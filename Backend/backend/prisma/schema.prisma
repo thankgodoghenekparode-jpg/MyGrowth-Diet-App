@@ -1,0 +1,1085 @@
+// Prisma schema — MyGrowth Diet Plan backend
+// PostgreSQL 16, UUID primary keys, enum-constrained statuses, timestamps everywhere.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  MAIN_ADMIN
+  ADMIN
+  MEMBER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+// Administrative access lifecycle. Only the Main Admin ever has ACTIVE admin
+// access granted during bootstrap. Admin accounts created by the Main Admin
+// start PENDING (no administrative access) until explicitly granted.
+enum AdminAccess {
+  NONE
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ActivityCategory {
+  prayer
+  scripture_reading
+  bible_study
+  literature_reading
+  proverbs_reading
+  fasting_and_prayer
+  prayer_and_affirmations
+  confessions_declarations
+  audio_message
+  prayer_partner_session
+  personal_reflection
+  custom
+}
+
+enum ActivityRecordStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  NOT_APPLICABLE
+}
+
+/// How a Daily Diet section behaves for the member. The structure (which
+/// sections exist, their order and labels) is set by an administrator; the
+/// behaviour decides which member interface the section opens.
+enum DailyDietBehaviour {
+  TEXT // Admin writes content; the member reads it and ticks it off.
+  MATERIAL // Admin uploads files (literature, audio, music); the member opens them.
+  TIMER // Prayer with a stopwatch; the member sets their own duration.
+  TICK // A yes/no the member marks (fasted / not fasted).
+  REPORT // Weekly or monthly report the member writes or uploads.
+  PARTNER // A shortcut to the prayer room (prayer accountability partner).
+}
+
+/// How far a piece of Daily Diet content reaches. Day content applies to one
+/// date, week content to the week starting on its anchor date, and month
+/// content to the whole month.
+enum DailyDietScope {
+  DAY
+  WEEK
+  MONTH
+}
+
+enum ActivityRecordSource {
+  PLAN
+  CUSTOM
+}
+
+enum GoalPeriodType {
+  WEEKLY
+  MONTHLY
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  ABANDONED
+}
+
+enum ReviewOutcome {
+  COMPLETED
+  PARTIAL
+  NOT_COMPLETED
+}
+
+enum PrayerAvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
+  TEMPORARILY_UNAVAILABLE
+}
+
+enum PartnerRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  BLOCKED
+  REPORTED
+}
+
+enum PartnershipStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+  BLOCKED
+}
+
+enum SessionStatus {
+  PROPOSED
+  ACCEPTED
+  COMPLETED
+  RESCHEDULED
+  CANCELLED
+  MISSED
+}
+
+enum ReportType {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum ReportPeriodType {
+  WEEK
+  MONTH
+  QUARTER
+  YEAR
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  REQUIRES_FOLLOW_UP
+  REVIEWED
+}
+
+enum ReportReviewAction {
+  COMMENT
+  REQUEST_FOLLOW_UP
+  MARK_REVIEWED
+}
+
+enum TestimonyVisibility {
+  PRIVATE
+  ADMINS
+  COMMUNITY
+}
+
+enum TestimonyApproval {
+  NOT_REQUESTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MaterialCategory {
+  PDF_DOCUMENT
+  AUDIO_MESSAGE
+  VIDEO
+  BIBLE_STUDY_NOTES
+  LITERATURE_REFERENCE
+  PRAYER_GUIDE
+  SCRIPTURE_READING_LINK
+  CONFESSION_DECLARATION
+  ANNOUNCEMENT
+  OTHER
+}
+
+enum MaterialVisibility {
+  ALL_MEMBERS
+  ADMINS_ONLY
+}
+
+enum NotificationEventType {
+  welcome_verification
+  membership_approved
+  programme_published
+  material_published
+  daily_activity_reminder
+  weekly_report_reminder
+  monthly_report_reminder
+  quarterly_review_reminder
+  annual_reflection_reminder
+  new_announcement
+  partner_request_received
+  partner_request_accepted
+  partner_request_declined
+  session_proposed
+  session_accepted
+  session_rescheduled
+  session_cancelled
+  session_upcoming
+  admin_report_comment
+  admin_report_follow_up
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum DeliveryStatus {
+  NOT_NEEDED
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum Audience {
+  ALL_MEMBERS
+  ADMINS_ONLY
+}
+
+enum SafetyReportStatus {
+  OPEN
+  REVIEWED
+  RESOLVED
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+}
+
+// ---------------------------------------------------------------------------
+// Identity & access
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String     @id @default(uuid()) @db.Uuid
+  email         String     @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          Role       @default(MEMBER)
+  status        UserStatus @default(ACTIVE)
+  adminAccess   AdminAccess @default(NONE)
+  emailVerifiedAt DateTime?
+  timezone      String     @default("Africa/Lagos")
+  locale        String     @default("en")
+  avatarFileId  String?    @db.Uuid
+  profileCompletedAt DateTime?
+  lastLoginAt   DateTime?
+  verificationTokenHash String?
+  verificationTokenExpiresAt DateTime?
+  passwordResetTokenHash String?
+  passwordResetExpiresAt DateTime?
+  createdByAdminId String?  @db.Uuid
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  avatarFile            File?               @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
+  createdByAdmin        User?               @relation("AdminCreations", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  createdAdmins         User[]              @relation("AdminCreations")
+  refreshTokens         RefreshToken[]
+  activityRecords       UserActivityRecord[]
+  goals                 PersonalGoal[]
+  progressReviews       ProgressReview[]
+  availability          PrayerAvailability?
+  partnerRequestsSent   PrayerPartnerRequest[] @relation("Requester")
+  partnerRequestsRecv   PrayerPartnerRequest[] @relation("Recipient")
+  partnershipsA         PrayerPartnership[]    @relation("PartnershipUserA")
+  partnershipsB         PrayerPartnership[]    @relation("PartnershipUserB")
+  sessionsProposed      PrayerSession[]        @relation("SessionProposer")
+  sessionsAccepted      PrayerSession[]        @relation("SessionAcceptor")
+  reports               Report[]
+  reportReviews         ReportReview[]
+  reflections           ReflectionEntry[]
+  annualLetters         AnnualLetter[]
+  testimonies           Testimony[]
+  notifications         Notification[]
+  notificationPref      NotificationPreference?
+  programmesCreated     Programme[]          @relation("ProgrammeCreator")
+  programmesUpdated     Programme[]          @relation("ProgrammeUpdater")
+  materialsCreated      Material[]           @relation("MaterialCreator")
+  materialsUpdated      Material[]           @relation("MaterialUpdater")
+  materialCompletions   MaterialCompletion[]
+  dailyDietCompletions  DailyDietCompletion[]
+  readingList           ReadingListEntry[]
+  announcementsCreated  Announcement[]        @relation("AnnouncementCreator")
+  filesUploaded         File[]
+  auditLogs             AuditLog[]
+  blockedUsers          PrayerBlock[]         @relation("Blocker")
+  blockedByUsers        PrayerBlock[]         @relation("BlockedBy")
+  safetyReportsFiled    SafetyReport[]        @relation("Reporter")
+  safetyReportsAgainst  SafetyReport[]        @relation("Reported")
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  replacedById String?  @db.Uuid
+  userAgent   String?
+  ipAddress   String?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Programme content
+// ---------------------------------------------------------------------------
+
+model Programme {
+  id              String        @id @default(uuid()) @db.Uuid
+  title           String
+  year            Int
+  ministry        String
+  description     String?
+  annualPrayerFocus String?
+  dailyAffirmation String?
+  quarterlyConfession String?
+  quarterlyReviewTopics Json?
+  annualReflectionTemplate Json?
+  startDate       DateTime?     @db.Date
+  endDate         DateTime?     @db.Date
+  status          ContentStatus @default(DRAFT)
+  createdById     String?       @db.Uuid
+  updatedById     String?       @db.Uuid
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  createdBy     User?         @relation("ProgrammeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy     User?         @relation("ProgrammeUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  monthlyPlans  MonthlyPlan[]
+  weeklyPlans   WeeklyPlan[]
+  dailyActivities DailyActivity[]
+  dailyDietSections DailyDietSection[]
+  materials     Material[]
+  reports       Report[]
+  annualLetters AnnualLetter[]
+  goals         PersonalGoal[]
+
+  @@index([year])
+  @@index([status])
+}
+
+model MonthlyPlan {
+  id                 String        @id @default(uuid()) @db.Uuid
+  programmeId        String        @db.Uuid
+  month              Int // 1-12
+  year               Int
+  theme              String?
+  prayerFocus        String?
+  bibleReadingGuidance String?
+  literatureList     Json?
+  audioMessages      Json?
+  fastingGuidance    String?
+  monthlyConfession  String?
+  monthlyGoalsGuidance String?
+  reflectionQuestions Json?
+  status             ContentStatus @default(DRAFT)
+  publishedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  programme    Programme     @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  weeklyPlans  WeeklyPlan[]
+  dailyActivities DailyActivity[]
+
+  @@unique([programmeId, month])
+  @@index([year, month])
+  @@index([status])
+}
+
+model WeeklyPlan {
+  id                  String        @id @default(uuid()) @db.Uuid
+  programmeId         String        @db.Uuid
+  monthlyPlanId       String?       @db.Uuid
+  weekNumber          Int // 1-6 within its month
+  startDate           DateTime?     @db.Date
+  endDate             DateTime?     @db.Date
+  bibleReading        String?
+  prayerDurationTargetMinutes Int?
+  bookReading         String?
+  fastingSchedule     String?
+  keyLessonPrompt     String?
+  memoryVerse         String?
+  studyMaterialIds    Json?
+  audioMaterialIds    Json?
+  extraActivities     Json?
+  status              ContentStatus @default(DRAFT)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  programme      Programme     @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  monthlyPlan    MonthlyPlan?  @relation(fields: [monthlyPlanId], references: [id], onDelete: SetNull)
+  dailyActivities DailyActivity[]
+
+  @@unique([programmeId, monthlyPlanId, weekNumber])
+  @@index([startDate])
+  @@index([status])
+}
+
+model DailyActivity {
+  id            String           @id @default(uuid()) @db.Uuid
+  programmeId   String           @db.Uuid
+  monthlyPlanId String?          @db.Uuid
+  weeklyPlanId  String?          @db.Uuid
+  date          DateTime?        @db.Date
+  title         String
+  description   String?
+  category      ActivityCategory
+  startTime     String? // "HH:mm"
+  durationMinutes Int?
+  quantityTarget Int?
+  quantityUnit  String?
+  relatedMaterialId String?      @db.Uuid
+  completionInstructions String?
+  trackCompletion Boolean        @default(true)
+  allowNote     Boolean          @default(true)
+  sortOrder     Int              @default(0)
+  status        ContentStatus    @default(DRAFT)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  programme      Programme     @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  monthlyPlan    MonthlyPlan?  @relation(fields: [monthlyPlanId], references: [id], onDelete: SetNull)
+  weeklyPlan     WeeklyPlan?   @relation(fields: [weeklyPlanId], references: [id], onDelete: SetNull)
+  relatedMaterial Material?    @relation(fields: [relatedMaterialId], references: [id], onDelete: SetNull)
+  activityRecords UserActivityRecord[]
+
+  @@index([programmeId, date])
+  @@index([monthlyPlanId])
+  @@index([weeklyPlanId])
+  @@index([status])
+}
+
+model ActivityCategoryDef {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  label       String
+  description String?
+  sortOrder   Int      @default(0)
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Daily Diet — the admin-configured devotional structure
+// ---------------------------------------------------------------------------
+
+/// One section of the Daily Diet (Prayers, Scriptures reading, Bible study…).
+/// The set of sections, their order and their labels are maintained by an
+/// administrator; members simply follow the structure that is published.
+model DailyDietSection {
+  id              String             @id @default(uuid()) @db.Uuid
+  programmeId     String             @db.Uuid
+  key             String
+  label           String
+  description     String?
+  behaviour       DailyDietBehaviour @default(TEXT)
+  sortOrder       Int                @default(0)
+  enabled         Boolean            @default(true)
+  required        Boolean            @default(true)
+  allowNote       Boolean            @default(true)
+  trackCompletion Boolean            @default(true)
+  status          ContentStatus      @default(DRAFT)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  programme  Programme             @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  contents   DailyDietContent[]
+  completions DailyDietCompletion[]
+
+  @@unique([programmeId, key])
+  @@index([programmeId, sortOrder])
+  @@index([status])
+}
+
+/// The content a section carries on a specific day.
+model DailyDietContent {
+  id                   String        @id @default(uuid()) @db.Uuid
+  sectionId            String        @db.Uuid
+  date                 DateTime      @db.Date
+  scope                DailyDietScope @default(DAY)
+  title                String
+  body                 String?       @db.Text
+  details              Json? // { reading, topic, teachings[], declarations[], note, … }
+  materialIds          Json? // [materialId]
+  externalUrl          String?
+  durationTargetMinutes Int?
+  sortOrder            Int           @default(0)
+  status               ContentStatus @default(DRAFT)
+  publishedAt          DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  section DailyDietSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, date])
+  @@index([date])
+}
+
+/// A member's tick-off of one Daily Diet section on one day.
+model DailyDietCompletion {
+  id                   String                @id @default(uuid()) @db.Uuid
+  userId               String                @db.Uuid
+  sectionId            String                @db.Uuid
+  date                 DateTime              @db.Date
+  status               ActivityRecordStatus  @default(NOT_STARTED)
+  note                 String?               @db.Text
+  actualDurationMinutes Int?
+  actualQuantity       Int?
+  attachmentFileId     String?               @db.Uuid
+  completedAt          DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  section DailyDietSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  attachmentFile File?     @relation("DietAttachment", fields: [attachmentFileId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, sectionId, date])
+  @@index([userId, date])
+  @@index([sectionId, date])
+}
+
+model NotificationEventDef {
+  id             String   @id @default(uuid()) @db.Uuid
+  key            String   @unique
+  label          String
+  description    String?
+  defaultEnabled Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Materials & files
+// ---------------------------------------------------------------------------
+
+model File {
+  id           String   @id @default(uuid()) @db.Uuid
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String
+  storageAdapter String @default("local")
+  uploadedById String?  @db.Uuid
+  createdAt    DateTime @default(now())
+
+  uploadedBy      User?      @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  avatarOf        User[]     @relation("UserAvatar")
+  materialAsFile  Material[] @relation("MaterialFile")
+  materialAsThumb Material[] @relation("MaterialThumb")
+  dietAttachments DailyDietCompletion[] @relation("DietAttachment")
+
+  @@index([uploadedById])
+  @@index([createdAt])
+}
+
+model Material {
+  id              String             @id @default(uuid()) @db.Uuid
+  title           String
+  description     String?
+  category        MaterialCategory
+  programmeYear   Int?
+  programmeId     String?            @db.Uuid
+  month           Int?
+  week            Int?
+  fileId          String?            @db.Uuid
+  thumbnailFileId String?            @db.Uuid
+  externalUrl     String?
+  authorSpeaker   String?
+  publicationDate DateTime?          @db.Date
+  visibility      MaterialVisibility @default(ALL_MEMBERS)
+  trackCompletion Boolean            @default(false)
+  status          ContentStatus      @default(DRAFT)
+  createdById     String?            @db.Uuid
+  updatedById     String?            @db.Uuid
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+  sortOrder       Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  programme     Programme?           @relation(fields: [programmeId], references: [id], onDelete: SetNull)
+  file          File?                @relation("MaterialFile", fields: [fileId], references: [id], onDelete: SetNull)
+  thumbnailFile File?                @relation("MaterialThumb", fields: [thumbnailFileId], references: [id], onDelete: SetNull)
+  createdBy     User?                @relation("MaterialCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy     User?                @relation("MaterialUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  completions   MaterialCompletion[]
+  readingList   ReadingListEntry[]
+  dailyActivities DailyActivity[]
+  announcements Announcement[]
+
+  @@index([status])
+  @@index([programmeYear])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model MaterialCompletion {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  materialId  String   @db.Uuid
+  completedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId])
+}
+
+model ReadingListEntry {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  materialId String   @db.Uuid
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId])
+}
+
+// ---------------------------------------------------------------------------
+// Member tracking
+// ---------------------------------------------------------------------------
+
+model UserActivityRecord {
+  id           String                @id @default(uuid()) @db.Uuid
+  userId       String                @db.Uuid
+  activityId   String?               @db.Uuid
+  category     ActivityCategory
+  source       ActivityRecordSource  @default(PLAN)
+  date         DateTime              @db.Date
+  title        String
+  status       ActivityRecordStatus  @default(NOT_STARTED)
+  note         String? // private to member; never shown in admin analytics
+  actualDurationMinutes Int?
+  actualQuantity Int?
+  completedAt  DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity DailyActivity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId])
+  @@index([category])
+}
+
+model PersonalGoal {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @db.Uuid
+  programmeId   String?       @db.Uuid
+  title         String
+  description   String?
+  periodType    GoalPeriodType
+  startDate     DateTime      @db.Date
+  targetDate    DateTime      @db.Date
+  targetQuantity Int?
+  unit          String?
+  currentProgress Float       @default(0)
+  status        GoalStatus    @default(ACTIVE)
+  privateNotes  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programme Programme?         @relation(fields: [programmeId], references: [id], onDelete: SetNull)
+  progressEntries GoalProgressEntry[]
+
+  @@index([userId])
+  @@index([periodType, status])
+}
+
+model GoalProgressEntry {
+  id        String   @id @default(uuid()) @db.Uuid
+  goalId    String   @db.Uuid
+  value     Float
+  note      String?
+  createdAt DateTime @default(now())
+
+  goal PersonalGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model ProgressReview {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  periodType   GoalPeriodType
+  periodKey    String
+  outcome      ReviewOutcome
+  lessonsLearned String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodType, periodKey])
+}
+
+// ---------------------------------------------------------------------------
+// Prayer partners
+// ---------------------------------------------------------------------------
+
+model PrayerAvailability {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  userId                  String                   @unique @db.Uuid
+  availability            PrayerAvailabilityStatus @default(UNAVAILABLE)
+  availableDays           Json? // [0..6] weekday numbers
+  preferredTimeRanges     Json? // [{start:"HH:mm",end:"HH:mm"}]
+  timezone                String                   @default("Africa/Lagos")
+  preferredDurationMinutes Int                     @default(30)
+  preferredLanguage       String                   @default("English")
+  acceptsNewRequests      Boolean                  @default(true)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PrayerPartnerRequest {
+  id          String               @id @default(uuid()) @db.Uuid
+  requesterId String               @db.Uuid
+  recipientId String               @db.Uuid
+  message     String?
+  status      PartnerRequestStatus @default(PENDING)
+  respondedAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  requester User @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  recipient User @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, recipientId, status])
+  @@index([recipientId, status])
+  @@index([requesterId, status])
+  @@index([createdAt])
+}
+
+model PrayerPartnership {
+  id          String            @id @default(uuid()) @db.Uuid
+  userAId     String            @db.Uuid
+  userBId     String            @db.Uuid
+  status      PartnershipStatus @default(ACTIVE)
+  initiatedById String?         @db.Uuid
+  startedAt   DateTime          @default(now())
+  pausedAt    DateTime?
+  endedAt     DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  userA    User @relation("PartnershipUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB    User @relation("PartnershipUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  sessions PrayerSession[]
+
+  @@unique([userAId, userBId])
+  @@index([status])
+}
+
+model PrayerSession {
+  id            String        @id @default(uuid()) @db.Uuid
+  partnershipId String        @db.Uuid
+  proposedById  String        @db.Uuid
+  acceptedById  String?       @db.Uuid
+  date          DateTime      @db.Date
+  startTime     String // "HH:mm"
+  durationMinutes Int         @default(30)
+  timezone      String        @default("Africa/Lagos")
+  prayerFocus   String?
+  meetingMethod String?
+  meetingLink   String?
+  status        SessionStatus @default(PROPOSED)
+  acceptedAt    DateTime?
+  completedAt   DateTime?
+  proposerNote  String?
+  partnerNote   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  partnership PrayerPartnership @relation(fields: [partnershipId], references: [id], onDelete: Cascade)
+  proposedBy  User               @relation("SessionProposer", fields: [proposedById], references: [id], onDelete: Cascade)
+  acceptedBy  User?              @relation("SessionAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([partnershipId, status])
+  @@index([date])
+  @@index([status])
+}
+
+model PrayerBlock {
+  id          String   @id @default(uuid()) @db.Uuid
+  blockerId   String   @db.Uuid
+  blockedId   String   @db.Uuid
+  reason     String?
+  createdAt   DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+}
+
+model SafetyReport {
+  id          String            @id @default(uuid()) @db.Uuid
+  reporterId  String            @db.Uuid
+  reportedId  String            @db.Uuid
+  partnershipId String?         @db.Uuid
+  reason      String
+  details     String?
+  status      SafetyReportStatus @default(OPEN)
+  resolvedById String?          @db.Uuid
+  resolutionNote String?
+  resolvedAt  DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported User @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+
+model Report {
+  id            String           @id @default(uuid()) @db.Uuid
+  userId        String           @db.Uuid
+  programmeId   String?          @db.Uuid
+  periodType    ReportPeriodType
+  periodKey     String
+  reportType    ReportType
+  status        ReportStatus     @default(DRAFT)
+  visibilityNotice String?
+  revision      Int              @default(1)
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programme Programme?     @relation(fields: [programmeId], references: [id], onDelete: SetNull)
+  answers   ReportAnswer[]
+  revisions ReportRevision[]
+  reviews   ReportReview[]
+
+  @@unique([userId, periodType, periodKey, reportType])
+  @@index([userId])
+  @@index([status])
+  @@index([periodType, periodKey])
+  @@index([programmeId])
+}
+
+model ReportAnswer {
+  id        String   @id @default(uuid()) @db.Uuid
+  reportId  String   @db.Uuid
+  fieldKey  String
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, fieldKey])
+}
+
+model ReportRevision {
+  id            String   @id @default(uuid()) @db.Uuid
+  reportId      String   @db.Uuid
+  revisionNumber Int
+  snapshot      Json
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, revisionNumber])
+}
+
+model ReportReview {
+  id         String              @id @default(uuid()) @db.Uuid
+  reportId   String              @db.Uuid
+  reviewerId String              @db.Uuid
+  action     ReportReviewAction
+  comment    String?
+  createdAt  DateTime            @default(now())
+
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reviewer User   @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+  @@index([reviewerId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Reflections, testimonies, annual letter
+// ---------------------------------------------------------------------------
+
+model ReflectionEntry {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  entryDate DateTime @db.Date
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, entryDate])
+}
+
+model AnnualLetter {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  programmeId String   @db.Uuid
+  body        String   @db.Text @default("")
+  isDraft     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programme Programme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, programmeId])
+}
+
+model Testimony {
+  id             String            @id @default(uuid()) @db.Uuid
+  userId         String            @db.Uuid
+  title          String
+  entryDate      DateTime          @db.Date
+  story          String            @db.Text
+  tags           Json?
+  visibility     TestimonyVisibility @default(PRIVATE)
+  consentToShare Boolean           @default(false)
+  approvalStatus TestimonyApproval @default(NOT_REQUESTED)
+  publishedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([visibility, approvalStatus])
+}
+
+// ---------------------------------------------------------------------------
+// Notifications, announcements, settings, audit
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id           String                @id @default(uuid()) @db.Uuid
+  userId       String                @db.Uuid
+  eventType    NotificationEventType
+  eventKey     String
+  title        String
+  body         String?
+  data         Json?
+  channel      NotificationChannel   @default(IN_APP)
+  deliveryStatus DeliveryStatus      @default(NOT_NEEDED)
+  deliveryError  String?
+  readAt       DateTime?
+  emailSentAt  DateTime?
+  createdAt    DateTime              @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventType, eventKey])
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+model NotificationPreference {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @db.Uuid
+  emailEnabled   Boolean  @default(true)
+  inAppEnabled   Boolean  @default(true)
+  dailyReminderEnabled Boolean @default(true)
+  dailyReminderTime String @default("06:00")
+  weeklyReminderEnabled Boolean @default(true)
+  monthlyReminderEnabled Boolean @default(true)
+  quarterlyReminderEnabled Boolean @default(true)
+  annualReminderEnabled Boolean @default(true)
+  sessionReminderMinutes Int  @default(30)
+  summaryPreference String @default("daily") // daily | weekly | off
+  quietHoursStart String? // "HH:mm"
+  quietHoursEnd   String? // "HH:mm"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id          String         @id @default(uuid()) @db.Uuid
+  title       String
+  body        String
+  link        String?
+  materialId  String?        @db.Uuid
+  audience    Audience       @default(ALL_MEMBERS)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  status      ContentStatus  @default(DRAFT)
+  createdById String?        @db.Uuid
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  material  Material? @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  createdBy User?     @relation("AnnouncementCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([status, startsAt, endsAt])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedBy String?  @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String        @id @default(uuid()) @db.Uuid
+  actorId    String?       @db.Uuid
+  actorRole  String?
+  actorEmail String?
+  targetType String
+  targetId   String?
+  action     String
+  outcome    AuditOutcome  @default(SUCCESS)
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime      @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([action])
+}

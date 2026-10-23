@@ -1,0 +1,48 @@
+{
+  "name": "mygrowth-diet-app-backend",
+  "version": "1.0.0",
+  "description": "Backend API for MyGrowth Diet App — Healings Erhuvwuigho Azuike Ministry",
+  "type": "module",
+  "private": true,
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "worker": "node src/jobs/worker.js",
+    "test": "node scripts/test-setup.js && node --test --test-concurrency=1 --test-reporter=spec \"tests/**/*.test.js\"",
+    "seed": "node prisma/seed.js",
+    "bootstrap:admin": "node scripts/bootstrap-admin.js",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev",
+    "generate": "prisma generate",
+    "lint": "eslint ."
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1155.0",
+    "@prisma/client": "^6.16.2",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "luxon": "^3.7.2",
+    "multer": "^2.4.0",
+    "node-cron": "^3.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.18.0",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.16.2",
+    "supertest": "^7.0.0"
+  }
+}

@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Prisma
+Backend/backend/prisma/*.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter/Dart coverage
+coverage/
+
+# Uploads (local storage dev adapter)
+Backend/backend/uploads/*
+!Backend/backend/uploads/.gitkeep
+
+# Generated platform folders kept out where regenerated
+Frontend/mygrowth_app/android/local.properties
+Frontend/mygrowth_app/ios/Pods/
