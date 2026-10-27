@@ -7,6 +7,7 @@ import '../core/models/app_user.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/widgets/app_badge.dart';
+import '../core/widgets/brand_logo.dart';
 
 /// Destinations available in the member bottom navigation (compact devices).
 const memberBottomDestinations = [
@@ -15,7 +16,7 @@ const memberBottomDestinations = [
       'Daily Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
   NavDestination('Bible', Icons.menu_book_outlined, Icons.menu_book_rounded,
       '/bible'),
-  NavDestination('Plan', Icons.menu_book_outlined, Icons.menu_book_rounded,
+  NavDestination('Plan', Icons.event_note_outlined, Icons.event_note_rounded,
       '/plan'),
   NavDestination(
       'Prayer', Icons.self_improvement_outlined, Icons.self_improvement_rounded,
@@ -274,19 +275,7 @@ class _BrandHeader extends StatelessWidget {
           AppSpacing.md, AppSpacing.md),
       child: Row(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.forestGreen, AppColors.darkEmerald],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: Icon(Icons.spa_outlined, color: AppColors.gold400, size: 21),
-          ),
+          const BrandLogo(size: 38),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(

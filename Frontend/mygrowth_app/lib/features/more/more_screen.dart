@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/appearance_section.dart';
 import '../../core/widgets/image_carousel.dart';
+import '../../core/widgets/brand_logo.dart';
 import '../../core/widgets/section_header.dart';
 
 /// Home tab: the landing screen after sign-in.
@@ -427,20 +428,7 @@ class _GreetingHeader extends StatelessWidget {
       child: Row(
         children: [
           // --------------------------------------------- brand mark
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.spa_outlined,
-              color: AppColors.softGold,
-              size: 24,
-            ),
-          ),
+          const BrandLogo(size: 44),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(

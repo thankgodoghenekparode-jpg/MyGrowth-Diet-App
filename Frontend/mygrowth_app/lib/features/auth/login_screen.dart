@@ -9,6 +9,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_buttons.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/brand_logo.dart';
 import '../../../core/widgets/toast.dart';
 
 /// Shared branding header used on all auth screens.
@@ -21,20 +22,7 @@ class AuthBrandHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          width: 68,
-          height: 68,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.forestGreen, AppColors.darkEmerald],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(Icons.spa_outlined,
-              color: AppColors.gold400, size: 34),
-        ),
+        const BrandLogo(size: 68),
         const SizedBox(height: AppSpacing.md),
         Text(
           'MyGrowth Diet App',

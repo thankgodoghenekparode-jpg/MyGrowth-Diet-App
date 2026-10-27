@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
 import '../core/theme/app_colors.dart';
+import '../core/widgets/brand_logo.dart';
 import '../features/activities/fasting_screen.dart';
 import '../features/bible/bible_reader_screen.dart';
 import '../features/admin/admin_access_screen.dart';
@@ -679,20 +680,7 @@ class _SplashLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 76,
-      height: 76,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.forestGreen, AppColors.darkEmerald],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Icon(Icons.spa_outlined,
-          color: AppColors.champagneGold, size: 40),
-    );
+    return const BrandLogo(size: 76);
   }
 }
 
