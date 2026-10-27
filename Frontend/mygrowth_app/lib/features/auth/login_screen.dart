@@ -6,6 +6,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_buttons.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -71,42 +72,52 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const AuthBrandHeader(),
-                  const SizedBox(height: AppSpacing.xl),
-                  AppCard(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
+    // Auth screens are designed for the light brand look. Force light theme
+    // so they don't follow the app-wide dark mode.
+    return Theme(
+      data: AppTheme.light,
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 440),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                        const AuthBrandHeader(),
+                        const SizedBox(height: AppSpacing.xl),
+                        AppCard(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              child,
+                            ],
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        child,
+                        footer,
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  footer,
-                ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -244,13 +255,14 @@ class _PrivacyNotice extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.navy50,
+        color: AppColors.green50,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.shield_outlined, size: 17, color: AppColors.navy600),
+          Icon(Icons.shield_outlined, size: 17, color: AppColors.brandText),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
@@ -259,7 +271,7 @@ class _PrivacyNotice extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .labelSmall
-                  ?.copyWith(height: 1.45),
+                  ?.copyWith(height: 1.45, color: AppColors.inkSecondary),
             ),
           ),
         ],
