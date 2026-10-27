@@ -81,7 +81,7 @@ class ApiClient {
   String? _accessToken;
   String? _refreshToken;
   bool _refreshing = false;
-  final List<Completer<void>> _waiters = [];
+  Completer<bool?>? _refreshCompleter;
 
   String? get accessToken => _accessToken;
   bool get hasSession => _accessToken != null;
@@ -253,28 +253,29 @@ class ApiClient {
 
     if (response.statusCode == 401 && !retried && path != '/auth/refresh') {
       final refreshed = await _tryRefresh();
-      if (refreshed) {
+      if (refreshed == true) {
         return _send(method, path, query: query, body: body, retried: true);
       }
-      final cb = onSessionExpired;
-      if (cb != null) unawaited(cb());
+      if (refreshed == false) {
+        final cb = onSessionExpired;
+        if (cb != null) unawaited(cb());
+      }
     }
 
     return _handleResponse(response);
   }
 
-  Future<bool> _tryRefresh() async {
+  /// Returns true when refreshed, false when credentials are invalid, and
+  /// null when a temporary failure prevented the refresh attempt.
+  Future<bool?> _tryRefresh() async {
     if (_refreshToken == null) return false;
     if (_refreshing) {
-      final completer = Completer<void>();
-      _waiters.add(completer);
-      await completer.future.timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {},
-      );
-      return _accessToken != null;
+      return _refreshCompleter!.future;
     }
     _refreshing = true;
+    final completer = Completer<bool?>();
+    _refreshCompleter = completer;
+    bool? result;
     try {
       final uri = _resolve('/auth/refresh', null);
       final response = await _client.post(
@@ -283,24 +284,35 @@ class ApiClient {
         body: jsonEncode({'refreshToken': _refreshToken}),
       );
       if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-        final access = data['data']?['accessToken'] as String?;
-        final refresh = data['data']?['refreshToken'] as String?;
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        final data = decoded is Map<String, dynamic>
+            ? (decoded['data'] is Map<String, dynamic>
+                ? decoded['data'] as Map<String, dynamic>
+                : decoded)
+            : null;
+        final access = data?['accessToken'] as String?;
+        final refresh = data?['refreshToken'] as String?;
         if (access != null) {
           await saveSession(accessToken: access, refreshToken: refresh);
-          return true;
+          result = true;
+          return result;
         }
+        // A malformed success response is a server problem, not proof that
+        // the user's refresh credentials are invalid.
+        return null;
       }
-      await clearSession();
-      return false;
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await clearSession();
+        result = false;
+        return result;
+      }
+      return null;
     } catch (_) {
-      return false;
+      return null;
     } finally {
       _refreshing = false;
-      for (final w in _waiters) {
-        if (!w.isCompleted) w.complete();
-      }
-      _waiters.clear();
+      if (!completer.isCompleted) completer.complete(result);
+      _refreshCompleter = null;
     }
   }
 
