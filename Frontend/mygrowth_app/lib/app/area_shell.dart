@@ -13,6 +13,8 @@ const memberBottomDestinations = [
   NavDestination('Home', Icons.home_outlined, Icons.home_rounded, '/home'),
   NavDestination(
       'Daily Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
+  NavDestination('Bible', Icons.menu_book_outlined, Icons.menu_book_rounded,
+      '/bible'),
   NavDestination('Plan', Icons.menu_book_outlined, Icons.menu_book_rounded,
       '/plan'),
   NavDestination(
@@ -558,6 +560,8 @@ const memberMenuItems = <MenuItem>[
       image: 'assets/images/dashboard.jpg'),
   MenuItem(Icons.today_outlined, 'Daily Diet', '/diet',
       image: 'assets/images/diet.jpg'),
+  MenuItem(Icons.menu_book_outlined, 'Bible', '/bible',
+      image: 'assets/images/bible.jpg'),
   MenuItem(Icons.menu_book_outlined, 'My Growth Plan', '/plan',
       image: 'assets/images/plan.jpg'),
   MenuItem(Icons.auto_stories_outlined, 'Bible Reading', '/bible-reading',

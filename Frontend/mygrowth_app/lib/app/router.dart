@@ -7,6 +7,7 @@ import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
 import '../core/theme/app_colors.dart';
 import '../features/activities/fasting_screen.dart';
+import '../features/bible/bible_reader_screen.dart';
 import '../features/admin/admin_access_screen.dart';
 import '../features/admin/admin_activities_screen.dart';
 import '../features/admin/admin_announcements_screen.dart';
@@ -179,6 +180,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               path: '/diet',
               pageBuilder: (_, _) =>
                   const NoTransitionPage(child: DailyDietScreen()),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/bible',
+              pageBuilder: (_, _) =>
+                  const NoTransitionPage(child: BibleReaderScreen()),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -617,8 +625,9 @@ class _AdminPage extends StatelessWidget {
 String _memberShellTitle(int index) => switch (index) {
       0 => 'Home',
       1 => 'Daily Diet',
-      2 => 'My Growth Plan',
-      3 => 'Prayer Room',
+      2 => 'Bible',
+      3 => 'My Growth Plan',
+      4 => 'Prayer Room',
       _ => 'Home',
     };
 
