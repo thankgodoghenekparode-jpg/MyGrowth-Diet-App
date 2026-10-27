@@ -34,18 +34,59 @@ class _BibleBook {
   );
 }
 
+class _BibleTranslation {
+  const _BibleTranslation({
+    required this.id,
+    required this.name,
+    required this.file,
+    required this.credit,
+  });
+
+  final String id;
+  final String name;
+  final String file;
+  final String credit;
+}
+
+const _bibleTranslations = [
+  _BibleTranslation(
+    id: 'WEB',
+    name: 'World English Bible',
+    file: 'web.json',
+    credit: 'WEB - Public domain',
+  ),
+  _BibleTranslation(
+    id: 'BSB',
+    name: 'Berean Standard Bible',
+    file: 'bsb.json',
+    credit: 'BSB - Public domain',
+  ),
+  _BibleTranslation(
+    id: 'KJV',
+    name: 'King James Version',
+    file: 'kjv.json',
+    credit: 'KJV - Public domain outside the United Kingdom',
+  ),
+];
+
 class _BibleSession {
   const _BibleSession({
+    required this.translation,
     required this.books,
     required this.preferences,
     required this.bookmarks,
+    required this.lastReadKey,
+    required this.bookmarksKey,
     required this.bookIndex,
     required this.chapterIndex,
   });
 
+  final _BibleTranslation translation;
   final List<_BibleBook> books;
   final SharedPreferences preferences;
   final Set<String> bookmarks;
+  final String lastReadKey;
+  final String bookmarksKey;
   final int bookIndex;
   final int chapterIndex;
 }
@@ -69,7 +110,7 @@ class _VerseHit {
   String get key => '${bookIndex}_${chapterIndex}_$verseNumber';
 }
 
-/// Offline Bible reader with the complete 66-book World English Bible.
+/// Offline Bible reader with selectable WEB, BSB, and KJV translations.
 class BibleReaderScreen extends StatefulWidget {
   const BibleReaderScreen({super.key});
 
@@ -78,11 +119,10 @@ class BibleReaderScreen extends StatefulWidget {
 }
 
 class _BibleReaderScreenState extends State<BibleReaderScreen> {
-  static const _lastReadKey = 'mgdp.bible.lastRead';
-  static const _bookmarksKey = 'mgdp.bible.bookmarks';
+  static const _translationKey = 'mgdp.bible.translation';
   static const _pagePadding = EdgeInsets.fromLTRB(16, 16, 16, 12);
 
-  late final Future<_BibleSession> _session = _loadSession();
+  late Future<_BibleSession> _session;
   final _searchController = TextEditingController();
   final _verseScrollController = ScrollController();
   Timer? _searchDebounce;
@@ -94,15 +134,37 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
   List<_VerseHit> _searchHits = const [];
   String? _highlightedVerse;
 
-  Future<_BibleSession> _loadSession() async {
+  @override
+  void initState() {
+    super.initState();
+    _session = _loadSession();
+  }
+
+  Future<_BibleSession> _loadSession([String? requestedTranslation]) async {
+    final preferences = await SharedPreferences.getInstance();
+    final storedId =
+        requestedTranslation ?? preferences.getString(_translationKey) ?? 'WEB';
+    final translation = _bibleTranslations.firstWhere(
+      (item) => item.id == storedId,
+      orElse: () => _bibleTranslations.first,
+    );
     final decoded = jsonDecode(
-      await rootBundle.loadString('assets/bible/web.json'),
+      await rootBundle.loadString('assets/bible/${translation.file}'),
     ) as Map<String, dynamic>;
     final books = (decoded['books'] as List<dynamic>)
         .map((book) => _BibleBook.fromJson(book as Map<String, dynamic>))
         .toList(growable: false);
-    final preferences = await SharedPreferences.getInstance();
-    final lastRead = preferences.getString(_lastReadKey)?.split('|') ?? [];
+    final lastReadKey = 'mgdp.bible.${translation.id}.lastRead';
+    final bookmarksKey = 'mgdp.bible.${translation.id}.bookmarks';
+    final oldWebLastRead = translation.id == 'WEB'
+        ? preferences.getString('mgdp.bible.lastRead')
+        : null;
+    final oldWebBookmarks = translation.id == 'WEB'
+        ? preferences.getStringList('mgdp.bible.bookmarks')
+        : null;
+    final lastRead =
+        (preferences.getString(lastReadKey) ?? oldWebLastRead)?.split('|') ??
+        [];
     var bookIndex = books.indexWhere(
       (book) => book.code == (lastRead.isEmpty ? null : lastRead[0]),
     );
@@ -113,9 +175,15 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
         .clamp(0, books[bookIndex].chapters.length - 1)
         .toInt();
     return _BibleSession(
+      translation: translation,
       books: books,
       preferences: preferences,
-      bookmarks: preferences.getStringList(_bookmarksKey)?.toSet() ?? {},
+      bookmarks:
+          (preferences.getStringList(bookmarksKey) ?? oldWebBookmarks)
+              ?.toSet() ??
+          {},
+      lastReadKey: lastReadKey,
+      bookmarksKey: bookmarksKey,
       bookIndex: bookIndex,
       chapterIndex: chapterIndex,
     );
@@ -141,9 +209,26 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
     }
     final book = session.books[bookIndex];
     session.preferences.setString(
-      _lastReadKey,
+      session.lastReadKey,
       '${book.code}|${chapterIndex + 1}',
     );
+  }
+
+  void _selectTranslation(_BibleSession session, String translationId) {
+    if (translationId == session.translation.id) return;
+    unawaited(session.preferences.setString(_translationKey, translationId));
+    _searchDebounce?.cancel();
+    _searchController.clear();
+    if (_verseScrollController.hasClients) _verseScrollController.jumpTo(0);
+    setState(() {
+      _bookIndex = 0;
+      _chapterIndex = 0;
+      _view = _BibleView.reader;
+      _searchQuery = '';
+      _searchHits = const [];
+      _highlightedVerse = null;
+      _session = _loadSession(translationId);
+    });
   }
 
   void _changeChapter(_BibleSession session, int change) {
@@ -314,7 +399,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
       if (!session.bookmarks.add(hit.key)) session.bookmarks.remove(hit.key);
     });
     await session.preferences.setStringList(
-      _bookmarksKey,
+      session.bookmarksKey,
       session.bookmarks.toList()..sort(),
     );
   }
@@ -347,7 +432,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                'World English Bible (WEB) · Public domain',
+                session.translation.credit,
                 style: Theme.of(context).textTheme.labelSmall
                     ?.copyWith(color: AppColors.inkMuted),
               ),
@@ -424,43 +509,67 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
     }
     return Padding(
       padding: _pagePadding,
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: _bookIndex,
-                isExpanded: true,
-                items: [
-                  for (var i = 0; i < session.books.length; i++)
-                    DropdownMenuItem(
-                      value: i,
-                      child: Text(
-                        session.books[i].name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: session.translation.id,
+              isExpanded: true,
+              items: [
+                for (final translation in _bibleTranslations)
+                  DropdownMenuItem(
+                    value: translation.id,
+                    child: Text(
+                      '${translation.id} - ${translation.name}',
+                      overflow: TextOverflow.ellipsis,
                     ),
-                ],
-                onChanged: (value) {
-                  if (value != null) _selectLocation(session, value, 0);
-                },
-              ),
+                  ),
+              ],
+              onChanged: (value) {
+                if (value != null) _selectTranslation(session, value);
+              },
             ),
           ),
-          const SizedBox(width: 8),
-          OutlinedButton(
-            onPressed: () => _chooseChapter(context, session),
-            child: Text('${_chapterIndex + 1}'),
-          ),
-          IconButton(
-            tooltip: 'Search the Bible',
-            onPressed: () => setState(() => _view = _BibleView.search),
-            icon: const Icon(Icons.search),
-          ),
-          IconButton(
-            tooltip: 'Bookmarks',
-            onPressed: () => setState(() => _view = _BibleView.bookmarks),
-            icon: const Icon(Icons.bookmarks_outlined),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _bookIndex,
+                    isExpanded: true,
+                    items: [
+                      for (var i = 0; i < session.books.length; i++)
+                        DropdownMenuItem(
+                          value: i,
+                          child: Text(
+                            session.books[i].name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) _selectLocation(session, value, 0);
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: () => _chooseChapter(context, session),
+                child: Text('${_chapterIndex + 1}'),
+              ),
+              IconButton(
+                tooltip: 'Search the Bible',
+                onPressed: () => setState(() => _view = _BibleView.search),
+                icon: const Icon(Icons.search),
+              ),
+              IconButton(
+                tooltip: 'Bookmarks',
+                onPressed: () => setState(() => _view = _BibleView.bookmarks),
+                icon: const Icon(Icons.bookmarks_outlined),
+              ),
+            ],
           ),
         ],
       ),

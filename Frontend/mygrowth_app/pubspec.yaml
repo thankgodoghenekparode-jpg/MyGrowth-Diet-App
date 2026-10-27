@@ -72,6 +72,8 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/bible/web.json
+    - assets/bible/bsb.json
+    - assets/bible/kjv.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

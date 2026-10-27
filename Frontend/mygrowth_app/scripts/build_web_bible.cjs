@@ -1,14 +1,22 @@
-// Build the compact, offline Bible asset from eBible.org's VPL archive.
-// Download https://ebible.org/Scriptures/engwebp_vpl.zip to assets/bible/
-// before running: node scripts/build_web_bible.cjs
+// Build a compact, offline Bible asset from eBible.org's VPL archive.
+// Download the matching archive into assets/bible/, then run:
+// node scripts/build_web_bible.cjs [web|bsb|kjv]
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const appRoot = path.resolve(__dirname, '..');
-const archive = path.join(appRoot, 'assets/bible/engwebp_vpl.zip');
+const versions = {
+  web: { archive: 'engwebp_vpl.zip', file: 'engwebp_vpl.txt', name: 'World English Bible', abbreviation: 'WEB' },
+  bsb: { archive: 'engbsb_vpl.zip', file: 'engbsb_vpl.txt', name: 'Berean Standard Bible', abbreviation: 'BSB' },
+  kjv: { archive: 'eng-kjv2006_vpl.zip', file: 'eng-kjv2006_vpl.txt', name: 'King James Version', abbreviation: 'KJV' },
+};
+const versionId = (process.argv[2] || 'web').toLowerCase();
+const version = versions[versionId];
+if (!version) throw new Error(`Unknown Bible version: ${versionId}`);
+const archive = path.join(appRoot, 'assets/bible', version.archive);
 const tar = process.platform === 'win32' ? 'tar.exe' : 'tar';
-const source = execFileSync(tar, ['-xOf', archive, 'engwebp_vpl.txt'], {
+const source = execFileSync(tar, ['-xOf', archive, version.file], {
   encoding: 'utf8',
   maxBuffer: 16 * 1024 * 1024,
 });
@@ -59,11 +67,11 @@ if (parsed < 30000 || books.some((book) => book.chapters.length === 0)) {
 }
 
 const output = {
-  translation: 'World English Bible',
-  abbreviation: 'WEB',
-  source: 'https://ebible.org/engwebp/',
+  translation: version.name,
+  abbreviation: version.abbreviation,
+  source: `https://ebible.org/${versionId === 'kjv' ? 'eng-kjv2006' : `eng${versionId}`}/`,
   books,
 };
-const destination = path.join(appRoot, 'assets/bible/web.json');
+const destination = path.join(appRoot, `assets/bible/${versionId}.json`);
 fs.writeFileSync(destination, JSON.stringify(output), 'utf8');
 console.log(`Wrote ${parsed} verse rows across ${books.length} books to ${destination}`);
