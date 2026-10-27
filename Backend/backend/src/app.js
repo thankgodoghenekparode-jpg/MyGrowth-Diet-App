@@ -13,10 +13,12 @@ import meProfileRoutes from './modules/me/profile.routes.js';
 import meActivityRoutes from './modules/me/activities.routes.js';
 import meGoalRoutes from './modules/me/goals.routes.js';
 import meDashboardRoutes from './modules/me/dashboard.routes.js';
+import aiAssistantRoutes from './modules/me/aiAssistant.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
 import reflectionsRoutes from './modules/reflections/reflections.routes.js';
 import notificationsRoutes from './modules/notifications/notifications.routes.js';
 import prayerPartnersRoutes from './modules/prayerPartners/prayerPartners.routes.js';
+import shapeSpaceRoutes from './modules/shapeSpace/routes.js';
 import programmesRoutes from './modules/programmes/programmes.routes.js';
 import dailyDietRoutes from './modules/dailyDiet/dailyDiet.routes.js';
 import materialsRoutes from './modules/materials/materials.routes.js';
@@ -88,13 +90,14 @@ export function createApp() {
   app.use('/api/v1/cron', cronRoutes);
 
   // Authenticated member context
-  app.use('/api/v1/me', requireAuth, meProfileRoutes, meActivityRoutes, meGoalRoutes, meDashboardRoutes, reportsRoutes, reflectionsRoutes, notificationsRoutes);
+  app.use('/api/v1/me', requireAuth, meProfileRoutes, meActivityRoutes, meGoalRoutes, meDashboardRoutes, reportsRoutes, reflectionsRoutes, notificationsRoutes, aiAssistantRoutes);
 
   // Published content for members (approved only)
   app.use('/api/v1/programmes', requireAuth, requireApprovedMember, programmesRoutes);
   app.use('/api/v1/daily-diet', requireAuth, requireApprovedMember, dailyDietRoutes);
   app.use('/api/v1/materials', requireAuth, requireApprovedMember, materialsRoutes);
   app.use('/api/v1/announcements', requireAuth, requireApprovedMember, announcementsRoutes);
+  app.use('/api/v1/shape-space', requireAuth, requireApprovedMember, shapeSpaceRoutes);
 
   // Prayer partners (any authenticated, approved member)
   app.use('/api/v1/prayer-partners', requireAuth, requireApprovedMember, prayerPartnersRoutes);

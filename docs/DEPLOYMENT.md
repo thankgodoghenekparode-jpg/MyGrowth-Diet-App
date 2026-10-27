@@ -126,6 +126,8 @@ npm run seed      # idempotent: 2027 programme content + definitions
 
 - `migrate deploy` is the production-safe migration command; it never generates
   new migrations or resets data.
+- The Shape Space chat adds a database migration. Run `npm run migrate` after
+  deploying this commit and before enabling the new room.
 - `seed` is **idempotent** — safe to run on every deploy. In production it
   creates the 2027 programme, the 12 activity categories, the notification-event
   definitions and the settings, and **skips** the development accounts.
@@ -150,6 +152,10 @@ account that can create administrators and grant administrative access.
 ---
 
 ## 6. Run the API
+
+To enable the AI Assistant, set `OPENAI_API_KEY` in the backend host's secret
+environment settings. `OPENAI_MODEL` is optional and defaults to
+`gpt-4.1-mini`. Do not put the provider key in the Flutter or Vercel frontend.
 
 Foreground (for a first smoke test):
 

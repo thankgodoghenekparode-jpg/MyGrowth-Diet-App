@@ -58,9 +58,9 @@ export async function dailyActivityReminders(now = DateTime.now()) {
       userId: user.id,
       eventType: 'daily_activity_reminder',
       eventKey,
-      title: "Today's growth diet",
-      body: 'Open your daily checklist and record your prayer, Word and study activities for today.',
-      data: { date: eventKey },
+      title: "Today's devotion",
+      body: 'Take a moment to read your devotion and continue your daily growth plan.',
+      data: { date: eventKey, link: '/devotion' },
     });
     if (n) created += 1;
   }

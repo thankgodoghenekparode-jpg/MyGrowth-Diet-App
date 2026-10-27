@@ -138,8 +138,8 @@ class _NotificationPrefsSectionState
               onChanged: (v) => setState(() => _emailEnabled = v),
             ),
             AppSwitchRow(
-              label: 'Daily reminder',
-              subtitle: 'A gentle nudge to keep your daily diet plan.',
+              label: 'Daily devotion reminder',
+              subtitle: 'A gentle reminder to read your devotion and daily plan.',
               value: _dailyReminderEnabled,
               onChanged: (v) => setState(() => _dailyReminderEnabled = v),
             ),

@@ -40,6 +40,19 @@ export const partnerRequestLimiter = limiter({
   message: 'Too many prayer partner requests, please try again later.',
 });
 
+/** Conversation endpoints can be abused to spam members or generate AI costs. */
+export const shapeSpaceMessageLimiter = limiter({
+  windowMs: 60 * 60 * 1000,
+  max: 40,
+  message: 'You have sent too many messages. Please try again later.',
+});
+
+export const aiAssistantLimiter = limiter({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  message: 'The assistant has reached its hourly limit. Please try again later.',
+});
+
 /** Password reset / verification request limiter. */
 export const sensitiveAuthLimiter = limiter({
   windowMs: 60 * 60 * 1000,

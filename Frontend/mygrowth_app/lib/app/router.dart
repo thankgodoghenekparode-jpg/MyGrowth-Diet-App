@@ -37,11 +37,15 @@ import '../features/auth/reset_password_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/goals/goals_screen.dart';
 import '../features/daily_diet/daily_diet_screen.dart';
+import '../features/daily_diet/daily_devotion_screen.dart';
 import '../features/daily_diet/daily_diet_section_screen.dart';
 import '../features/materials/material_detail_screen.dart';
 import '../features/materials/materials_screen.dart';
 import '../features/more/more_screen.dart';
 import '../features/notifications/notifications_screen.dart';
+import '../features/notifications/reminders_screen.dart';
+import '../features/shape_space/shape_space_screen.dart';
+import '../features/assistant/ai_assistant_screen.dart';
 import '../features/prayer_partners/prayer_partners_screen.dart';
 import '../features/prayer_partners/prayer_room_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -217,6 +221,30 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             child: DashboardScreen(),
           ),
         )),
+      ),
+      GoRoute(
+        path: '/devotion',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: DailyDevotionScreen())),
+      ),
+      GoRoute(
+        path: '/shape-space',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: ShapeSpaceScreen())),
+      ),
+      GoRoute(
+        path: '/assistant',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: AiAssistantScreen())),
+      ),
+      GoRoute(
+        path: '/reminders',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: RemindersScreen())),
       ),
       GoRoute(
         path: '/bible-reading',

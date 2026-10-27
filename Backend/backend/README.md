@@ -109,6 +109,8 @@ Copy `.env.example` to `.env`. **Never commit `.env`.** Full reference:
 | `EMAIL_PROVIDER` | `console` | `console` or `resend` |
 | `RESEND_API_KEY` | *(empty)* | Required only when `EMAIL_PROVIDER=resend` |
 | `EMAIL_FROM` | `MyGrowth Diet App <no-reply@mygrowth.local>` | From header |
+| `OPENAI_API_KEY` | *(empty)* | Optional; enables the authenticated AI Assistant. Store only on the backend host. |
+| `OPENAI_MODEL` | `gpt-4.1-mini` | Optional model used by the AI Assistant. |
 | `STORAGE_ADAPTER` | `local` | `local` or `s3` (stub) |
 | `UPLOAD_DIR` | `./uploads` | Local storage root |
 | `FILE_MAX_BYTES` | `52428800` | Upload size limit (50 MB) |

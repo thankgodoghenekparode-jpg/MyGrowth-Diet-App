@@ -314,6 +314,7 @@ model User {
   blockedByUsers        PrayerBlock[]         @relation("BlockedBy")
   safetyReportsFiled    SafetyReport[]        @relation("Reporter")
   safetyReportsAgainst  SafetyReport[]        @relation("Reported")
+  shapeSpaceMessages    ShapeSpaceMessage[]
 
   @@index([role])
   @@index([status])
@@ -858,6 +859,19 @@ model SafetyReport {
 
   @@index([status])
   @@index([createdAt])
+}
+
+model ShapeSpaceMessage {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  body      String    @db.VarChar(1000)
+  createdAt DateTime  @default(now())
+  hiddenAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 // ---------------------------------------------------------------------------

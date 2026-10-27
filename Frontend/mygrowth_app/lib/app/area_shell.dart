@@ -545,6 +545,10 @@ class _AreaDrawer extends StatelessWidget {
 
 /// Full member navigation list (used by drawer and the "More" screen).
 const memberMenuItems = <MenuItem>[
+  MenuItem(Icons.auto_stories_outlined, 'Daily Devotion', '/devotion'),
+  MenuItem(Icons.forum_outlined, 'Shape Space', '/shape-space'),
+  MenuItem(Icons.auto_awesome_outlined, 'AI Assistant', '/assistant'),
+  MenuItem(Icons.alarm_outlined, 'Daily Reminders', '/reminders'),
   MenuItem(Icons.dashboard_outlined, 'Dashboard', '/dashboard',
       image: 'assets/images/dashboard.jpg'),
   MenuItem(Icons.today_outlined, 'Daily Diet', '/diet',
