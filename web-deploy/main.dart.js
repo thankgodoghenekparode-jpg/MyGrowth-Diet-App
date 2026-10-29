@@ -122361,7 +122361,7 @@ $S:0}
 A.biY.prototype={
 $1(a){var s=$.av.h(0,B.aqi),r=s==null?null:t.Kb.a(s).$0()
 if(r==null)r=new A.Xs(A.a([],t.O))
-s=new A.uP(r,"/api/v1")
+s=new A.uP(r,"https://mygrowth-diet-app.onrender.com/api/v1")
 a.UE(s.gtT())
 return s},
 $S:693}
