@@ -78,6 +78,8 @@ class AreaShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final offlineMode = ref.watch(authControllerProvider).offlineMode &&
+        area == AppArea.member;
     final location = GoRouterState.of(context).uri.path;
     final expanded = Breakpoints.isExpanded(context);
     final medium = Breakpoints.isMedium(context);
@@ -107,7 +109,12 @@ class AreaShell extends ConsumerWidget {
               leadingWidth: 56,
             ),
             drawer: _AreaDrawer(area: area, user: user),
-            body: child,
+            body: Column(
+              children: [
+                if (offlineMode) const _OfflineAccessBanner(),
+                Expanded(child: child),
+              ],
+            ),
             floatingActionButton: floatingActionButton,
             bottomNavigationBar: _BottomNav(
               destinations: destinations,
@@ -125,6 +132,7 @@ class AreaShell extends ConsumerWidget {
               child: Column(
                 children: [
                   _DesktopAppBar(title: title, actions: actions, user: user),
+                  if (offlineMode) const _OfflineAccessBanner(),
                   Expanded(child: child),
                 ],
               ),
@@ -147,6 +155,21 @@ class AreaShell extends ConsumerWidget {
     }
     return best;
   }
+}
+
+class _OfflineAccessBanner extends StatelessWidget {
+  const _OfflineAccessBanner();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        color: AppColors.navy100,
+        child: const Text(
+          'Offline mode · saved Bible and daily readings are available. Saving progress needs internet.',
+          textAlign: TextAlign.center,
+        ),
+      );
 }
 
 enum AppArea { member, admin }
@@ -602,6 +625,8 @@ const adminMenuItems = <MenuItem>[
       image: 'assets/images/weekly_plans.jpg'),
   MenuItem(Icons.today_outlined, 'Daily Diet', '/admin/daily-diet',
       image: 'assets/images/diet.jpg'),
+  MenuItem(Icons.forum_outlined, 'Shape Space (Pastoral Care)', '/admin/shape-space',
+      image: 'assets/images/partners.jpg'),
   MenuItem(Icons.library_books_outlined, 'Materials Library',
       '/admin/materials',
       image: 'assets/images/admin_materials.jpg'),

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/daily_diet_models.dart';
@@ -16,8 +19,25 @@ Map<String, dynamic> _asMap(dynamic data) =>
 final dailyDietProvider =
     FutureProvider.autoDispose.family<DailyDietBundle, String>((ref, date) async {
   final client = ref.watch(apiClientProvider);
-  final data = await client.get('/daily-diet', query: {'date': date});
-  return DailyDietBundle.fromJson(_asMap(data));
+  final userId = ref.watch(authControllerProvider).user?.id;
+  final cacheKey = userId == null ? null : 'mgdp.dailyDiet.$userId.$date';
+  try {
+    final data = await client.get('/daily-diet', query: {'date': date});
+    final json = _asMap(data);
+    if (cacheKey != null && json.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(cacheKey, jsonEncode(json));
+    }
+    return DailyDietBundle.fromJson(json);
+  } on ApiException catch (error) {
+    if (!error.isNetworkError || cacheKey == null) rethrow;
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(cacheKey);
+    if (saved == null) rethrow;
+    final json = jsonDecode(saved);
+    if (json is! Map<String, dynamic>) rethrow;
+    return DailyDietBundle.fromJson(json);
+  }
 });
 
 /// Per-day completion counts for the member, used by the calendar strip.

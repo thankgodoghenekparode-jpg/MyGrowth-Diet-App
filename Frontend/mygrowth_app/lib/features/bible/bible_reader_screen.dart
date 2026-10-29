@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -50,6 +51,30 @@ class _BibleTranslation {
 
 const _bibleTranslations = [
   _BibleTranslation(
+    id: 'KJV',
+    name: 'King James Version',
+    file: 'kjv.json',
+    credit: 'KJV - Public domain',
+  ),
+  _BibleTranslation(
+    id: 'NLT',
+    name: 'New Living Translation',
+    file: 'nlt.json',
+    credit: 'NLT - New Living Translation',
+  ),
+  _BibleTranslation(
+    id: 'AMP',
+    name: 'Amplified Bible Classic',
+    file: 'amp.json',
+    credit: 'AMP - Amplified Bible Classic Edition',
+  ),
+  _BibleTranslation(
+    id: 'TPT',
+    name: 'The Passion Translation',
+    file: 'tpt.json',
+    credit: 'TPT - The Passion Translation',
+  ),
+  _BibleTranslation(
     id: 'WEB',
     name: 'World English Bible',
     file: 'web.json',
@@ -60,12 +85,6 @@ const _bibleTranslations = [
     name: 'Berean Standard Bible',
     file: 'bsb.json',
     credit: 'BSB - Public domain',
-  ),
-  _BibleTranslation(
-    id: 'KJV',
-    name: 'King James Version',
-    file: 'kjv.json',
-    credit: 'KJV - Public domain outside the United Kingdom',
   ),
 ];
 
@@ -368,8 +387,9 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
             verseNumber: verseIndex + 1,
             text: text ?? '',
           );
-          if (text != null && session.bookmarks.contains(hit.key))
+          if (text != null && session.bookmarks.contains(hit.key)) {
             hits.add(hit);
+          }
         }
       }
     }
@@ -402,6 +422,101 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
       session.bookmarksKey,
       session.bookmarks.toList()..sort(),
     );
+  }
+
+  Future<void> _copyVerse(_BibleSession session, _VerseHit hit) async {
+    final reference = hit.reference(session.books);
+    final text = '$reference (${session.translation.id})\n${hit.text}';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied $reference'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _copyChapter(_BibleSession session) async {
+    final book = session.books[_bookIndex];
+    final verses = book.chapters[_chapterIndex];
+    final buffer = StringBuffer('${book.name} ${_chapterIndex + 1} (${session.translation.id})\n\n');
+    for (var i = 0; i < verses.length; i++) {
+      final text = verses[i];
+      if (text != null) {
+        buffer.writeln('${i + 1}. $text');
+        buffer.writeln();
+      }
+    }
+    await Clipboard.setData(ClipboardData(text: buffer.toString()));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Copied chapter'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _openAudioBible(_BibleSession session) async {
+    final book = session.books[_bookIndex];
+    final chapter = _chapterIndex + 1;
+    // Use BibleGateway audio or YouVersion style links as fallback
+    final uri = Uri.parse('https://www.biblegateway.com/audio/mclean/kjv/${_getBibleGatewayBook(book.name)}/$chapter');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      final uri2 = Uri.parse('https://www.bible.com/bible/1/${_getYouVersionBook(book.name)}.$chapter.KJV');
+      if (await canLaunchUrl(uri2)) {
+        await launchUrl(uri2, mode: LaunchMode.externalApplication);
+      }
+    }
+  }
+
+  String _getBibleGatewayBook(String name) {
+    final map = {
+      'Genesis': 'Gen', 'Exodus': 'Exod', 'Leviticus': 'Lev', 'Numbers': 'Num',
+      'Deuteronomy': 'Deut', 'Joshua': 'Josh', 'Judges': 'Judg', 'Ruth': 'Ruth',
+      '1 Samuel': '1Sam', '2 Samuel': '2Sam', '1 Kings': '1Kgs', '2 Kings': '2Kgs',
+      '1 Chronicles': '1Chr', '2 Chronicles': '2Chr', 'Ezra': 'Ezra', 'Nehemiah': 'Neh',
+      'Esther': 'Est', 'Job': 'Job', 'Psalms': 'Ps', 'Proverbs': 'Prov',
+      'Ecclesiastes': 'Eccl', 'Song of Solomon': 'Song', 'Isaiah': 'Isa', 'Jeremiah': 'Jer',
+      'Lamentations': 'Lam', 'Ezekiel': 'Ezek', 'Daniel': 'Dan', 'Hosea': 'Hos',
+      'Joel': 'Joel', 'Amos': 'Amos', 'Obadiah': 'Obad', 'Jonah': 'Jonah',
+      'Micah': 'Mic', 'Nahum': 'Nah', 'Habakkuk': 'Hab', 'Zephaniah': 'Zeph',
+      'Haggai': 'Hag', 'Zechariah': 'Zech', 'Malachi': 'Mal',
+      'Matthew': 'Matt', 'Mark': 'Mark', 'Luke': 'Luke', 'John': 'John',
+      'Acts': 'Acts', 'Romans': 'Rom', '1 Corinthians': '1Cor', '2 Corinthians': '2Cor',
+      'Galatians': 'Gal', 'Ephesians': 'Eph', 'Philippians': 'Phil', 'Colossians': 'Col',
+      '1 Thessalonians': '1Thess', '2 Thessalonians': '2Thess', '1 Timothy': '1Tim', '2 Timothy': '2Tim',
+      'Titus': 'Titus', 'Philemon': 'Phlm', 'Hebrews': 'Heb', 'James': 'James',
+      '1 Peter': '1Pet', '2 Peter': '2Pet', '1 John': '1John', '2 John': '2John',
+      '3 John': '3John', 'Jude': 'Jude', 'Revelation': 'Rev',
+    };
+    return map[name] ?? name.replaceAll(' ', '');
+  }
+
+  String _getYouVersionBook(String name) {
+    final map = {
+      'Genesis': 'GEN', 'Exodus': 'EXO', 'Leviticus': 'LEV', 'Numbers': 'NUM',
+      'Deuteronomy': 'DEU', 'Joshua': 'JOS', 'Judges': 'JDG', 'Ruth': 'RUT',
+      '1 Samuel': '1SA', '2 Samuel': '2SA', '1 Kings': '1KI', '2 Kings': '2KI',
+      '1 Chronicles': '1CH', '2 Chronicles': '2CH', 'Ezra': 'EZR', 'Nehemiah': 'NEH',
+      'Esther': 'EST', 'Job': 'JOB', 'Psalms': 'PSA', 'Proverbs': 'PRO',
+      'Ecclesiastes': 'ECC', 'Song of Solomon': 'SNG', 'Isaiah': 'ISA', 'Jeremiah': 'JER',
+      'Lamentations': 'LAM', 'Ezekiel': 'EZK', 'Daniel': 'DAN', 'Hosea': 'HOS',
+      'Joel': 'JOL', 'Amos': 'AMO', 'Obadiah': 'OBA', 'Jonah': 'JON',
+      'Micah': 'MIC', 'Nahum': 'NAM', 'Habakkuk': 'HAB', 'Zephaniah': 'ZEP',
+      'Haggai': 'HAG', 'Zechariah': 'ZEC', 'Malachi': 'MAL',
+      'Matthew': 'MAT', 'Mark': 'MRK', 'Luke': 'LUK', 'John': 'JHN',
+      'Acts': 'ACT', 'Romans': 'ROM', '1 Corinthians': '1CO', '2 Corinthians': '2CO',
+      'Galatians': 'GAL', 'Ephesians': 'EPH', 'Philippians': 'PHP', 'Colossians': 'COL',
+      '1 Thessalonians': '1TH', '2 Thessalonians': '2TH', '1 Timothy': '1TI', '2 Timothy': '2TI',
+      'Titus': 'TIT', 'Philemon': 'PHM', 'Hebrews': 'HEB', 'James': 'JAS',
+      '1 Peter': '1PE', '2 Peter': '2PE', '1 John': '1JN', '2 John': '2JN',
+      '3 John': '3JN', 'Jude': 'JUD', 'Revelation': 'REV',
+    };
+    return map[name] ?? name.substring(0,3).toUpperCase();
   }
 
   @override
@@ -560,6 +675,11 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                 child: Text('${_chapterIndex + 1}'),
               ),
               IconButton(
+                tooltip: 'Listen to Audio Bible',
+                onPressed: () => _openAudioBible(session),
+                icon: const Icon(Icons.volume_up_outlined),
+              ),
+              IconButton(
                 tooltip: 'Search the Bible',
                 onPressed: () => setState(() => _view = _BibleView.search),
                 icon: const Icon(Icons.search),
@@ -594,6 +714,11 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
+          ),
+          IconButton(
+            tooltip: 'Copy chapter',
+            onPressed: () => _copyChapter(session),
+            icon: const Icon(Icons.copy_all_outlined),
           ),
           IconButton(
             tooltip: 'Next chapter',
@@ -687,15 +812,30 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                   ),
                 ),
               ),
-              IconButton(
-                tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark verse',
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _toggleBookmark(session, hit),
-                icon: Icon(
-                  isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  size: 19,
-                  color: isBookmarked ? AppColors.gold600 : AppColors.inkMuted,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Copy verse',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _copyVerse(session, hit),
+                    icon: Icon(
+                      Icons.copy_outlined,
+                      size: 18,
+                      color: AppColors.inkMuted,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark verse',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _toggleBookmark(session, hit),
+                    icon: Icon(
+                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      size: 19,
+                      color: isBookmarked ? AppColors.gold600 : AppColors.inkMuted,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

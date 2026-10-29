@@ -320,31 +320,35 @@ class _Dots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < count; i++)
-          Semantics(
-            button: true,
-            selected: i == active,
-            label: 'Slide ${i + 1} of $count',
-            child: GestureDetector(
-              onTap: () => onSelect(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: i == active ? 20 : 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: i == active
-                      ? AppColors.softGold
-                      : Colors.white.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(4),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (var i = 0; i < count; i++)
+            Semantics(
+              button: true,
+              selected: i == active,
+              label: 'Slide ${i + 1} of $count',
+              child: GestureDetector(
+                onTap: () => onSelect(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == active ? 18 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == active
+                        ? AppColors.softGold
+                        : Colors.white.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

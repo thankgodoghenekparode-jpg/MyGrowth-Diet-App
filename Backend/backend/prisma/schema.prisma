@@ -312,9 +312,11 @@ model User {
   auditLogs             AuditLog[]
   blockedUsers          PrayerBlock[]         @relation("Blocker")
   blockedByUsers        PrayerBlock[]         @relation("BlockedBy")
-  safetyReportsFiled    SafetyReport[]        @relation("Reporter")
-  safetyReportsAgainst  SafetyReport[]        @relation("Reported")
-  shapeSpaceMessages    ShapeSpaceMessage[]
+  safetyReportsFiled      SafetyReport[]            @relation("Reporter")
+  safetyReportsAgainst    SafetyReport[]            @relation("Reported")
+  shapeSpaceConversations ShapeSpaceConversation[]
+  shapeSpaceMessages      ShapeSpaceMessage[]
+  devotionCompletions     DailyDevotionCompletion[]
 
   @@index([role])
   @@index([status])
@@ -861,17 +863,39 @@ model SafetyReport {
   @@index([createdAt])
 }
 
+model ShapeSpaceConversation {
+  id            String    @id @default(uuid()) @db.Uuid
+  memberId      String    @unique @db.Uuid
+  status        String    @default("OPEN") @db.VarChar(20) // OPEN, RESOLVED, ARCHIVED
+  isAnonymous   Boolean   @default(false)
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  member   User                @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  messages ShapeSpaceMessage[]
+
+  @@index([lastMessageAt])
+  @@index([status])
+}
+
 model ShapeSpaceMessage {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
-  body      String    @db.VarChar(1000)
-  createdAt DateTime  @default(now())
-  hiddenAt  DateTime?
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  senderId       String    @db.Uuid
+  body           String    @db.VarChar(2000)
+  isAnonymous    Boolean   @default(false)
+  isFromAdmin    Boolean   @default(false)
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+  hiddenAt       DateTime?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation ShapeSpaceConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                   @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
   @@index([createdAt])
-  @@index([userId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -1097,3 +1121,48 @@ model AuditLog {
   @@index([targetType, targetId])
   @@index([action])
 }
+
+// ---------------------------------------------------------------------------
+// Daily Devotion (365 Days of Spiritual Food)
+// ---------------------------------------------------------------------------
+
+model DailyDevotion {
+  id                  String    @id @default(uuid()) @db.Uuid
+  dayOfYear           Int       @unique // 1 to 365 (or 366)
+  month               Int       // 1 to 12
+  day                 Int       // 1 to 31
+  date                DateTime? @db.Date
+  title               String    @db.VarChar(255)
+  anchorScripture     String    @db.VarChar(255) // e.g. "Romans 8:28"
+  scriptureReading    String?   @db.VarChar(255) // e.g. "Romans 8:28-39"
+  scriptureText       String?   @db.Text
+  content             String    @db.Text
+  confession          String?   @db.Text
+  prayer              String?   @db.Text
+  oneYearBibleReading String?   @db.VarChar(255)
+  thoughtForTheDay    String?   @db.Text
+  author              String?   @default("Pastor Healings E. Azuike") @db.VarChar(255)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  completions         DailyDevotionCompletion[]
+
+  @@index([month, day])
+  @@index([dayOfYear])
+}
+
+model DailyDevotionCompletion {
+  id              String   @id @default(uuid()) @db.Uuid
+  devotionId      String   @db.Uuid
+  userId          String   @db.Uuid
+  completedAt     DateTime @default(now())
+  isBookmarked    Boolean  @default(false)
+  reflectionNotes String?  @db.Text
+
+  devotion DailyDevotion @relation(fields: [devotionId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([devotionId, userId])
+  @@index([userId, completedAt])
+}
+

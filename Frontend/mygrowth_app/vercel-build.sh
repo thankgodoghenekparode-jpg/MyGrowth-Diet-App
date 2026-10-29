@@ -28,6 +28,9 @@ export PUB_CACHE="${CACHE_ROOT}/pub-cache"
 flutter --version
 flutter config --no-analytics >/dev/null
 flutter pub get
-flutter build web --release --dart-define=API_BASE_URL="${API_BASE_URL}"
+flutter build web --release --web-content-hash --dart-define=API_BASE_URL="${API_BASE_URL}"
+
+BUILD_ID="$(sha256sum build/web/precache_manifest.json | cut -c1-16)"
+sed "s/__BUILD_ID__/${BUILD_ID}/g" scripts/service-worker.js.template > build/web/service-worker.js
 
 echo "Built build/web"

@@ -40,6 +40,21 @@ class AppUser {
   /// Backend enforcement is the real security boundary; this only shapes UI.
   bool get canUseAdminArea => isAdmin && (isMainAdmin || adminAccessActive);
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'role': role,
+        'status': status,
+        'phone': phone,
+        'timeZone': timeZone,
+        'emailVerified': emailVerified,
+        'adminAccessActive': adminAccessActive,
+        'bio': bio,
+        'avatarUrl': avatarUrl,
+        'createdAt': joinedAt?.toIso8601String(),
+      };
+
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty || parts.first.isEmpty) return '?';

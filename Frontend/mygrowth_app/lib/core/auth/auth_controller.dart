@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_user.dart';
 import '../network/api_client.dart';
@@ -11,11 +14,13 @@ class AuthState {
     this.status = AuthStatus.initial,
     this.user,
     this.needsProfileCompletion = false,
+    this.offlineMode = false,
   });
 
   final AuthStatus status;
   final AppUser? user;
   final bool needsProfileCompletion;
+  final bool offlineMode;
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
   bool get isAdmin => user?.canUseAdminArea ?? false;
@@ -26,12 +31,14 @@ class AuthState {
     AppUser? user,
     bool clearUser = false,
     bool? needsProfileCompletion,
+    bool? offlineMode,
   }) {
     return AuthState(
       status: status ?? this.status,
       user: clearUser ? null : (user ?? this.user),
       needsProfileCompletion:
           needsProfileCompletion ?? this.needsProfileCompletion,
+      offlineMode: offlineMode ?? this.offlineMode,
     );
   }
 }
@@ -43,6 +50,9 @@ class AuthController extends Notifier<AuthState> {
     final client = ref.read(apiClientProvider);
     client.onSessionExpired = () async {
       await signOut(clearServer: false);
+    };
+    client.onConnectionRestored = () {
+      if (state.offlineMode) state = state.copyWith(offlineMode: false);
     };
     return const AuthState();
   }
@@ -65,15 +75,41 @@ class AuthController extends Notifier<AuthState> {
         user: user,
         needsProfileCompletion: (data['profileCompleted'] as bool? ?? true) == false,
       );
+      await _cacheUser(user, state.needsProfileCompletion);
       return user;
     } on ApiException catch (e) {
-      if (e.isUnauthorized || e.isNetworkError) {
-        state = const AuthState(status: AuthStatus.unauthenticated);
-      } else {
-        // Keep the session but surface an error state via unauthenticated-less
-        // fallback: treat as unauthenticated so the user can retry login.
-        state = const AuthState(status: AuthStatus.unauthenticated);
+      if (e.isNetworkError) {
+        final cached = await _cachedOfflineState();
+        if (cached != null) {
+          state = cached;
+          return cached.user;
+        }
       }
+      state = const AuthState(status: AuthStatus.unauthenticated);
+      return null;
+    }
+  }
+
+  Future<void> _cacheUser(AppUser user, bool needsProfileCompletion) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mgdp.cachedUser', jsonEncode(user.toJson()));
+    await prefs.setBool('mgdp.cachedProfileCompletion', needsProfileCompletion);
+  }
+
+  Future<AuthState?> _cachedOfflineState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('mgdp.cachedUser');
+    if (raw == null) return null;
+    try {
+      final user = AppUser.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      return AuthState(
+        status: AuthStatus.authenticated,
+        user: user,
+        needsProfileCompletion:
+            prefs.getBool('mgdp.cachedProfileCompletion') ?? false,
+        offlineMode: true,
+      );
+    } catch (_) {
       return null;
     }
   }
@@ -124,12 +160,14 @@ class AuthController extends Notifier<AuthState> {
       user: user,
       needsProfileCompletion: (data['profileCompleted'] as bool? ?? true) == false,
     );
+    await _cacheUser(user, state.needsProfileCompletion);
   }
 
   /// Refreshes cached profile data from the backend.
   Future<AppUser?> refreshUser() async {
     final data = await _api.get('/me') as Map<String, dynamic>;
     final user = AppUser.fromJson(data);
+    await _cacheUser(user, false);
     state = state.copyWith(user: user);
     return user;
   }
@@ -137,6 +175,7 @@ class AuthController extends Notifier<AuthState> {
   Future<void> updateProfile(Map<String, dynamic> patch) async {
     final data = await _api.patch('/me', body: patch) as Map<String, dynamic>;
     final user = AppUser.fromJson(data);
+    await _cacheUser(user, false);
     state = state.copyWith(
       user: user,
       needsProfileCompletion: false,
@@ -166,6 +205,9 @@ class AuthController extends Notifier<AuthState> {
       }
     }
     await _api.clearSession();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('mgdp.cachedUser');
+    await prefs.remove('mgdp.cachedProfileCompletion');
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 

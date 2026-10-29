@@ -77,6 +77,7 @@ class ApiClient {
 
   Future<void> Function()? onSessionExpired;
   Future<void> Function(String accessToken)? onTokensUpdated;
+  void Function()? onConnectionRestored;
 
   String? _accessToken;
   String? _refreshToken;
@@ -188,6 +189,8 @@ class ApiClient {
         isNetworkError: true,
       );
     }
+
+    onConnectionRestored?.call();
     onProgress?.call(1);
     return _handleResponse(response);
   }
@@ -251,6 +254,8 @@ class ApiClient {
       );
     }
 
+    onConnectionRestored?.call();
+
     if (response.statusCode == 401 && !retried && path != '/auth/refresh') {
       final refreshed = await _tryRefresh();
       if (refreshed == true) {
@@ -259,6 +264,13 @@ class ApiClient {
       if (refreshed == false) {
         final cb = onSessionExpired;
         if (cb != null) unawaited(cb());
+      } else if (refreshed == null) {
+        throw ApiException(
+          0,
+          'network',
+          'Unable to refresh your session while offline.',
+          isNetworkError: true,
+        );
       }
     }
 

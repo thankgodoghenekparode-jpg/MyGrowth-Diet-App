@@ -29,6 +29,36 @@ DateTime _today() {
 
 const memberHomeSlides = <CarouselSlide>[
   CarouselSlide(
+    image: 'assets/images/slide_1.jpg',
+    title: 'Transformative Books',
+    caption: 'Dear Teenager, Dear Teen Parents & Scripted Life by Pastor Healings E. Azuike.',
+    icon: Icons.menu_book_outlined,
+  ),
+  CarouselSlide(
+    image: 'assets/images/slide_2.jpg',
+    title: 'Healings E. Azuike',
+    caption: 'Available on Selar · Inspiring and empowering believers worldwide.',
+    icon: Icons.star_outline_rounded,
+  ),
+  CarouselSlide(
+    image: 'assets/images/slide_3.jpg',
+    title: 'The Fear of Failing',
+    caption: 'Failure is not the end, fear is. Step boldly into God’s glorious calling.',
+    icon: Icons.auto_stories_outlined,
+  ),
+  CarouselSlide(
+    image: 'assets/images/slide_4.jpg',
+    title: 'Out With It',
+    caption: 'The world needs it — unleash the God-given treasures within your spirit.',
+    icon: Icons.public_outlined,
+  ),
+  CarouselSlide(
+    image: 'assets/images/slide_5.jpg',
+    title: 'Spiritual Growth Books',
+    caption: 'Faith-building literature to equip your mind and empower your daily walk.',
+    icon: Icons.local_library_outlined,
+  ),
+  CarouselSlide(
     image: 'assets/images/bible.jpg',
     title: 'Feed on the Word',
     caption: 'Follow the reading plan and let Scripture shape your week.',

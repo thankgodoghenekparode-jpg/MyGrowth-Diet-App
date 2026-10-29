@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/auth/auth_controller.dart';
 import '../../core/network/api_client.dart';
 
 class AiAssistantScreen extends ConsumerStatefulWidget {
@@ -38,20 +39,23 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
           );
       final answer = data is Map ? data['answer']?.toString() : null;
       if (answer == null || answer.isEmpty) throw StateError('Empty response');
-      if (mounted)
+      if (mounted) {
         setState(() => _messages.add({'role': 'assistant', 'content': answer}));
+      }
     } on ApiException catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = error.code == 'AI_NOT_CONFIGURED'
               ? 'The assistant is being set up. Please try again later.'
               : 'I could not respond just now. Please try again.',
         );
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = 'I could not respond just now. Please try again.',
         );
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -73,7 +77,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     const Icon(Icons.auto_awesome_outlined, size: 42),
                     const SizedBox(height: 12),
                     Text(
-                      'How can I support your growth today?',
+                      'How can I support your spiritual growth today?',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
@@ -84,9 +88,11 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                       alignment: WrapAlignment.center,
                       children:
                           [
-                                'Help me reflect on a Bible passage',
-                                'Suggest a short prayer',
-                                'How can I build a daily habit?',
+                                'Help me reflect on today\'s devotion',
+                                'Guide me in a morning prayer',
+                                'Explain a Bible passage to me',
+                                'Give me an encouraging scripture for faith',
+                                'How can I build consistency in prayer?',
                               ]
                               .map(
                                 (q) => ActionChip(
@@ -98,7 +104,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     ),
                     const SizedBox(height: 14),
                     const Text(
-                      'For reflection and learning. It is not a substitute for pastoral, medical, or professional care.',
+                      'Powered by Google Gemini. For reflection and learning. Speak with the Pastor in Shape Space for personal pastoral care.',
                       textAlign: TextAlign.center,
                     ),
                   ],

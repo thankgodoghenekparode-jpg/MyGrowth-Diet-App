@@ -4,6 +4,15 @@ Feature-based Flutter client for the MyGrowth Diet App. Targets Android, iOS
 and Web. See the repository root `README.md` for the full architecture and the
 `docs/FRONTEND_CONVENTIONS.md` for the coding conventions used here.
 
+## Offline access
+
+The installed web app precaches its Flutter shell and bundled Bible translations.
+After signing in while online, the app also keeps the profile and each opened
+Daily Diet day on that device so an existing member can read them offline.
+Sign-in on a new device, server-backed pages, AI, Shape Space, reminders, and
+saving progress still need an internet connection. Offline progress is not
+queued for later sync.
+
 ## Run
 
 ```powershell

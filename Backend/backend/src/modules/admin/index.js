@@ -7,6 +7,8 @@ import { materialsRouter, filesRouter } from './materials.routes.js';
 import { reportsRouter, safetyRouter } from './reports.routes.js';
 import { analyticsRouter, auditRouter, settingsRouter } from './analytics.routes.js';
 import { dailyDietRouter } from './dailyDiet.routes.js';
+import { adminShapeSpaceRouter } from './shapeSpace.routes.js';
+import { adminDevotionsRouter } from '../devotions/devotions.routes.js';
 
 const router = Router();
 
@@ -16,6 +18,8 @@ router.use(requireAuth, requireAdmin);
 router.use(usersRouter); // /users, /users/:id/...
 router.use(contentRouter); // programmes, plans, announcements, categories, events
 router.use(dailyDietRouter); // /daily-diet/sections, /daily-diet/content
+router.use('/shape-space', adminShapeSpaceRouter); // /shape-space/conversations
+router.use('/devotions', adminDevotionsRouter); // /devotions/bulk-import
 router.use(adminPartnersRouter); // /prayer-partnerships, /prayer-partner-requests
 router.use(materialsRouter); // /materials
 router.use(filesRouter); // /files (upload)

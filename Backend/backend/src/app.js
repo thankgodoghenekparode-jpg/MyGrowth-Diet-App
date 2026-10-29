@@ -21,6 +21,7 @@ import prayerPartnersRoutes from './modules/prayerPartners/prayerPartners.routes
 import shapeSpaceRoutes from './modules/shapeSpace/routes.js';
 import programmesRoutes from './modules/programmes/programmes.routes.js';
 import dailyDietRoutes from './modules/dailyDiet/dailyDiet.routes.js';
+import { devotionsRouter } from './modules/devotions/devotions.routes.js';
 import materialsRoutes from './modules/materials/materials.routes.js';
 import announcementsRoutes from './modules/announcements/announcements.routes.js';
 import filesRoutes from './modules/files/files.routes.js';
@@ -98,6 +99,7 @@ export function createApp() {
   app.use('/api/v1/materials', requireAuth, requireApprovedMember, materialsRoutes);
   app.use('/api/v1/announcements', requireAuth, requireApprovedMember, announcementsRoutes);
   app.use('/api/v1/shape-space', requireAuth, requireApprovedMember, shapeSpaceRoutes);
+  app.use('/api/v1/devotions', requireAuth, requireApprovedMember, devotionsRouter);
 
   // Prayer partners (any authenticated, approved member)
   app.use('/api/v1/prayer-partners', requireAuth, requireApprovedMember, prayerPartnersRoutes);

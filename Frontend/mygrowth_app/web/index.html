@@ -36,6 +36,19 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', async () => {
+        try {
+          const workerUrl = new URL('service-worker.js', document.baseURI);
+          const exists = await fetch(workerUrl, { method: 'HEAD' });
+          if (exists.ok) await navigator.serviceWorker.register(workerUrl, { scope: new URL('.', document.baseURI).pathname });
+        } catch (_) {
+          // The app still runs online when the host does not publish a worker.
+        }
+      });
+    }
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

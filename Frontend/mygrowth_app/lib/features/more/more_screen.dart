@@ -133,6 +133,46 @@ class _HomeSlide extends CarouselSlide {
 
 const _memberSlides = <_HomeSlide>[
   _HomeSlide(
+    image: 'assets/images/slide_1.jpg',
+    title: 'Transformative Books',
+    caption: 'Dear Teenager, Dear Teen Parents & Scripted Life by Pastor Healings E. Azuike.',
+    actionLabel: 'Study materials',
+    path: '/materials',
+    icon: Icons.menu_book_outlined,
+  ),
+  _HomeSlide(
+    image: 'assets/images/slide_2.jpg',
+    title: 'Healings E. Azuike',
+    caption: 'Available on Selar · Inspiring and empowering believers worldwide.',
+    actionLabel: 'Explore books',
+    path: '/materials',
+    icon: Icons.star_outline_rounded,
+  ),
+  _HomeSlide(
+    image: 'assets/images/slide_3.jpg',
+    title: 'The Fear of Failing',
+    caption: 'Failure is not the end, fear is. Step boldly into God’s glorious calling.',
+    actionLabel: 'Read teachings',
+    path: '/devotion',
+    icon: Icons.auto_stories_outlined,
+  ),
+  _HomeSlide(
+    image: 'assets/images/slide_4.jpg',
+    title: 'Out With It',
+    caption: 'The world needs it — unleash the God-given treasures within your spirit.',
+    actionLabel: 'Daily devotion',
+    path: '/devotion',
+    icon: Icons.public_outlined,
+  ),
+  _HomeSlide(
+    image: 'assets/images/slide_5.jpg',
+    title: 'Spiritual Growth Books',
+    caption: 'Faith-building literature to equip your mind and empower your daily walk.',
+    actionLabel: 'View library',
+    path: '/materials',
+    icon: Icons.local_library_outlined,
+  ),
+  _HomeSlide(
     image: 'assets/images/bible.jpg',
     title: 'Feed on the Word',
     caption: 'Follow the reading plan and let Scripture shape your week.',
@@ -163,6 +203,14 @@ const _memberSlides = <_HomeSlide>[
     actionLabel: 'See my plan',
     path: '/plan',
     icon: Icons.menu_book_outlined,
+  ),
+  _HomeSlide(
+    image: 'assets/images/materials.jpg',
+    title: 'Study Materials',
+    caption: 'Audio messages, declarations and resources to strengthen your faith.',
+    actionLabel: 'View materials',
+    path: '/materials',
+    icon: Icons.local_library_outlined,
   ),
 ];
 

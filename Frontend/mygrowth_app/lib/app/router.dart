@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
-import '../core/theme/app_colors.dart';
 import '../core/widgets/brand_logo.dart';
 import '../features/activities/fasting_screen.dart';
 import '../features/bible/bible_reader_screen.dart';
@@ -27,6 +26,7 @@ import '../features/admin/admin_reports_screen.dart';
 import '../features/admin/admin_report_detail_screen.dart';
 import '../features/admin/admin_settings_screen.dart';
 import '../features/admin/admin_weekly_plans_screen.dart';
+import '../features/admin/admin_shape_space_screen.dart';
 import '../features/admin/programme_edit_screen.dart';
 import '../features/announcements/announcements_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
@@ -431,6 +431,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           child: _AdminPage(
             title: 'Admin access',
             child: AdminAccessScreen(),
+          ),
+        )),
+      ),
+      GoRoute(
+        path: '/admin/shape-space',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) => _fade(const MaterialPage(
+          child: _AdminPage(
+            title: 'Shape Space — Pastoral Care',
+            child: AdminShapeSpaceScreen(),
           ),
         )),
       ),
