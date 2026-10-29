@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
@@ -41,7 +43,7 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
       final data = await ref.read(apiClientProvider).get('/devotions?date=$dateStr');
       if (!mounted) return;
 
-      if (data is Map) {
+      if (data is Map && data['devotion'] != null) {
         final dev = data['devotion'] as Map<String, dynamic>?;
         setState(() {
           _devotion = dev;
@@ -49,14 +51,39 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
           _loading = false;
           _error = null;
         });
+        return;
       }
-    } catch (e) {
-      if (mounted) {
+    } catch (_) {
+      // Backend unavailable or error; fall through to local bundled devotion asset
+    }
+
+    try {
+      final raw = await rootBundle.loadString('assets/devotions.json');
+      final list = jsonDecode(raw) as List<dynamic>;
+      final target = list.firstWhere(
+        (item) => item['month'] == _currentDate.month && item['day'] == _currentDate.day,
+        orElse: () => null,
+      );
+
+      if (!mounted) return;
+      if (target != null) {
         setState(() {
+          _devotion = Map<String, dynamic>.from(target as Map);
+          _notesController.text = '';
           _loading = false;
-          _error = 'Unable to load devotion for this day.';
+          _error = null;
         });
+        return;
       }
+    } catch (_) {
+      // Asset loading failed
+    }
+
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        _error = 'Unable to load devotion for this day.';
+      });
     }
   }
 

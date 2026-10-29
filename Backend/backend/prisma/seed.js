@@ -12,6 +12,7 @@
  *
  * Usage: npm run seed
  */
+import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { hashPassword } from '../src/lib/password.js';
 import { prisma } from '../src/db/index.js';
@@ -678,6 +679,53 @@ async function seedDevMemberData(users) {
 }
 
 // ---------------------------------------------------------------------------
+// Daily Devotions (365 Days)
+// ---------------------------------------------------------------------------
+
+async function seedDevotions() {
+  const filePath = new URL('./data/devotions365.json', import.meta.url);
+  if (!fs.existsSync(filePath)) {
+    log('no devotions365.json found; skipping devotions');
+    return;
+  }
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const devotions = JSON.parse(raw);
+
+  log(`seeding ${devotions.length} daily devotions...`);
+  for (const dev of devotions) {
+    await prisma.dailyDevotion.upsert({
+      where: { dayOfYear: dev.dayOfYear },
+      update: {
+        month: dev.month,
+        day: dev.day,
+        title: dev.title,
+        anchorScripture: dev.anchorScripture,
+        scriptureReading: dev.scriptureReading,
+        content: dev.content,
+        confession: dev.confession,
+        prayer: dev.prayer,
+        thoughtForTheDay: dev.thoughtForTheDay,
+        author: dev.author,
+      },
+      create: {
+        dayOfYear: dev.dayOfYear,
+        month: dev.month,
+        day: dev.day,
+        title: dev.title,
+        anchorScripture: dev.anchorScripture,
+        scriptureReading: dev.scriptureReading,
+        content: dev.content,
+        confession: dev.confession,
+        prayer: dev.prayer,
+        thoughtForTheDay: dev.thoughtForTheDay,
+        author: dev.author,
+      },
+    });
+  }
+  log(`seeded ${devotions.length} daily devotions successfully`);
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -687,6 +735,7 @@ export async function main() {
   await seedDailyDiet(programme);
   await seedDefinitions();
   await seedDevUsers();
+  await seedDevotions();
   log('done');
 }
 
@@ -695,6 +744,7 @@ export {
   seedDailyDiet,
   seedDefinitions,
   seedDevUsers,
+  seedDevotions,
   PROGRAMME,
   MONTHS,
 };

@@ -78,6 +78,8 @@ flutter:
     - assets/bible/nlt.json
     - assets/bible/amp.json
     - assets/bible/tpt.json
+    - assets/devotions.json
+    - assets/DAILY DECLARATION.docx
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

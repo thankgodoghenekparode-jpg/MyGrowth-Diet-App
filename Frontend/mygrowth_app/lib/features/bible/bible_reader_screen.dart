@@ -453,7 +453,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Copied chapter'),
-        duration: const Duration(seconds: 2),
+        duration: Duration(seconds: 2),
       ),
     );
   }
