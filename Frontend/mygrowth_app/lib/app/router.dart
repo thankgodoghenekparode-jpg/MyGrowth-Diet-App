@@ -11,6 +11,8 @@ import '../features/bible/bible_reader_screen.dart';
 import '../features/admin/admin_access_screen.dart';
 import '../features/admin/admin_activities_screen.dart';
 import '../features/admin/admin_announcements_screen.dart';
+import '../features/admin/admin_connect_links_screen.dart';
+import '../features/connect/connect_screen.dart';
 import '../features/admin/admin_analytics_screen.dart';
 import '../features/admin/admin_audit_logs_screen.dart';
 import '../features/admin/admin_dashboard_screen.dart';
@@ -341,6 +343,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             _fade(const MaterialPage(child: AnnouncementsScreen())),
       ),
       GoRoute(
+        path: '/connect',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: ConnectScreen())),
+      ),
+      GoRoute(
         path: '/notifications',
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
@@ -542,6 +550,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           child: _AdminPage(
             title: 'Announcements',
             child: AdminAnnouncementsScreen(),
+          ),
+        )),
+      ),
+      GoRoute(
+        path: '/admin/connect-links',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) => _fade(const MaterialPage(
+          child: _AdminPage(
+            title: 'Connect with me links',
+            child: AdminConnectLinksScreen(),
           ),
         )),
       ),
