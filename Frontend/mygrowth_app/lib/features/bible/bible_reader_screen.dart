@@ -289,37 +289,50 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                 ),
               ),
               Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.0,
-                  ),
-                  itemCount: chapters,
-                  itemBuilder: (context, index) => OutlinedButton(
-                    onPressed: () => Navigator.pop(context, index),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      backgroundColor: index == _chapterIndex
-                          ? AppColors.brandSurface
-                          : null,
-                      foregroundColor: index == _chapterIndex
-                          ? Colors.white
-                          : AppColors.brandText,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    final crossAxisCount = width < 360
+                        ? 4
+                        : width < 400
+                            ? 5
+                            : width < 600
+                                ? 6
+                                : 7;
+                    return GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 1.0,
                       ),
-                    ),
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      itemCount: chapters,
+                      itemBuilder: (context, index) => OutlinedButton(
+                        onPressed: () => Navigator.pop(context, index),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          backgroundColor: index == _chapterIndex
+                              ? AppColors.brandSurface
+                              : null,
+                          foregroundColor: index == _chapterIndex
+                              ? Colors.white
+                              : AppColors.brandText,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          '${index + 1}',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ],
