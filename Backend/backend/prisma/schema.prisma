@@ -308,6 +308,7 @@ model User {
   dailyDietCompletions  DailyDietCompletion[]
   readingList           ReadingListEntry[]
   announcementsCreated  Announcement[]        @relation("AnnouncementCreator")
+  connectLinksCreated   ConnectLink[]         @relation("ConnectLinkCreator")
   filesUploaded         File[]
   auditLogs             AuditLog[]
   blockedUsers          PrayerBlock[]         @relation("Blocker")
@@ -1090,6 +1091,24 @@ model Announcement {
   createdBy User?     @relation("AnnouncementCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([status, startsAt, endsAt])
+}
+
+model ConnectLink {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  url         String
+  description String?
+  icon        String?
+  qrCodeUrl   String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdById String?  @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User? @relation("ConnectLinkCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([isActive, sortOrder])
 }
 
 model Setting {

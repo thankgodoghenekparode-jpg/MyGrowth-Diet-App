@@ -14,6 +14,7 @@ import meActivityRoutes from './modules/me/activities.routes.js';
 import meGoalRoutes from './modules/me/goals.routes.js';
 import meDashboardRoutes from './modules/me/dashboard.routes.js';
 import aiAssistantRoutes from './modules/me/aiAssistant.routes.js';
+import { connectRoutes } from './modules/connect/connect.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
 import reflectionsRoutes from './modules/reflections/reflections.routes.js';
 import notificationsRoutes from './modules/notifications/notifications.routes.js';
@@ -103,6 +104,7 @@ export function createApp() {
 
   // Prayer partners (any authenticated, approved member)
   app.use('/api/v1/prayer-partners', requireAuth, requireApprovedMember, prayerPartnersRoutes);
+  app.use('/api/v1/connect-links', connectRoutes);
 
   // Authenticated file access
   app.use('/api/v1/files', requireAuth, filesRoutes);

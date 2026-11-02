@@ -9,6 +9,7 @@ import { analyticsRouter, auditRouter, settingsRouter } from './analytics.routes
 import { dailyDietRouter } from './dailyDiet.routes.js';
 import { adminShapeSpaceRouter } from './shapeSpace.routes.js';
 import { adminDevotionsRouter } from '../devotions/devotions.routes.js';
+import { adminConnectRouter } from './connect.routes.js';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use(safetyRouter); // /safety-reports
 router.use(analyticsRouter); // /analytics/*
 router.use(auditRouter); // /audit-logs
 router.use(settingsRouter); // /settings
+router.use(adminConnectRouter); // /connect-links
 
 // Administrator account management: Main Admin only.
 router.use('/admins', requireMainAdmin, adminsRouter);
