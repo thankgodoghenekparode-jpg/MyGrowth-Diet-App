@@ -104,7 +104,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     ),
                     const SizedBox(height: 14),
                     const Text(
-                      'Powered by Google Gemini. For reflection and learning. Speak with the Pastor in Shape Space for personal pastoral care.',
+                      'Powered by Google Gemini. For reflection and learning. Share questions and learn with others in Shape Space.',
                       textAlign: TextAlign.center,
                     ),
                   ],

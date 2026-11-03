@@ -447,7 +447,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) => _fade(const MaterialPage(
           child: _AdminPage(
-            title: 'Shape Space — Pastoral Care',
+            title: 'Shape Space Q&A',
             child: AdminShapeSpaceScreen(),
           ),
         )),

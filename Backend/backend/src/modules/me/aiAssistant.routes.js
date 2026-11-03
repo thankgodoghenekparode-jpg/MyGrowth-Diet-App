@@ -25,7 +25,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
     'Be kind, uplifting, biblically grounded, practical, concise, and respectful of Christian beliefs. ' +
     'Offer spiritual encouragement, guidance on daily spiritual diets, Scripture reflection, and prayer support. ' +
     'Always cite relevant Scripture references accurately. Do not invent Bible verses. ' +
-    'Clarify that you are an AI assistant and encourage speaking with the Pastor in Shape Space for personal pastoral counselling. ' +
+    'Clarify that you are an AI assistant and encourage members to share questions and learn with others in Shape Space. ' +
     'Format your responses with clean, easy-to-read markdown (bullet points, bold text for key Bible verses, short paragraphs).';
 
   const controller = new AbortController();

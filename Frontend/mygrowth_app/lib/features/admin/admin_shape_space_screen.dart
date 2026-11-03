@@ -57,7 +57,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
       if (mounted && !silent) {
         setState(() {
           _loading = false;
-          _error = 'Unable to load pastoral counseling conversations.';
+          _error = 'Unable to load community questions.';
         });
       }
     }
@@ -107,7 +107,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not send pastoral reply.')),
+          const SnackBar(content: Text('Could not post your answer.')),
         );
       }
     } finally {
@@ -131,7 +131,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
       _loadConversations(silent: true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Marked conversation as $newStatus')),
+          SnackBar(content: Text('Marked question as $newStatus')),
         );
       }
     } catch (_) {
@@ -163,7 +163,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shape Space — Pastoral Care'),
+        title: const Text('Shape Space — Community Q&A'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -205,7 +205,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                               Icon(Icons.forum_outlined, size: 48, color: colorScheme.outline),
                               const SizedBox(height: 12),
                               Text(
-                                'Select a counselling thread to view and reply',
+                                'Select a question to read and answer',
                                 style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
                               ),
                             ],
@@ -237,10 +237,10 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
             children: [
               Icon(Icons.mark_chat_unread_outlined, size: 48, color: colorScheme.outline),
               const SizedBox(height: 12),
-              const Text('No pastoral counseling messages yet.'),
+              const Text('No community questions yet.'),
               const SizedBox(height: 6),
               Text(
-                'When members reach out through Shape Space, their messages will appear here.',
+                'Questions posted in Shape Space will appear here.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
@@ -378,7 +378,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
           child: _loadingThread
               ? const Center(child: CircularProgressIndicator())
               : _threadMessages.isEmpty
-              ? const Center(child: Text('No messages in this conversation yet.'))
+              ? const Center(child: Text('No answers in this discussion yet.'))
               : ListView.builder(
                   controller: _threadScrollController,
                   padding: const EdgeInsets.all(16),
@@ -410,7 +410,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                                     children: [
                                       Text(
                                         isFromAdmin
-                                            ? 'You (Pastor / Counselor)'
+                                            ? 'You (Admin)'
                                             : (msg['senderName']?.toString() ?? 'Member'),
                                         style: theme.textTheme.labelMedium?.copyWith(
                                           fontWeight: FontWeight.bold,
@@ -431,7 +431,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                 ),
         ),
 
-        // Pastor reply bar
+        // Admin answer bar
         SafeArea(
           top: false,
           child: Padding(
@@ -445,7 +445,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                     maxLines: 4,
                     maxLength: 2000,
                     decoration: const InputDecoration(
-                      hintText: 'Type your pastoral counseling reply...',
+                      hintText: 'Write an answer to the community…',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(24)),
                       ),
@@ -464,7 +464,7 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send_rounded),
-                  tooltip: 'Send pastoral reply',
+                  tooltip: 'Post answer',
                 ),
               ],
             ),

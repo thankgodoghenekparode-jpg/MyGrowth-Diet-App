@@ -16,10 +16,11 @@ const statusSchema = z.object({
 
 /**
  * GET /api/v1/admin/shape-space/conversations
- * Lists all member counselling threads for pastoral care.
+ * Lists all public Shape Space questions for community moderation.
  */
 adminShapeSpaceRouter.get('/conversations', asyncHandler(async (_req, res) => {
   const conversations = await prisma.shapeSpaceConversation.findMany({
+    where: { isCommunity: true },
     orderBy: { lastMessageAt: 'desc' },
     include: {
       member: {
@@ -50,6 +51,7 @@ adminShapeSpaceRouter.get('/conversations', asyncHandler(async (_req, res) => {
       isFromAdmin: false,
       readAt: null,
       hiddenAt: null,
+      conversation: { isCommunity: true },
     },
     _count: { id: true },
   });
@@ -58,7 +60,7 @@ adminShapeSpaceRouter.get('/conversations', asyncHandler(async (_req, res) => {
 
   const result = conversations.map((conv) => {
     const lastMsg = conv.messages[0];
-    const isAnonymous = conv.isAnonymous || (lastMsg && lastMsg.isAnonymous);
+    const isAnonymous = conv.isAnonymous;
 
     return {
       id: conv.id,
@@ -88,13 +90,13 @@ adminShapeSpaceRouter.get('/conversations', asyncHandler(async (_req, res) => {
 
 /**
  * GET /api/v1/admin/shape-space/conversations/:id
- * Retrieves the full pastoral counselling thread for a conversation.
+ * Retrieves a public question and its answers for moderation.
  */
 adminShapeSpaceRouter.get('/conversations/:id', validate({
   params: z.object({ id: uuidSchema }),
 }), asyncHandler(async (req, res) => {
-  const conversation = await prisma.shapeSpaceConversation.findUnique({
-    where: { id: req.valid.params.id },
+  const conversation = await prisma.shapeSpaceConversation.findFirst({
+    where: { id: req.valid.params.id, isCommunity: true },
     include: {
       member: {
         select: {
@@ -108,10 +110,10 @@ adminShapeSpaceRouter.get('/conversations/:id', validate({
   });
 
   if (!conversation) {
-    throw errors.notFound('Pastoral counselling conversation not found');
+    throw errors.notFound('Community question not found');
   }
 
-  // Mark member messages as read by pastor/admin
+  // Mark community posts as reviewed by an administrator.
   await prisma.shapeSpaceMessage.updateMany({
     where: {
       conversationId: conversation.id,
@@ -164,7 +166,7 @@ adminShapeSpaceRouter.get('/conversations/:id', validate({
       readAt: m.readAt,
       createdAt: m.createdAt,
       senderName: m.isFromAdmin
-        ? 'Pastor (You)'
+        ? 'Administrator'
         : m.isAnonymous
         ? 'Anonymous Member'
         : `${m.sender.firstName} ${m.sender.lastName}`.trim(),
@@ -174,18 +176,18 @@ adminShapeSpaceRouter.get('/conversations/:id', validate({
 
 /**
  * POST /api/v1/admin/shape-space/conversations/:id/reply
- * Pastor sends a reply to a member's counselling thread.
+ * Admin adds an answer to a community question.
  */
 adminShapeSpaceRouter.post('/conversations/:id/reply', validate({
   params: z.object({ id: uuidSchema }),
   body: replySchema,
 }), asyncHandler(async (req, res) => {
-  const conversation = await prisma.shapeSpaceConversation.findUnique({
-    where: { id: req.valid.params.id },
+  const conversation = await prisma.shapeSpaceConversation.findFirst({
+    where: { id: req.valid.params.id, isCommunity: true },
   });
 
   if (!conversation) {
-    throw errors.notFound('Pastoral counselling conversation not found');
+    throw errors.notFound('Community question not found');
   }
 
   const message = await prisma.shapeSpaceMessage.create({
@@ -214,7 +216,7 @@ adminShapeSpaceRouter.post('/conversations/:id/reply', validate({
   res.status(201).json({
     message: {
       ...message,
-      senderName: 'Pastor (You)',
+      senderName: 'Administrator',
     },
   });
 }));
@@ -227,8 +229,13 @@ adminShapeSpaceRouter.patch('/conversations/:id/status', validate({
   params: z.object({ id: uuidSchema }),
   body: statusSchema,
 }), asyncHandler(async (req, res) => {
+  const thread = await prisma.shapeSpaceConversation.findFirst({
+    where: { id: req.valid.params.id, isCommunity: true },
+    select: { id: true },
+  });
+  if (!thread) throw errors.notFound('Community question not found');
   const updated = await prisma.shapeSpaceConversation.update({
-    where: { id: req.valid.params.id },
+    where: { id: thread.id },
     data: { status: req.valid.body.status },
     select: { id: true, status: true, updatedAt: true },
   });

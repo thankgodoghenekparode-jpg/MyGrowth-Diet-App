@@ -627,7 +627,7 @@ const adminMenuItems = <MenuItem>[
       image: 'assets/images/weekly_plans.jpg'),
   MenuItem(Icons.today_outlined, 'Daily Diet', '/admin/daily-diet',
       image: 'assets/images/diet.jpg'),
-  MenuItem(Icons.forum_outlined, 'Shape Space (Pastoral Care)', '/admin/shape-space',
+  MenuItem(Icons.forum_outlined, 'Shape Space Q&A', '/admin/shape-space',
       image: 'assets/images/partners.jpg'),
   MenuItem(Icons.library_books_outlined, 'Materials Library',
       '/admin/materials',
