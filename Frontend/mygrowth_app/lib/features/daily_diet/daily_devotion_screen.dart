@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_controller.dart';
 
@@ -457,11 +458,30 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
 
                       // One-year Bible reading plan
                       if (_devotion!['oneYearBibleReading'] != null) ...[
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.auto_stories_outlined),
-                          title: const Text('One-Year Bible Reading Plan'),
-                          subtitle: Text(_devotion!['oneYearBibleReading']?.toString() ?? ''),
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            leading: const Icon(Icons.auto_stories_outlined),
+                            title: const Text('One-Year Bible Reading Plan'),
+                            subtitle: Text(_devotion!['oneYearBibleReading']?.toString() ?? ''),
+                            trailing: const Icon(Icons.open_in_new, size: 18),
+                            onTap: () => context.go('/bible'),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      if (_devotion!['bibleReading'] != null) ...[
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            leading: const Icon(Icons.menu_book_outlined),
+                            title: const Text("Today's Bible Passage"),
+                            subtitle: Text(_devotion!['bibleReading']?.toString() ?? ''),
+                            trailing: const Icon(Icons.open_in_new, size: 18),
+                            onTap: () => context.go('/bible'),
+                          ),
                         ),
                         const SizedBox(height: 12),
                       ],

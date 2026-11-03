@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/models/activity_models.dart';
@@ -137,16 +138,23 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      (guidance == null || guidance.isEmpty)
-                          ? 'Reading guidance for this month hasn’t been '
-                              'published yet. It will appear here as soon as '
-                              'your ministry adds it.'
-                          : guidance,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(height: 1.55, color: AppColors.inkSecondary),
+                    InkWell(
+                      onTap: guidance != null && guidance.isNotEmpty ? () => context.go('/bible') : null,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          (guidance == null || guidance.isEmpty)
+                              ? 'Reading guidance for this month hasn’t been '
+                                  'published yet. It will appear here as soon as '
+                                  'your ministry adds it.'
+                              : guidance,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(height: 1.55, color: AppColors.inkSecondary),
+                        ),
+                      ),
                     ),
                   ],
                 ),
