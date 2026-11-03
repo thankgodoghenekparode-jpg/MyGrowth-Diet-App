@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,6 +72,7 @@ class ApiClient {
 
   final http.Client _client;
   final String baseUrl;
+  final FlutterSecureStorage _secure = const FlutterSecureStorage();
 
   static const _accessKey = 'mgdp.accessToken';
   static const _refreshKey = 'mgdp.refreshToken';
@@ -90,9 +92,22 @@ class ApiClient {
   void close() => _client.close();
 
   Future<void> loadSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    _accessToken = prefs.getString(_accessKey);
-    _refreshToken = prefs.getString(_refreshKey);
+    try {
+      _accessToken = await _secure.read(key: _accessKey);
+      _refreshToken = await _secure.read(key: _refreshKey);
+    } catch (_) {
+      final prefs = await SharedPreferences.getInstance();
+      _accessToken = prefs.getString(_accessKey);
+      _refreshToken = prefs.getString(_refreshKey);
+      if (_accessToken != null) {
+        await _secure.write(key: _accessKey, value: _accessToken);
+        await prefs.remove(_accessKey);
+      }
+      if (_refreshToken != null) {
+        await _secure.write(key: _refreshKey, value: _refreshToken);
+        await prefs.remove(_refreshKey);
+      }
+    }
   }
 
   Future<void> saveSession({
@@ -101,9 +116,16 @@ class ApiClient {
   }) async {
     _accessToken = accessToken;
     if (refreshToken != null) _refreshToken = refreshToken;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_accessKey, accessToken);
-    if (refreshToken != null) await prefs.setString(_refreshKey, refreshToken);
+    try {
+      await _secure.write(key: _accessKey, value: accessToken);
+      if (refreshToken != null) {
+        await _secure.write(key: _refreshKey, value: refreshToken);
+      }
+    } catch (_) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_accessKey, accessToken);
+      if (refreshToken != null) await prefs.setString(_refreshKey, refreshToken);
+    }
     final cb = onTokensUpdated;
     if (cb != null) await cb(accessToken);
   }
@@ -111,6 +133,10 @@ class ApiClient {
   Future<void> clearSession() async {
     _accessToken = null;
     _refreshToken = null;
+    try {
+      await _secure.delete(key: _accessKey);
+      await _secure.delete(key: _refreshKey);
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_accessKey);
     await prefs.remove(_refreshKey);
