@@ -1,10 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/auth/auth_controller.dart';
@@ -28,6 +24,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final api = ref.read(apiClientProvider);
+    final avatarUrl = user?.avatarUrl;
     final isAdminArea =
         GoRouterState.of(context).uri.path.startsWith('/admin');
 
@@ -55,10 +53,14 @@ class ProfileScreen extends ConsumerWidget {
                         CircleAvatar(
                           radius: 30,
                           backgroundColor: AppColors.avatarBg,
-                          backgroundImage:
-                              (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty)
-                                  ? NetworkImage(user.avatarUrl!)
-                                  : null,
+                          backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                              ? NetworkImage(
+                                  _resolveAvatarUrl(avatarUrl, api.baseUrl),
+                                  headers: api.accessToken == null
+                                      ? null
+                                      : {'Authorization': 'Bearer ${api.accessToken}'},
+                                )
+                              : null,
                           child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
                               ? Text(
                                   user?.initials ?? '?',
@@ -305,41 +307,50 @@ Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
     };
 
     final api = ref.read(apiClientProvider);
-    final uri = Uri.parse('${api.baseUrl}/files');
-    final request = http.MultipartRequest('POST', uri);
-    final token = api.accessToken;
-    if (token != null) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
-    request.files.add(http.MultipartFile.fromBytes(
-      'file',
-      bytes,
+    final data = await api.upload(
+      '/files',
+      bytes: bytes,
+      fieldName: 'file',
       filename: image.name,
-      contentType: MediaType('image', subtype),
-    ));
-    final streamed = await request.send();
-    final resp = await http.Response.fromStream(streamed);
-    if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      String msg = 'Upload failed (${resp.statusCode})';
-      try {
-        final err = jsonDecode(resp.body);
-        if (err is Map && err['error']?['message'] != null) {
-          msg = err['error']['message'].toString();
-        }
-      } catch (_) {}
-      throw ApiException(resp.statusCode, 'upload_failed', msg);
-    }
-    final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final fileId = data['file']?['id'] ?? data['data']?['id'] ?? data['id'];
+      contentType: 'image/$subtype',
+    );
+    final uploadedFile = data is Map ? data['file'] : null;
+    final nestedData = data is Map ? data['data'] : null;
+    final fileId = uploadedFile is Map
+        ? uploadedFile['id']
+        : nestedData is Map
+            ? nestedData['id']
+            : data is Map
+                ? data['id']
+                : null;
     if (fileId == null) throw ApiException(500, 'upload_failed', 'Invalid upload response');
     await api.patch('/me', body: {'avatarFileId': fileId});
     await ref.read(authControllerProvider.notifier).refreshUser();
     if (context.mounted) Toast.success(context, 'Profile photo updated');
   } on ApiException catch (e) {
     if (context.mounted) Toast.error(context, e.message);
-  } catch (_) {
-    if (context.mounted) Toast.error(context, 'Failed to update photo');
+  } catch (error) {
+    debugPrint('Profile photo update failed: $error');
+    if (context.mounted) {
+      Toast.error(context, 'Could not upload that photo. Try a JPG or PNG image.');
+    }
   }
+}
+
+String _resolveAvatarUrl(String avatarUrl, String apiBaseUrl) {
+  final parsed = Uri.tryParse(avatarUrl);
+  if (parsed != null && parsed.hasScheme) return avatarUrl;
+
+  final base = Uri.parse(apiBaseUrl);
+  final basePath = base.path.replaceFirst(RegExp(r'/+$'), '');
+  var path = avatarUrl;
+  if (basePath.isNotEmpty && path.startsWith('$basePath/')) {
+    path = path.substring(basePath.length);
+  } else if (path.startsWith('/api/v1/')) {
+    path = path.substring('/api/v1'.length);
+  }
+  final normalizedPath = path.startsWith('/') ? path : '/$path';
+  return base.replace(path: '$basePath$normalizedPath').toString();
 }
 
 class _ProfileForm extends ConsumerStatefulWidget {
