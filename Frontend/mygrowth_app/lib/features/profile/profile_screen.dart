@@ -104,6 +104,20 @@ class ProfileScreen extends ConsumerWidget {
                             user.email,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
+                        if (user != null)
+                          TextButton.icon(
+                            onPressed: () => _changeAvatar(context, ref),
+                            icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                            label: const Text('Change profile photo'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.navy700,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 0,
+                                vertical: AppSpacing.xs,
+                              ),
+                              alignment: Alignment.centerLeft,
+                            ),
+                          ),
                         const SizedBox(height: AppSpacing.xs),
                         Wrap(
                           spacing: AppSpacing.xs,
