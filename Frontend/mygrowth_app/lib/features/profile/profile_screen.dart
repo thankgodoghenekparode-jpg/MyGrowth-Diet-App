@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/network/api_client.dart';
@@ -261,19 +261,49 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.image,
-    allowMultiple: false,
-    withData: true,
+  final source = await showModalBottomSheet<String>(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Choose from gallery'),
+            onTap: () => Navigator.of(ctx).pop('gallery'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined),
+            title: const Text('Take a photo'),
+            onTap: () => Navigator.of(ctx).pop('camera'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.close),
+            title: const Text('Cancel'),
+            onTap: () => Navigator.of(ctx).pop(),
+          ),
+        ],
+      ),
+    ),
   );
-  if (result == null || result.files.isEmpty) return;
-  final file = result.files.first;
-  final bytes = file.bytes;
-  if (bytes == null) {
-    Toast.error(context, 'Could not read image');
-    return;
-  }
+  if (source == null) return;
+
   try {
+    final image = await ImagePicker().pickImage(
+      source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
+      imageQuality: 90,
+    );
+    if (image == null) return;
+    final bytes = await image.readAsBytes();
+    final extension = image.name.split('.').last.toLowerCase();
+    final subtype = switch (extension) {
+      'jpg' => 'jpeg',
+      'png' => 'png',
+      'webp' => 'webp',
+      'gif' => 'gif',
+      _ => 'jpeg',
+    };
+
     final api = ref.read(apiClientProvider);
     final uri = Uri.parse('${api.baseUrl}/files');
     final request = http.MultipartRequest('POST', uri);
@@ -284,16 +314,23 @@ Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
     request.files.add(http.MultipartFile.fromBytes(
       'file',
       bytes,
-      filename: file.name,
-      contentType: MediaType('image', file.extension ?? 'jpeg'),
+      filename: image.name,
+      contentType: MediaType('image', subtype),
     ));
     final streamed = await request.send();
     final resp = await http.Response.fromStream(streamed);
     if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      throw ApiException(resp.statusCode, 'upload_failed', 'Upload failed');
+      String msg = 'Upload failed (${resp.statusCode})';
+      try {
+        final err = jsonDecode(resp.body);
+        if (err is Map && err['error']?['message'] != null) {
+          msg = err['error']['message'].toString();
+        }
+      } catch (_) {}
+      throw ApiException(resp.statusCode, 'upload_failed', msg);
     }
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final fileId = data['file']?['id'] ?? data['id'];
+    final fileId = data['file']?['id'] ?? data['data']?['id'] ?? data['id'];
     if (fileId == null) throw ApiException(500, 'upload_failed', 'Invalid upload response');
     await api.patch('/me', body: {'avatarFileId': fileId});
     await ref.read(authControllerProvider.notifier).refreshUser();
