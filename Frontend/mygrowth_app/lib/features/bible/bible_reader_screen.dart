@@ -292,10 +292,10 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                 child: GridView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    // Keep chapter buttons comfortably tappable on phones,
-                    // while letting wider layouts show more chapters per row.
-                    maxCrossAxisExtent: 64,
-                    mainAxisExtent: 48,
+                    // Five roomy columns fit common phone widths; wider
+                    // screens gain columns without shrinking two-digit labels.
+                    maxCrossAxisExtent: 76,
+                    mainAxisExtent: 52,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
                   ),
@@ -315,11 +315,18 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${index + 1}',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ),
