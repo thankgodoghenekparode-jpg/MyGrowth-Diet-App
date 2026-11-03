@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/network/api_client.dart';
@@ -43,21 +48,41 @@ class ProfileScreen extends ConsumerWidget {
             AppCard(
               child: Row(
                 children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: AppColors.avatarBg,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      user?.initials ?? '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
+                  GestureDetector(
+                    onTap: user == null ? null : () => _changeAvatar(context, ref),
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: AppColors.avatarBg,
+                          backgroundImage:
+                              (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty)
+                                  ? NetworkImage(user.avatarUrl!)
+                                  : null,
+                          child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
+                              ? Text(
+                                  user?.initials ?? '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.navy700,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -232,6 +257,51 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.image,
+    allowMultiple: false,
+    withData: true,
+  );
+  if (result == null || result.files.isEmpty) return;
+  final file = result.files.first;
+  final bytes = file.bytes;
+  if (bytes == null) {
+    Toast.error(context, 'Could not read image');
+    return;
+  }
+  try {
+    final api = ref.read(apiClientProvider);
+    final uri = Uri.parse('${api.baseUrl}/files');
+    final request = http.MultipartRequest('POST', uri);
+    final token = api.accessToken;
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      bytes,
+      filename: file.name,
+      contentType: MediaType('image', file.extension ?? 'jpeg'),
+    ));
+    final streamed = await request.send();
+    final resp = await http.Response.fromStream(streamed);
+    if (resp.statusCode < 200 || resp.statusCode >= 300) {
+      throw ApiException(resp.statusCode, 'upload_failed', 'Upload failed');
+    }
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    final fileId = data['file']?['id'] ?? data['id'];
+    if (fileId == null) throw ApiException(500, 'upload_failed', 'Invalid upload response');
+    await api.patch('/me', body: {'avatarFileId': fileId});
+    await ref.read(authControllerProvider.notifier).refreshUser();
+    if (context.mounted) Toast.success(context, 'Profile photo updated');
+  } on ApiException catch (e) {
+    if (context.mounted) Toast.error(context, e.message);
+  } catch (_) {
+    if (context.mounted) Toast.error(context, 'Failed to update photo');
   }
 }
 
