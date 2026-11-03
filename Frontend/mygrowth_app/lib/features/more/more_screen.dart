@@ -174,7 +174,7 @@ const _memberSlides = <_HomeSlide>[
   ),
   _HomeSlide(
     image: 'assets/images/bible.jpg',
-    title: 'Feed on the Word',
+    title: 'Devotional',
     caption: 'Follow the reading plan and let Scripture shape your week.',
     actionLabel: 'Start reading',
     path: '/bible-reading',
@@ -190,7 +190,7 @@ const _memberSlides = <_HomeSlide>[
   ),
   _HomeSlide(
     image: 'assets/images/prayer.jpg',
-    title: 'A life of prayer',
+    title: 'Prayer Point',
     caption: 'Meet God in the quiet place, then pray with a partner.',
     actionLabel: 'Enter prayer room',
     path: '/prayer',
@@ -198,7 +198,7 @@ const _memberSlides = <_HomeSlide>[
   ),
   _HomeSlide(
     image: 'assets/images/plan.jpg',
-    title: 'Grow with the plan',
+    title: 'Proverbs',
     caption: 'Monthly and weekly guidance for your journey.',
     actionLabel: 'See my plan',
     path: '/plan',

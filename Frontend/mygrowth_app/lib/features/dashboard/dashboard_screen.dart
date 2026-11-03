@@ -60,7 +60,7 @@ const memberHomeSlides = <CarouselSlide>[
   ),
   CarouselSlide(
     image: 'assets/images/bible.jpg',
-    title: 'Feed on the Word',
+    title: 'Devotional',
     caption: 'Follow the reading plan and let Scripture shape your week.',
     icon: Icons.auto_stories_outlined,
   ),
@@ -72,13 +72,13 @@ const memberHomeSlides = <CarouselSlide>[
   ),
   CarouselSlide(
     image: 'assets/images/prayer.jpg',
-    title: 'A Life of Prayer',
+    title: 'Prayer Point',
     caption: 'Meet God in the quiet place, then pray with a partner.',
     icon: Icons.self_improvement_outlined,
   ),
   CarouselSlide(
     image: 'assets/images/plan.jpg',
-    title: 'Grow with the Plan',
+    title: 'Proverbs',
     caption: 'Monthly and weekly guidance for your journey.',
     icon: Icons.menu_book_outlined,
   ),
