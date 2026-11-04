@@ -67,6 +67,7 @@ class TitledCard extends StatelessWidget {
     this.trailing,
     this.icon,
     this.padding = AppSpacing.cardPadding,
+    this.onTap,
   });
 
   final String title;
@@ -74,10 +75,12 @@ class TitledCard extends StatelessWidget {
   final Widget? trailing;
   final IconData? icon;
   final EdgeInsetsGeometry padding;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      onTap: onTap,
       padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +100,11 @@ class TitledCard extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
-              ?trailing,
+              if (trailing != null) trailing!,
+              if (onTap != null) ...[
+                if (trailing != null) const SizedBox(width: AppSpacing.xs),
+                Icon(Icons.chevron_right, size: 20, color: AppColors.inkMuted),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -118,6 +125,7 @@ class VerseCard extends StatelessWidget {
     this.caption,
     this.icon = Icons.format_quote_rounded,
     this.tone = VerseTone.navy,
+    this.onTap,
   });
 
   final String text;
@@ -125,6 +133,7 @@ class VerseCard extends StatelessWidget {
   final String? caption;
   final IconData icon;
   final VerseTone tone;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -158,48 +167,54 @@ class VerseCard extends StatelessWidget {
             ? Border.all(color: AppColors.border)
             : null,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: style.accent, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              if (label != null)
-                Expanded(
-                  child: Text(
-                    label!.toUpperCase(),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: style.subtle,
-                          letterSpacing: 1.1,
-                          fontWeight: FontWeight.w700,
-                        ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppSpacing.cardRadius,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: style.accent, size: 20),
+                const SizedBox(width: AppSpacing.xs),
+                if (label != null)
+                  Expanded(
+                    child: Text(
+                      label!.toUpperCase(),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: style.subtle,
+                            letterSpacing: 1.1,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: style.fg,
-                  height: 1.6,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          if (caption != null) ...[
+                if (onTap != null)
+                  Icon(Icons.chevron_right, size: 20, color: style.subtle),
+              ],
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              caption!,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: style.subtle,
-                    fontWeight: FontWeight.w600,
+              text,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: style.fg,
+                    height: 1.6,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w500,
                   ),
             ),
+            if (caption != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                caption!,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: style.subtle,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

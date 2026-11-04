@@ -256,6 +256,14 @@ class _MonthlyPlanContent extends ConsumerWidget {
             TitledCard(
               icon: Icons.menu_book_outlined,
               title: 'Theme & Study Topic',
+              onTap: () => _showPlanContent(
+                context,
+                title: 'Theme & Study Topic',
+                text: (plan.theme == null || plan.theme!.trim().isEmpty)
+                    ? 'The theme for this month is being prepared.'
+                    : plan.theme!,
+                icon: Icons.menu_book_outlined,
+              ),
               child: Text(
                 (plan.theme == null || plan.theme!.trim().isEmpty)
                     ? 'The theme for this month is being prepared.'
@@ -274,6 +282,12 @@ class _MonthlyPlanContent extends ConsumerWidget {
                 tone: VerseTone.navy,
                 label: 'Prayer Focus',
                 text: plan.prayerFocus!,
+                onTap: () => _showPlanContent(
+                  context,
+                  title: 'Prayer Focus',
+                  text: plan.prayerFocus!,
+                  icon: Icons.favorite_outline,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
             ],
@@ -283,6 +297,13 @@ class _MonthlyPlanContent extends ConsumerWidget {
               TitledCard(
                 icon: Icons.auto_stories_outlined,
                 title: 'Bible Reading Guidance',
+                onTap: () => _showPlanContent(
+                  context,
+                  title: 'Bible Reading Guidance',
+                  text: plan.bibleReadingGuidance!,
+                  icon: Icons.auto_stories_outlined,
+                  bibleReferences: true,
+                ),
                 child: BibleReferenceText(
                   text: plan.bibleReadingGuidance!,
                   style: Theme.of(context)
@@ -300,6 +321,12 @@ class _MonthlyPlanContent extends ConsumerWidget {
                 tone: VerseTone.gold,
                 label: 'Monthly Confession',
                 text: plan.confession!,
+                onTap: () => _showPlanContent(
+                  context,
+                  title: 'Monthly Confession',
+                  text: plan.confession!,
+                  icon: Icons.format_quote_rounded,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
             ],
@@ -309,6 +336,12 @@ class _MonthlyPlanContent extends ConsumerWidget {
               TitledCard(
                 icon: Icons.local_library_outlined,
                 title: 'Literature List',
+                onTap: () => _showPlanContent(
+                  context,
+                  title: 'Literature List',
+                  text: plan.literatureList!,
+                  icon: Icons.local_library_outlined,
+                ),
                 child: _GuidanceText(plan.literatureList!),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -319,6 +352,12 @@ class _MonthlyPlanContent extends ConsumerWidget {
               TitledCard(
                 icon: Icons.headphones_outlined,
                 title: 'Audio Messages',
+                onTap: () => _showPlanContent(
+                  context,
+                  title: 'Audio Messages',
+                  text: plan.audioMessageList!,
+                  icon: Icons.headphones_outlined,
+                ),
                 child: _GuidanceText(plan.audioMessageList!),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -329,6 +368,12 @@ class _MonthlyPlanContent extends ConsumerWidget {
               TitledCard(
                 icon: Icons.wb_sunny_outlined,
                 title: 'Fasting Guidance',
+                onTap: () => _showPlanContent(
+                  context,
+                  title: 'Fasting Guidance',
+                  text: plan.fastingGuidance!,
+                  icon: Icons.wb_sunny_outlined,
+                ),
                 child: _GuidanceText(plan.fastingGuidance!),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -339,6 +384,12 @@ class _MonthlyPlanContent extends ConsumerWidget {
               TitledCard(
                 icon: Icons.flag_outlined,
                 title: 'Monthly Goals',
+                onTap: () => _showPlanContent(
+                  context,
+                  title: 'Monthly Goals',
+                  text: plan.goalsGuidance!,
+                  icon: Icons.flag_outlined,
+                ),
                 child: _GuidanceText(plan.goalsGuidance!),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -348,6 +399,18 @@ class _MonthlyPlanContent extends ConsumerWidget {
             TitledCard(
               icon: Icons.edit_note_outlined,
               title: 'Reflection Questions',
+              onTap: () => _showPlanContent(
+                context,
+                title: 'Reflection Questions',
+                text: plan.reflectionQuestions.isEmpty
+                    ? 'Reflection questions for this month haven’t been published yet.'
+                    : plan.reflectionQuestions
+                        .asMap()
+                        .entries
+                        .map((entry) => '${entry.key + 1}. ${entry.value}')
+                        .join('\n\n'),
+                icon: Icons.edit_note_outlined,
+              ),
               child: plan.reflectionQuestions.isEmpty
                   ? Text(
                       'Reflection questions for this month haven’t been '
@@ -415,6 +478,86 @@ class _MonthlyPlanContent extends ConsumerWidget {
   }
 
   bool _hasText(String? value) => value != null && value.trim().isNotEmpty;
+}
+
+void _showPlanContent(
+  BuildContext context, {
+  required String title,
+  required String text,
+  required IconData icon,
+  bool bibleReferences = false,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (sheetContext) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.72,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.inkMuted.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Icon(icon, color: AppColors.navy700),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(title,
+                      style: Theme.of(context).textTheme.titleLarge),
+                ),
+                IconButton(
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const Divider(),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                child: bibleReferences
+                    ? BibleReferenceText(
+                        text: text,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(height: 1.6),
+                      )
+                    : Text(
+                        text,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(height: 1.6),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// Multi-line guidance text that respects existing line breaks.
