@@ -194,6 +194,8 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isToday = DateUtils.isSameDay(_currentDate, DateTime.now());
+    final thoughtForTheDay = _devotion?['thoughtForTheDay']?.toString() ?? '';
+    final hasGrowthPrompts = thoughtForTheDay.startsWith('Growth Practice:');
 
     return Scaffold(
       appBar: AppBar(
@@ -342,8 +344,8 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                               children: [
                                 Icon(Icons.format_quote, color: colorScheme.primary, size: 22),
                                 const SizedBox(width: 8),
-                                Text(
-                                  _devotion!['anchorScripture']?.toString() ?? '',
+                                BibleReferenceText(
+                                  text: _devotion!['anchorScripture']?.toString() ?? '',
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: colorScheme.primary,
@@ -400,12 +402,14 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Thought for Today',
+                                        hasGrowthPrompts
+                                            ? 'Growth Practice & Reflection'
+                                            : 'Thought for Today',
                                         style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        _devotion!['thoughtForTheDay']?.toString() ?? '',
+                                        thoughtForTheDay,
                                         style: theme.textTheme.bodyMedium,
                                       ),
                                     ],
