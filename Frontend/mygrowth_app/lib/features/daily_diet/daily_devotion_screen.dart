@@ -8,7 +8,9 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/widgets/bible_reference_text.dart';
 
 class DailyDevotionScreen extends ConsumerStatefulWidget {
-  const DailyDevotionScreen({super.key});
+  const DailyDevotionScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   ConsumerState<DailyDevotionScreen> createState() => _DailyDevotionScreenState();
@@ -198,36 +200,42 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
     final hasGrowthPrompts = thoughtForTheDay.startsWith('Growth Practice:');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daily Devotion'),
-        actions: [
-          if (_devotion != null)
-            IconButton(
-              icon: Icon(
-                _devotion!['isBookmarked'] == true ? Icons.bookmark : Icons.bookmark_border,
-                color: _devotion!['isBookmarked'] == true ? Colors.amber : null,
-              ),
-              tooltip: 'Bookmark',
-              onPressed: _toggleBookmark,
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              title: const Text('Daily Devotion'),
+              actions: [
+                if (_devotion != null)
+                  IconButton(
+                    icon: Icon(
+                      _devotion!['isBookmarked'] == true
+                          ? Icons.bookmark
+                          : Icons.bookmark_border,
+                      color: _devotion!['isBookmarked'] == true
+                          ? Colors.amber
+                          : null,
+                    ),
+                    tooltip: 'Bookmark',
+                    onPressed: _toggleBookmark,
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  tooltip: 'Pick Date',
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _currentDate,
+                      firstDate: DateTime(2025, 1, 1),
+                      lastDate: DateTime(2028, 12, 31),
+                    );
+                    if (picked != null) {
+                      setState(() => _currentDate = picked);
+                      _loadDevotion();
+                    }
+                  },
+                ),
+              ],
             ),
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
-            tooltip: 'Pick Date',
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _currentDate,
-                firstDate: DateTime(2025, 1, 1),
-                lastDate: DateTime(2028, 12, 31),
-              );
-              if (picked != null) {
-                setState(() => _currentDate = picked);
-                _loadDevotion();
-              }
-            },
-          ),
-        ],
-      ),
       body: Column(
         children: [
           // Date navigation header
@@ -241,28 +249,82 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
+                  constraints: widget.embedded
+                      ? const BoxConstraints.tightFor(width: 40, height: 40)
+                      : null,
+                  padding: widget.embedded ? EdgeInsets.zero : null,
                   icon: const Icon(Icons.chevron_left),
                   onPressed: () => _changeDate(-1),
                   tooltip: 'Previous day',
                 ),
-                Column(
-                  children: [
-                    Text(
-                      _formatDate(_currentDate),
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    if (isToday)
+                Expanded(
+                  child: Column(
+                    children: [
                       Text(
-                        'Today',
-                        style: theme.textTheme.labelSmall?.copyWith(color: colorScheme.primary),
+                        _formatDate(_currentDate),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                  ],
+                      if (isToday)
+                        Text(
+                          'Today',
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: colorScheme.primary),
+                        ),
+                    ],
+                  ),
                 ),
                 IconButton(
+                  constraints: widget.embedded
+                      ? const BoxConstraints.tightFor(width: 40, height: 40)
+                      : null,
+                  padding: widget.embedded ? EdgeInsets.zero : null,
                   icon: const Icon(Icons.chevron_right),
                   onPressed: () => _changeDate(1),
                   tooltip: 'Next day',
                 ),
+                if (widget.embedded) ...[
+                  IconButton(
+                    constraints:
+                        const BoxConstraints.tightFor(width: 40, height: 40),
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.calendar_today_outlined, size: 19),
+                    tooltip: 'Pick Date',
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _currentDate,
+                        firstDate: DateTime(2025, 1, 1),
+                        lastDate: DateTime(2028, 12, 31),
+                      );
+                      if (picked != null) {
+                        setState(() => _currentDate = picked);
+                        _loadDevotion();
+                      }
+                    },
+                  ),
+                  if (_devotion != null)
+                    IconButton(
+                      constraints: const BoxConstraints.tightFor(
+                        width: 40,
+                        height: 40,
+                      ),
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        _devotion!['isBookmarked'] == true
+                            ? Icons.bookmark
+                            : Icons.bookmark_border,
+                        color: _devotion!['isBookmarked'] == true
+                            ? Colors.amber
+                            : null,
+                        size: 19,
+                      ),
+                      tooltip: 'Bookmark',
+                      onPressed: _toggleBookmark,
+                    ),
+                ],
               ],
             ),
           ),

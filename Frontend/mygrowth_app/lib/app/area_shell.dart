@@ -20,8 +20,8 @@ const memberBottomDestinations = [
   NavDestination('Plan', Icons.event_note_outlined, Icons.event_note_rounded,
       '/plan'),
   NavDestination(
-      'Prayer', Icons.self_improvement_outlined, Icons.self_improvement_rounded,
-      '/prayer'),
+      'Devotion', Icons.auto_stories_outlined, Icons.auto_stories_rounded,
+      '/devotion'),
 ];
 
 /// Destinations available in the admin bottom navigation (compact devices).
@@ -82,6 +82,7 @@ class AreaShell extends ConsumerWidget {
     final offlineMode = ref.watch(authControllerProvider).offlineMode &&
         area == AppArea.member;
     final location = GoRouterState.of(context).uri.path;
+    final isHomeLocation = location == '/home' || location == '/admin';
     final expanded = Breakpoints.isExpanded(context);
     final medium = Breakpoints.isMedium(context);
     final selectedIndex = _indexOf(location);
@@ -106,17 +107,26 @@ class AreaShell extends ConsumerWidget {
         : Scaffold(
             appBar: AppBar(
               title: Text(title),
-              leading: const AppBackButton(),
+              leading: isHomeLocation
+                  ? Builder(
+                      builder: (context) => IconButton(
+                        tooltip: 'Open navigation menu',
+                        icon: const Icon(Icons.menu_rounded),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                      ),
+                    )
+                  : const AppBackButton(),
               leadingWidth: 56,
               actions: [
                 ...?actions,
-                Builder(
-                  builder: (context) => IconButton(
-                    tooltip: 'Open navigation menu',
-                    icon: const Icon(Icons.menu_rounded),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
+                if (!isHomeLocation)
+                  Builder(
+                    builder: (context) => IconButton(
+                      tooltip: 'Open navigation menu',
+                      icon: const Icon(Icons.menu_rounded),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
                   ),
-                ),
               ],
             ),
             drawer: _AreaDrawer(area: area, user: user),
@@ -142,7 +152,12 @@ class AreaShell extends ConsumerWidget {
             Expanded(
               child: Column(
                 children: [
-                  _DesktopAppBar(title: title, actions: actions, user: user),
+                  _DesktopAppBar(
+                    title: title,
+                    actions: actions,
+                    user: user,
+                    showBackButton: !isHomeLocation,
+                  ),
                   if (offlineMode) const _OfflineAccessBanner(),
                   Expanded(child: child),
                 ],
@@ -190,11 +205,13 @@ class _DesktopAppBar extends StatelessWidget {
     required this.title,
     required this.actions,
     required this.user,
+    required this.showBackButton,
   });
 
   final String title;
   final List<Widget>? actions;
   final AppUser? user;
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +224,7 @@ class _DesktopAppBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const AppBackButton(),
+          if (showBackButton) const AppBackButton(),
           Text(
             title,
             style: Theme.of(context)
@@ -559,7 +576,11 @@ class _AreaDrawer extends StatelessWidget {
                               size: 18),
                           onTap: () {
                             Navigator.of(context).pop();
-                            context.go(item.path);
+                            if (item.path == '/shape-space') {
+                              context.push(item.path);
+                            } else {
+                              context.go(item.path);
+                            }
                           },
                         ),
                       ),

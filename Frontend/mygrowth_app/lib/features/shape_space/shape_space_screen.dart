@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_controller.dart';
@@ -49,7 +50,8 @@ class _ShapeSpaceScreenState extends ConsumerState<ShapeSpaceScreen> {
     try {
       final data = await ref
           .read(apiClientProvider)
-          .get('/shape-space/questions');
+          .get('/shape-space/questions')
+          .timeout(const Duration(seconds: 20));
       if (!mounted) return;
       setState(() {
         _questions = List<Map<String, dynamic>>.from(
@@ -77,7 +79,8 @@ class _ShapeSpaceScreenState extends ConsumerState<ShapeSpaceScreen> {
     try {
       final data = await ref
           .read(apiClientProvider)
-          .get('/shape-space/questions/${question['id']}');
+          .get('/shape-space/questions/${question['id']}')
+          .timeout(const Duration(seconds: 20));
       if (!mounted || data is! Map) return;
       setState(() {
         _selectedQuestion = Map<String, dynamic>.from(
@@ -275,7 +278,17 @@ class _ShapeSpaceScreenState extends ConsumerState<ShapeSpaceScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: _selectedQuestion == null
-            ? null
+            ? IconButton(
+                tooltip: 'Back to Home',
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
+                icon: const Icon(Icons.arrow_back),
+              )
             : IconButton(
                 tooltip: 'Back to questions',
                 onPressed: () => setState(() => _selectedQuestion = null),
