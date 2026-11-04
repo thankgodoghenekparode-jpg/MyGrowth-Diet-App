@@ -8,6 +8,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/widgets/app_badge.dart';
 import '../core/widgets/brand_logo.dart';
+import '../core/widgets/app_back_button.dart';
 
 /// Destinations available in the member bottom navigation (compact devices).
 const memberBottomDestinations = [
@@ -105,8 +106,18 @@ class AreaShell extends ConsumerWidget {
         : Scaffold(
             appBar: AppBar(
               title: Text(title),
-              actions: actions,
+              leading: const AppBackButton(),
               leadingWidth: 56,
+              actions: [
+                ...?actions,
+                Builder(
+                  builder: (context) => IconButton(
+                    tooltip: 'Open navigation menu',
+                    icon: const Icon(Icons.menu_rounded),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                ),
+              ],
             ),
             drawer: _AreaDrawer(area: area, user: user),
             body: Column(
@@ -196,6 +207,7 @@ class _DesktopAppBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          const AppBackButton(),
           Text(
             title,
             style: Theme.of(context)

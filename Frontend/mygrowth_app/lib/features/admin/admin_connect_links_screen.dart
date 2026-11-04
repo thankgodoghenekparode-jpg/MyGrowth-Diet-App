@@ -1,3 +1,4 @@
+import 'package:mygrowth_app/core/auth/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -239,9 +240,9 @@ class _ConnectLinkSheetState extends ConsumerState<_ConnectLinkSheet> {
         'isActive': _isActive,
       };
       if (widget.link == null) {
-        await api.post('/admin/connect-links', data: body);
+        await api.post('/admin/connect-links', body: body);
       } else {
-        await api.patch('/admin/connect-links/${widget.link!.id}', data: body);
+        await api.patch('/admin/connect-links/${widget.link!.id}', body: body);
       }
       if (mounted) {
         Toast.success(context, 'Saved');
@@ -320,7 +321,7 @@ class _ConnectLinkSheetState extends ConsumerState<_ConnectLinkSheet> {
                 Expanded(
                   child: AppButton(
                     label: 'Save',
-                    loading: _busy,
+                    busy: _busy,
                     onPressed: _busy ? null : _save,
                   ),
                 ),
@@ -332,3 +333,4 @@ class _ConnectLinkSheetState extends ConsumerState<_ConnectLinkSheet> {
     );
   }
 }
+
