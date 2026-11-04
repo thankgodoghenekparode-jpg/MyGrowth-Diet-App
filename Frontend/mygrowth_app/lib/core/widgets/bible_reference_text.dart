@@ -44,6 +44,8 @@ class BibleReferenceText extends StatelessWidget {
   }
 
   static String _canonicalBook(String value) {
+    if (value.toLowerCase() == 'psalm') return 'Psalms';
+    if (value.toLowerCase() == 'song of songs') return 'Song of Solomon';
     return _books.firstWhere(
       (book) => book.toLowerCase() == value.toLowerCase(),
       orElse: () => value,

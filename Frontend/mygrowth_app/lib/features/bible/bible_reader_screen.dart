@@ -169,6 +169,11 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
         oldWidget.initialChapter != widget.initialChapter) {
       _bookIndex = -1;
       _chapterIndex = -1;
+      _view = _BibleView.reader;
+      _searchController.clear();
+      _searchQuery = '';
+      _searchHits = const [];
+      _highlightedVerse = null;
       _session = _loadSession();
     }
   }
