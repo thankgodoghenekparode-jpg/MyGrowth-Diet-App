@@ -11,6 +11,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bible_reference_text.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
 import '../activities/record_activity_sheet.dart';
@@ -139,11 +140,17 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     InkWell(
-                      onTap: guidance != null && guidance.isNotEmpty ? () => context.go('/bible') : null,
+                      onTap: guidance != null && guidance.isNotEmpty
+                          ? () => context.go(
+                                BibleReferenceText.firstReferenceRoute(guidance) ??
+                                    '/bible',
+                              )
+                          : null,
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
+                        child: BibleReferenceText(
+                          text:
                           (guidance == null || guidance.isEmpty)
                               ? 'Reading guidance for this month hasn’t been '
                                   'published yet. It will appear here as soon as '
@@ -276,8 +283,8 @@ class _WeeklyReadingCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  (week.bibleReading == null ||
+                BibleReferenceText(
+                  text: (week.bibleReading == null ||
                           week.bibleReading!.trim().isEmpty)
                       ? 'Reading for this week hasn’t been published yet.'
                       : week.bibleReading!,

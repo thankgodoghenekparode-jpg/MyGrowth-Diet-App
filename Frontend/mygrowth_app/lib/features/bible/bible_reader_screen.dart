@@ -131,7 +131,10 @@ class _VerseHit {
 
 /// Offline Bible reader with selectable WEB, BSB, and KJV translations.
 class BibleReaderScreen extends StatefulWidget {
-  const BibleReaderScreen({super.key});
+  const BibleReaderScreen({this.initialBook, this.initialChapter, super.key});
+
+  final String? initialBook;
+  final int? initialChapter;
 
   @override
   State<BibleReaderScreen> createState() => _BibleReaderScreenState();
@@ -147,8 +150,8 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
   Timer? _searchDebounce;
 
   _BibleView _view = _BibleView.reader;
-  int _bookIndex = 0;
-  int _chapterIndex = 0;
+  int _bookIndex = -1;
+  int _chapterIndex = -1;
   String _searchQuery = '';
   List<_VerseHit> _searchHits = const [];
   String? _highlightedVerse;
@@ -157,6 +160,17 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
   void initState() {
     super.initState();
     _session = _loadSession();
+  }
+
+  @override
+  void didUpdateWidget(covariant BibleReaderScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialBook != widget.initialBook ||
+        oldWidget.initialChapter != widget.initialChapter) {
+      _bookIndex = -1;
+      _chapterIndex = -1;
+      _session = _loadSession();
+    }
   }
 
   Future<_BibleSession> _loadSession([String? requestedTranslation]) async {
@@ -193,6 +207,24 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
     chapterIndex = (chapterIndex - 1)
         .clamp(0, books[bookIndex].chapters.length - 1)
         .toInt();
+    if (widget.initialBook != null && widget.initialBook!.trim().isNotEmpty) {
+      final requestedBook = widget.initialBook!.trim().toLowerCase();
+      final requestedIndex = books.indexWhere(
+        (book) =>
+            book.name.toLowerCase() == requestedBook ||
+            book.code.toLowerCase() == requestedBook,
+      );
+      if (requestedIndex >= 0) {
+        bookIndex = requestedIndex;
+        chapterIndex = ((widget.initialChapter ?? 1) - 1)
+            .clamp(0, books[bookIndex].chapters.length - 1)
+            .toInt();
+        await preferences.setString(
+          lastReadKey,
+          '${books[bookIndex].code}|${chapterIndex + 1}',
+        );
+      }
+    }
     return _BibleSession(
       translation: translation,
       books: books,
@@ -553,7 +585,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         final session = snapshot.data!;
-        if (_bookIndex == 0 && _chapterIndex == 0) {
+        if (_bookIndex < 0 || _chapterIndex < 0) {
           _bookIndex = session.bookIndex;
           _chapterIndex = session.chapterIndex;
         }

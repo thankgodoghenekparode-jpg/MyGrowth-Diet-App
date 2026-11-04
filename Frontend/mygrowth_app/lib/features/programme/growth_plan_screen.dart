@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bible_reference_text.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
 import '../programme/programme_providers.dart';
@@ -282,7 +283,13 @@ class _MonthlyPlanContent extends ConsumerWidget {
               TitledCard(
                 icon: Icons.auto_stories_outlined,
                 title: 'Bible Reading Guidance',
-                child: _GuidanceText(plan.bibleReadingGuidance!),
+                child: BibleReferenceText(
+                  text: plan.bibleReadingGuidance!,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(height: 1.55, color: AppColors.inkSecondary),
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
             ],
@@ -520,6 +527,7 @@ class _WeekCard extends StatelessWidget {
               icon: Icons.auto_stories_outlined,
               label: 'Bible reading',
               value: week.bibleReading!,
+              bibleReference: true,
             ),
           ],
           if (week.prayerDurationTarget != null)
@@ -582,11 +590,13 @@ class _WeekRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.bibleReference = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final bool bibleReference;
 
   @override
   Widget build(BuildContext context) {
@@ -603,10 +613,16 @@ class _WeekRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: theme.textTheme.labelSmall),
-                Text(
-                  value,
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
-                ),
+                if (bibleReference)
+                  BibleReferenceText(
+                    text: value,
+                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                  )
+                else
+                  Text(
+                    value,
+                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                  ),
               ],
             ),
           ),

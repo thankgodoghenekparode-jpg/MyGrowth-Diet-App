@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/widgets/bible_reference_text.dart';
 
 class DailyDevotionScreen extends ConsumerStatefulWidget {
   const DailyDevotionScreen({super.key});
@@ -362,8 +363,9 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                             ],
                             if (_devotion!['scriptureReading'] != null) ...[
                               const SizedBox(height: 8),
-                              Text(
-                                'Scripture Reading: ${_devotion!['scriptureReading']}',
+                              BibleReferenceText(
+                                text:
+                                    'Scripture Reading: ${_devotion!['scriptureReading']}',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -464,9 +466,16 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                             leading: const Icon(Icons.auto_stories_outlined),
                             title: const Text('One-Year Bible Reading Plan'),
-                            subtitle: Text(_devotion!['oneYearBibleReading']?.toString() ?? ''),
+                            subtitle: BibleReferenceText(
+                              text: _devotion!['oneYearBibleReading']?.toString() ?? '',
+                            ),
                             trailing: const Icon(Icons.open_in_new, size: 18),
-                            onTap: () => context.go('/bible'),
+                            onTap: () => context.go(
+                              BibleReferenceText.firstReferenceRoute(
+                                    _devotion!['oneYearBibleReading']?.toString() ?? '',
+                                  ) ??
+                                  '/bible',
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -478,9 +487,16 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                             leading: const Icon(Icons.menu_book_outlined),
                             title: const Text("Today's Bible Passage"),
-                            subtitle: Text(_devotion!['bibleReading']?.toString() ?? ''),
+                            subtitle: BibleReferenceText(
+                              text: _devotion!['bibleReading']?.toString() ?? '',
+                            ),
                             trailing: const Icon(Icons.open_in_new, size: 18),
-                            onTap: () => context.go('/bible'),
+                            onTap: () => context.go(
+                              BibleReferenceText.firstReferenceRoute(
+                                    _devotion!['bibleReading']?.toString() ?? '',
+                                  ) ??
+                                  '/bible',
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),

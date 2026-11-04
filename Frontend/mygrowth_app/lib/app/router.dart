@@ -192,8 +192,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/bible',
-              pageBuilder: (_, _) =>
-                  const NoTransitionPage(child: BibleReaderScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                child: BibleReaderScreen(
+                  initialBook: state.uri.queryParameters['book'],
+                  initialChapter:
+                      int.tryParse(state.uri.queryParameters['chapter'] ?? ''),
+                ),
+              ),
             ),
           ]),
           StatefulShellBranch(routes: [
