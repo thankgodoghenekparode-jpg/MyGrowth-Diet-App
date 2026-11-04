@@ -43,7 +43,7 @@ class AuthBrandHeader extends StatelessWidget {
         if (showTagline) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Growing in the Word. Consistent in Prayer.\nAccountable in Purpose.',
+            'Growing in the Word, consistent in prayer, accountability in purpose',
             textAlign: TextAlign.center,
             style: Theme.of(context)
                 .textTheme

@@ -133996,7 +133996,7 @@ s=A.f(a).ok.Q
 r=t.p
 s=A.a([B.SK,B.m,p,B.dj,A.j("Healings Erhuvwuigho Azuike Ministry",q,q,q,q,s==null?q:s.bi($.T.ay),B.aM,q,q)],r)
 p=A.f(a).ok.at
-B.b.H(s,A.a([B.z,A.j("Growing in the Word. Consistent in Prayer.\nAccountable in Purpose.",q,q,q,q,p==null?q:p.lL($.T.ch,1.5),B.aM,q,q)],r))
+B.b.H(s,A.a([B.z,A.j("Growing in the Word, consistent in prayer, accountability in purpose",q,q,q,q,p==null?q:p.lL($.T.ch,1.5),B.aM,q,q)],r))
 return A.M(s,B.i,B.d,B.f)}}
 A.rl.prototype={
 q(a){var s,r=null,q=A.f(a).ok.r
