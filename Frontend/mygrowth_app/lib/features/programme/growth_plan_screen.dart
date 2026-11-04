@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/models/programme_models.dart';
@@ -124,10 +125,211 @@ class _GrowthPlanViewState extends ConsumerState<_GrowthPlanView> {
           ),
           const SizedBox(height: AppSpacing.lg),
 
+          const _ProgramReviewSection(),
+          const SizedBox(height: AppSpacing.lg),
+
           // ----------------------------------------- month's content
           _MonthlyPlanContent(year: _year, month: _month),
         ],
       ),
+    );
+  }
+}
+
+const _programReviewItems = <_ProgramReviewItem>[
+  _ProgramReviewItem(
+    title: 'Prayers',
+    subtitle: 'Prayer room and prayer focus',
+    icon: Icons.self_improvement_outlined,
+    route: '/prayer',
+  ),
+  _ProgramReviewItem(
+    title: 'Bible Reading',
+    subtitle: 'Monthly reading guidance',
+    icon: Icons.auto_stories_outlined,
+    route: '/bible-reading',
+  ),
+  _ProgramReviewItem(
+    title: 'Bible Study Topics',
+    subtitle: 'Study notes and Bible resources',
+    icon: Icons.menu_book_outlined,
+    route: '/diet?section=bible_study',
+  ),
+  _ProgramReviewItem(
+    title: 'Literature Daily Read',
+    subtitle: 'Today’s reading assignment',
+    icon: Icons.local_library_outlined,
+    route: '/diet?section=literature_reading',
+  ),
+  _ProgramReviewItem(
+    title: 'Weekly Audio Messages',
+    subtitle: 'Audio messages and teaching resources',
+    icon: Icons.headphones_outlined,
+    route: '/diet?section=audio_message',
+  ),
+  _ProgramReviewItem(
+    title: 'Daily Affirmation',
+    subtitle: 'Read this year’s affirmation',
+    icon: Icons.format_quote_outlined,
+    affirmation: true,
+  ),
+  _ProgramReviewItem(
+    title: 'Daily Proverbs Read',
+    subtitle: 'Open Proverbs chapter 1',
+    icon: Icons.menu_book_outlined,
+    route: '/bible?book=Proverbs&chapter=1',
+  ),
+  _ProgramReviewItem(
+    title: 'Daily Devotional Read',
+    subtitle: 'Open today’s devotional',
+    icon: Icons.wb_sunny_outlined,
+    route: '/devotion',
+  ),
+  _ProgramReviewItem(
+    title: 'Declarations',
+    subtitle: 'Today’s declarations and growth activities',
+    icon: Icons.record_voice_over_outlined,
+    route: '/diet?section=declarations',
+  ),
+  _ProgramReviewItem(
+    title: 'Fasting and Prayer Days',
+    subtitle: 'View and manage fasting days',
+    icon: Icons.event_available_outlined,
+    route: '/fasting',
+  ),
+  _ProgramReviewItem(
+    title: 'Prayer Accountability Partner',
+    subtitle: 'Connect with your prayer partner',
+    icon: Icons.handshake_outlined,
+    route: '/prayer/partners',
+  ),
+  _ProgramReviewItem(
+    title: 'Weekly, Monthly & Annual Reports',
+    subtitle: 'Write and review your reports',
+    icon: Icons.fact_check_outlined,
+    route: '/reports',
+  ),
+];
+
+class _ProgramReviewItem {
+  const _ProgramReviewItem({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.route,
+    this.affirmation = false,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String? route;
+  final bool affirmation;
+}
+
+class _ProgramReviewSection extends ConsumerWidget {
+  const _ProgramReviewSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final programme = ref.watch(currentProgrammeProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(
+          title: 'Program Review',
+          subtitle: 'Tap a card to open its page or reading.',
+          icon: Icons.dashboard_customize_outlined,
+        ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 900
+                ? 4
+                : constraints.maxWidth >= 600
+                    ? 3
+                    : 2;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _programReviewItems.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: AppSpacing.xs,
+                mainAxisSpacing: AppSpacing.xs,
+                childAspectRatio: columns == 2 ? 1.45 : 1.7,
+              ),
+              itemBuilder: (context, index) {
+                final item = _programReviewItems[index];
+                return AppCard(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  onTap: () {
+                    if (item.affirmation) {
+                      programme.when(
+                        data: (value) => _showPlanContent(
+                          context,
+                          title: item.title,
+                          text: value?.dailyAffirmation?.trim().isNotEmpty ==
+                                  true
+                              ? value!.dailyAffirmation!
+                              : 'The daily affirmation has not been published yet.',
+                          icon: item.icon,
+                        ),
+                        loading: () => _showPlanContent(
+                          context,
+                          title: item.title,
+                          text: 'Loading the daily affirmation…',
+                          icon: item.icon,
+                        ),
+                        error: (_, _) => _showPlanContent(
+                          context,
+                          title: item.title,
+                          text:
+                              'The daily affirmation is unavailable right now.',
+                          icon: item.icon,
+                        ),
+                      );
+                    } else if (item.route != null) {
+                      context.push(item.route!);
+                    }
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(item.icon, size: 19, color: AppColors.navy700),
+                          const Spacer(),
+                          Icon(Icons.chevron_right,
+                              size: 20, color: AppColors.inkMuted),
+                        ],
+                      ),
+                      Text(
+                        item.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        item.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(color: AppColors.inkMuted),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 }

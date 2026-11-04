@@ -23,16 +23,20 @@ import 'daily_diet_shared.dart';
 /// the member picks a date, reads what was published for that day and ticks
 /// each section off.
 class DailyDietScreen extends ConsumerWidget {
-  const DailyDietScreen({super.key});
+  const DailyDietScreen({super.key, this.initialSectionKey});
+
+  final String? initialSectionKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const _DailyDietView();
+    return _DailyDietView(initialSectionKey: initialSectionKey);
   }
 }
 
 class _DailyDietView extends ConsumerStatefulWidget {
-  const _DailyDietView();
+  const _DailyDietView({this.initialSectionKey});
+
+  final String? initialSectionKey;
 
   @override
   ConsumerState<_DailyDietView> createState() => _DailyDietViewState();
@@ -40,6 +44,7 @@ class _DailyDietView extends ConsumerStatefulWidget {
 
 class _DailyDietViewState extends ConsumerState<_DailyDietView> {
   DateTime _selected = dailyDietDateOnly(DateTime.now());
+  String? _handledInitialSectionKey;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +52,29 @@ class _DailyDietViewState extends ConsumerState<_DailyDietView> {
     final dateISO = dailyDietDateISO(_selected);
     final bundleAsync = ref.watch(dailyDietProvider(dateISO));
     final programmeAsync = ref.watch(currentProgrammeProvider);
+    final bundle = bundleAsync.value;
+    if (widget.initialSectionKey != null &&
+        _handledInitialSectionKey != widget.initialSectionKey &&
+        bundle != null) {
+      _handledInitialSectionKey = widget.initialSectionKey;
+      DailyDietSection? target;
+      for (final section in bundle.sections) {
+        if (section.key == widget.initialSectionKey) {
+          target = section;
+          break;
+        }
+      }
+      if (target != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context
+              .push('/daily-diet/section/${target!.id}?date=$dateISO')
+              .whenComplete(() {
+                if (mounted) _handledInitialSectionKey = null;
+              });
+        });
+      }
+    }
 
     final bounds = _DateBounds.resolve(programmeAsync, today);
     if (_selected.isBefore(bounds.min)) _selected = bounds.min;

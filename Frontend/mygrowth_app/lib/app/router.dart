@@ -185,8 +185,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/diet',
-              pageBuilder: (_, _) =>
-                  const NoTransitionPage(child: DailyDietScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                child: DailyDietScreen(
+                  initialSectionKey: state.uri.queryParameters['section'],
+                ),
+              ),
             ),
           ]),
           StatefulShellBranch(routes: [
