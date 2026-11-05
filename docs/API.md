@@ -221,6 +221,12 @@ Reflections are private and are never exposed to administrators.
 
 ---
 
+## Financial ministry partnerships
+
+| GET | `/partnerships/mine` | Member | Read the current financial pledge. |
+| POST | `/partnerships` | Member | Create or update pledge. Body: `amount`, `frequency` (`WEEKLY`/`MONTHLY`/`YEARLY`), optional `note`. Currency is NGN. This records a pledge and does not charge the member. |
+| PATCH | `/partnerships/mine` | Member | Pause, resume (`ACTIVE`) or end pledge. Body: `status`. |
+
 ## Prayer partners
 
 | Method | Path | Auth | Notes |
@@ -453,6 +459,8 @@ All create/update/publish/archive/delete actions are audit-logged.
 | PATCH | `/admin/safety-reports/:id` | Body `{ action: "review"\|"resolve", resolutionNote? }`. |
 
 ## Admin — prayer partners
+
+| GET | `/admin/ministry-partnerships` | Admin | Paginated ministry pledges. |
 
 | Method | Path | Notes |
 | --- | --- | --- |

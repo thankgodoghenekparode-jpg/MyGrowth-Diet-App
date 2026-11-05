@@ -389,6 +389,11 @@ class _Tool {
 
 const _memberTools = <_Tool>[
   _Tool(
+    icon: Icons.volunteer_activism_outlined,
+    label: 'Partner with the Ministry',
+    path: '/partnership',
+  ),
+  _Tool(
     icon: Icons.handshake_outlined,
     label: 'Prayer Partners',
     path: '/prayer/partners',
@@ -416,6 +421,11 @@ const _memberTools = <_Tool>[
 ];
 
 const _adminTools = <_Tool>[
+  _Tool(
+    icon: Icons.volunteer_activism_outlined,
+    label: 'Ministry Partnerships',
+    path: '/admin/ministry-partnerships',
+  ),
   _Tool(
     icon: Icons.admin_panel_settings_outlined,
     label: 'Admin Access',

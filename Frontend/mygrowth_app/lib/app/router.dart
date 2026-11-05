@@ -50,6 +50,8 @@ import '../features/shape_space/shape_space_screen.dart';
 import '../features/assistant/ai_assistant_screen.dart';
 import '../features/prayer_partners/prayer_partners_screen.dart';
 import '../features/prayer_partners/prayer_room_screen.dart';
+import '../features/partnerships/ministry_partnership_screen.dart';
+import '../features/admin/admin_ministry_partnerships_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/programme/bible_reading_screen.dart';
 import '../features/programme/growth_plan_screen.dart';
@@ -232,6 +234,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             child: DashboardScreen(),
           ),
         )),
+      ),
+      GoRoute(
+        path: '/partnership',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) => _fade(const MaterialPage(child: MinistryPartnershipScreen())),
+      ),
+      GoRoute(
+        path: '/admin/ministry-partnerships',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) => _fade(const MaterialPage(child: AdminMinistryPartnershipsScreen())),
       ),
       GoRoute(
         path: '/prayer',

@@ -28,6 +28,7 @@ import announcementsRoutes from './modules/announcements/announcements.routes.js
 import filesRoutes from './modules/files/files.routes.js';
 import adminRoutes from './modules/admin/index.js';
 import cronRoutes, { healthHandler } from './modules/cron/cron.routes.js';
+import { partnershipsRouter } from './modules/partnerships/partnerships.routes.js';
 
 export function createApp() {
   const app = express();
@@ -104,6 +105,7 @@ export function createApp() {
 
   // Prayer partners (any authenticated, approved member)
   app.use('/api/v1/prayer-partners', requireAuth, requireApprovedMember, prayerPartnersRoutes);
+  app.use('/api/v1/partnerships', requireAuth, requireApprovedMember, partnershipsRouter);
   app.use('/api/v1/connect-links', connectRoutes);
 
   // Authenticated file access
