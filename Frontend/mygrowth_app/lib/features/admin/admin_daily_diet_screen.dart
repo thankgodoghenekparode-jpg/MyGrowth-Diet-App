@@ -1207,10 +1207,23 @@ class _ContentEditorSheetState extends ConsumerState<_ContentEditorSheet> {
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(
-                label: 'Body',
-                hint: 'What the member reads or does',
+                label: switch (section.key) {
+                  'bible_study' => 'Bible study content',
+                  'literature_reading' => 'Literature reading content',
+                  'scripture_reading' => 'Scripture reading guidance',
+                  _ => 'Body',
+                },
+                hint: switch (section.key) {
+                  'bible_study' => 'Enter the full study so members can read it here.',
+                  'literature_reading' => 'Add reading text or guidance. Attach files below for longer material.',
+                  'scripture_reading' => 'Add instructions or context for the assigned passages.',
+                  _ => 'What the member reads or does',
+                },
                 controller: _bodyController,
-                maxLines: 5,
+                maxLines: section.key == 'bible_study' ||
+                        section.key == 'literature_reading'
+                    ? 10
+                    : 5,
               ),
               for (var i = 0; i < _textFields.length; i++) ...[
                 const SizedBox(height: AppSpacing.sm),

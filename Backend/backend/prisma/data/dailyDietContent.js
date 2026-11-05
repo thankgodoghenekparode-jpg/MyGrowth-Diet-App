@@ -16,6 +16,7 @@
  */
 import { DEFAULT_DAILY_DIET_SECTIONS } from '../../src/lib/dailyDiet.js';
 import { scriptureReadingDays2027 } from './scriptureReading2027.js';
+import { JANUARY_BIBLE_STUDY } from './januaryBibleStudy.js';
 
 const MONTH_NAMES = [
   'January',
@@ -100,18 +101,18 @@ export function buildDailyDietContent(months) {
       key: 'bible_study',
       date: monthStart,
       scope: 'MONTH',
-      title: month.theme,
-      body: [
+      title: m === 1 ? 'The Fatherhood of God' : month.theme,
+      body: m === 1 ? JANUARY_BIBLE_STUDY : [
         `Topic: ${month.theme}`,
         '',
         'Teachings:',
         ...teachings.map((t, i) => `${i + 1}. ${t}`),
       ].join('\n'),
       details: {
-        topic: month.theme,
+        topic: m === 1 ? 'The Fatherhood of God' : month.theme,
         month: monthName,
         year: 2027,
-        teachings,
+        teachings: m === 1 ? [] : teachings,
         books: month.bibleReadingGuidance,
       },
     });
@@ -225,18 +226,17 @@ export function buildDailyDietContent(months) {
   }
 
   // --- Daily proverbs -----------------------------------------------------
-  // The ministry supplies the proverb text itself; until then each day points
-  // the member at the month's Proverbs reading.
+  // The member reads the proverb whose chapter matches the day of the month.
   for (const day of scriptureDays) {
-    const month = months[day.month - 1];
+    const reading = `Proverbs ${day.day}`;
     rows.push({
       key: 'proverbs_reading',
       date: day.date,
       scope: 'DAY',
-      title: 'Daily proverbs',
-      body: `Read today's proverb in Proverbs and meditate on it. This month's reading: ${month.bibleReadingGuidance}.`,
+      title: reading,
+      body: `Read ${reading} and reflect on the wisdom you can apply today.`,
       details: {
-        books: month.bibleReadingGuidance,
+        reading,
         month: MONTH_NAMES[day.month - 1],
         dayOfMonth: day.day,
         year: 2027,

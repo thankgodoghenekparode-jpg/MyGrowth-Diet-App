@@ -436,6 +436,10 @@ class DailyDietSection {
 
   /// A one-line summary shown on the hub tile.
   String get preview {
+    if (key == 'proverbs_reading' && content != null) {
+      final date = DateTime.tryParse(content!.date);
+      if (date != null) return 'Proverbs ${date.day}';
+    }
     if (content != null && content!.title.trim().isNotEmpty) {
       return content!.title;
     }

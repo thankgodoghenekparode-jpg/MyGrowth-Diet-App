@@ -11,6 +11,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bible_reference_text.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/toast.dart';
@@ -357,11 +358,28 @@ class _IntroCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(section.description!, style: theme.textTheme.bodySmall),
           ],
-          if (content != null && content.hasBody) ...[
+          if (content != null &&
+              content.hasBody &&
+              section.key != 'proverbs_reading') ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
-              content.body!,
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+              switch (section.key) {
+                'bible_study' => 'Study content',
+                'literature_reading' => 'Reading content',
+                'scripture_reading' => 'Reading guidance',
+                _ => 'Content',
+              },
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              color: AppColors.surfaceMuted,
+              child: BibleReferenceText(
+                text: content.body!,
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+              ),
             ),
           ],
           if (content?.externalUrl != null) ...[
@@ -417,15 +435,19 @@ class _TextBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = section.content;
     final theme = Theme.of(context);
+    final date = DateTime.tryParse(bundle.date);
+    final proverbsReading = section.key == 'proverbs_reading' && date != null
+        ? 'Proverbs ${date.day}'
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (content?.reading != null)
+        if (proverbsReading != null || content?.reading != null)
           _HighlightCard(
             icon: Icons.menu_book_rounded,
             label: 'Today\'s reading',
-            value: content!.reading!,
+            value: proverbsReading ?? content!.reading!,
           ),
         if (content?.heading != null)
           _HighlightCard(
@@ -444,8 +466,8 @@ class _TextBlock extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           AppCard(
             color: AppColors.surfaceMuted,
-            child: Text(
-              content!.readingNote!,
+            child: BibleReferenceText(
+              text: content!.readingNote!,
               style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
             ),
           ),
@@ -501,8 +523,8 @@ class _TextBlock extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
-                        child: Text(
-                          content.teachings[i],
+                        child: BibleReferenceText(
+                          text: content.teachings[i],
                           style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
                         ),
                       ),
@@ -555,11 +577,12 @@ class _TextBlock extends StatelessWidget {
             (content?.declarations.isEmpty ?? true) &&
             content?.reading == null &&
             content?.topic == null &&
+            section.key != 'proverbs_reading' &&
             (content?.hasBody ?? false)) ...[
           const SizedBox(height: AppSpacing.md),
           AppCard(
-            child: Text(
-              content!.body!,
+            child: BibleReferenceText(
+              text: content!.body!,
               style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
             ),
           ),
@@ -611,9 +634,9 @@ class _HighlightCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: theme.textTheme.titleMedium?.copyWith(
+          BibleReferenceText(
+            text: value,
+            style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.brandText,
                     ),
