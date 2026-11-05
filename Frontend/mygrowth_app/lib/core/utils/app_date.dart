@@ -1,5 +1,5 @@
 /// The programme begins on January 1, 2027.
-const DateTime appStartDate = DateTime(2027, 1, 1);
+final DateTime appStartDate = DateTime(2027, 1, 1);
 
 /// Current app date, clamped to the programme start date before launch.
 DateTime appDateNow() {
