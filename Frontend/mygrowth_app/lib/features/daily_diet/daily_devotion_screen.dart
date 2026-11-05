@@ -1,10 +1,11 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/widgets/bible_reference_text.dart';
 
 class DailyDevotionScreen extends ConsumerStatefulWidget {
@@ -13,16 +14,15 @@ class DailyDevotionScreen extends ConsumerStatefulWidget {
   final bool embedded;
 
   @override
-  ConsumerState<DailyDevotionScreen> createState() => _DailyDevotionScreenState();
+  ConsumerState<DailyDevotionScreen> createState() =>
+      _DailyDevotionScreenState();
 }
 
 class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
-  DateTime _currentDate = DateTime.now();
+  DateTime _currentDate = appToday();
   Map<String, dynamic>? _devotion;
   bool _loading = true;
   String? _error;
-  bool _savingNote = false;
-  final _notesController = TextEditingController();
 
   @override
   void initState() {
@@ -30,240 +30,122 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
     _loadDevotion();
   }
 
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  String _formatDate(DateTime d) {
-    return '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-  }
+  String _formatDate(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 
   Future<void> _loadDevotion() async {
     setState(() => _loading = true);
-    final dateStr = _formatDate(_currentDate);
+
+    // Use the supplied January 2027 devotion content for those dates.
+    if (_currentDate.year == 2027 && _currentDate.month == 1) {
+      final bundled = await _loadBundledDevotion();
+      if (!mounted) return;
+      if (bundled != null) {
+        setState(() {
+          _devotion = bundled;
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
+    }
+
     try {
-      final data = await ref.read(apiClientProvider).get('/devotions?date=$dateStr');
+      final date = Uri.encodeQueryComponent(_formatDate(_currentDate));
+      final data = await ref.read(apiClientProvider).get('/devotions?date=$date');
       if (!mounted) return;
 
-      if (data is Map && data['devotion'] != null) {
-        final dev = data['devotion'] as Map<String, dynamic>?;
+      if (data is Map && data['devotion'] is Map) {
         setState(() {
-          _devotion = dev;
-          _notesController.text = dev?['reflectionNotes']?.toString() ?? '';
+          _devotion = Map<String, dynamic>.from(data['devotion'] as Map);
           _loading = false;
           _error = null;
         });
         return;
       }
     } catch (_) {
-      // Backend unavailable or error; fall through to local bundled devotion asset
+      // Use the bundled devotion if the API is unavailable.
     }
 
+    final bundled = await _loadBundledDevotion();
+    if (!mounted) return;
+    setState(() {
+      _devotion = bundled;
+      _loading = false;
+      _error = bundled == null ? 'Unable to load devotion for this day.' : null;
+    });
+  }
+
+  Future<Map<String, dynamic>?> _loadBundledDevotion() async {
     try {
       final raw = await rootBundle.loadString('assets/devotions.json');
-      final list = jsonDecode(raw) as List<dynamic>;
-      final target = list.firstWhere(
-        (item) => item['month'] == _currentDate.month && item['day'] == _currentDate.day,
-        orElse: () => null,
-      );
-
-      if (!mounted) return;
-      if (target != null) {
-        setState(() {
-          _devotion = Map<String, dynamic>.from(target as Map);
-          _notesController.text = '';
-          _loading = false;
-          _error = null;
-        });
-        return;
+      final entries = jsonDecode(raw) as List<dynamic>;
+      for (final entry in entries) {
+        if (entry is Map &&
+            entry['month'] == _currentDate.month &&
+            entry['day'] == _currentDate.day) {
+          return Map<String, dynamic>.from(entry);
+        }
       }
     } catch (_) {
-      // Asset loading failed
+      // The asset may be unavailable in a development build.
     }
-
-    if (mounted) {
-      setState(() {
-        _loading = false;
-        _error = 'Unable to load devotion for this day.';
-      });
-    }
+    return null;
   }
 
-  Future<void> _toggleComplete() async {
-    if (_devotion == null) return;
-    final currentStatus = _devotion!['isCompleted'] == true;
-    final newStatus = !currentStatus;
-
-    try {
-      await ref.read(apiClientProvider).post(
-        '/devotions/${_devotion!['id']}/complete',
-        body: {
-          'isBookmarked': _devotion!['isBookmarked'],
-          'reflectionNotes': _notesController.text.trim(),
-        },
-      );
-      setState(() {
-        _devotion!['isCompleted'] = newStatus;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(newStatus ? 'Marked today’s devotion as completed! 🎉' : 'Completion cleared.'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not update devotion status.')),
-        );
-      }
-    }
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _currentDate,
+      firstDate: appStartDate,
+      lastDate: DateTime(2028, 12, 31),
+    );
+    if (picked == null) return;
+    setState(() => _currentDate = picked);
+    _loadDevotion();
   }
 
-  Future<void> _toggleBookmark() async {
-    if (_devotion == null) return;
-    final isBookmarked = _devotion!['isBookmarked'] == true;
-    final newBookmark = !isBookmarked;
-
-    try {
-      await ref.read(apiClientProvider).post(
-        '/devotions/${_devotion!['id']}/complete',
-        body: {
-          'isBookmarked': newBookmark,
-          'reflectionNotes': _notesController.text.trim(),
-        },
-      );
-      setState(() {
-        _devotion!['isBookmarked'] = newBookmark;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(newBookmark ? 'Added to your bookmarked devotions.' : 'Removed bookmark.'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not update bookmark.')),
-        );
-      }
-    }
-  }
-
-  Future<void> _saveNotes() async {
-    if (_devotion == null) return;
-    setState(() => _savingNote = true);
-    try {
-      await ref.read(apiClientProvider).post(
-        '/devotions/${_devotion!['id']}/complete',
-        body: {
-          'isBookmarked': _devotion!['isBookmarked'],
-          'reflectionNotes': _notesController.text.trim(),
-        },
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notes saved successfully.')),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not save notes.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _savingNote = false);
-    }
-  }
-
-  void _changeDate(int daysDelta) {
-    setState(() {
-      _currentDate = _currentDate.add(Duration(days: daysDelta));
-    });
+  void _changeDate(int days) {
+    setState(() => _currentDate = _currentDate.add(Duration(days: days)));
     _loadDevotion();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isToday = DateUtils.isSameDay(_currentDate, DateTime.now());
-    final thoughtForTheDay = _devotion?['thoughtForTheDay']?.toString() ?? '';
-    final hasGrowthPrompts = thoughtForTheDay.startsWith('Growth Practice:');
+    final colors = theme.colorScheme;
+    final isToday = DateUtils.isSameDay(_currentDate, appToday());
+    final title = _devotion?['title']?.toString() ?? 'Daily Devotion';
+    final anchor = _devotion?['anchorScripture']?.toString() ?? '';
+    final reading = (_devotion?['scriptureReading'] ??
+            _devotion?['bibleReading'] ??
+            _devotion?['oneYearBibleReading'])
+        ?.toString();
+    final scriptureText = _devotion?['scriptureText']?.toString();
+    final content = _devotion?['content']?.toString() ?? '';
 
     return Scaffold(
       appBar: widget.embedded
           ? null
-          : AppBar(
-              title: const Text('Daily Devotion'),
-              actions: [
-                if (_devotion != null)
-                  IconButton(
-                    icon: Icon(
-                      _devotion!['isBookmarked'] == true
-                          ? Icons.bookmark
-                          : Icons.bookmark_border,
-                      color: _devotion!['isBookmarked'] == true
-                          ? Colors.amber
-                          : null,
-                    ),
-                    tooltip: 'Bookmark',
-                    onPressed: _toggleBookmark,
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  tooltip: 'Pick Date',
-                  onPressed: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _currentDate,
-                      firstDate: DateTime(2025, 1, 1),
-                      lastDate: DateTime(2028, 12, 31),
-                    );
-                    if (picked != null) {
-                      setState(() => _currentDate = picked);
-                      _loadDevotion();
-                    }
-                  },
-                ),
-              ],
-            ),
+          : AppBar(title: const Text('Daily Devotion')),
       body: Column(
         children: [
-          // Date navigation header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              border: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
-            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  constraints: widget.embedded
-                      ? const BoxConstraints.tightFor(width: 40, height: 40)
-                      : null,
-                  padding: widget.embedded ? EdgeInsets.zero : null,
                   icon: const Icon(Icons.chevron_left),
-                  onPressed: () => _changeDate(-1),
                   tooltip: 'Previous day',
+                  onPressed: () => _changeDate(-1),
                 ),
                 Expanded(
                   child: Column(
                     children: [
                       Text(
                         _formatDate(_currentDate),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -271,345 +153,94 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                         Text(
                           'Today',
                           style: theme.textTheme.labelSmall
-                              ?.copyWith(color: colorScheme.primary),
+                              ?.copyWith(color: colors.primary),
                         ),
                     ],
                   ),
                 ),
                 IconButton(
-                  constraints: widget.embedded
-                      ? const BoxConstraints.tightFor(width: 40, height: 40)
-                      : null,
-                  padding: widget.embedded ? EdgeInsets.zero : null,
                   icon: const Icon(Icons.chevron_right),
-                  onPressed: () => _changeDate(1),
                   tooltip: 'Next day',
+                  onPressed: () => _changeDate(1),
                 ),
-                if (widget.embedded) ...[
-                  IconButton(
-                    constraints:
-                        const BoxConstraints.tightFor(width: 40, height: 40),
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.calendar_today_outlined, size: 19),
-                    tooltip: 'Pick Date',
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _currentDate,
-                        firstDate: DateTime(2025, 1, 1),
-                        lastDate: DateTime(2028, 12, 31),
-                      );
-                      if (picked != null) {
-                        setState(() => _currentDate = picked);
-                        _loadDevotion();
-                      }
-                    },
-                  ),
-                  if (_devotion != null)
-                    IconButton(
-                      constraints: const BoxConstraints.tightFor(
-                        width: 40,
-                        height: 40,
-                      ),
-                      padding: EdgeInsets.zero,
-                      icon: Icon(
-                        _devotion!['isBookmarked'] == true
-                            ? Icons.bookmark
-                            : Icons.bookmark_border,
-                        color: _devotion!['isBookmarked'] == true
-                            ? Colors.amber
-                            : null,
-                        size: 19,
-                      ),
-                      tooltip: 'Bookmark',
-                      onPressed: _toggleBookmark,
-                    ),
-                ],
+                IconButton(
+                  icon: const Icon(Icons.calendar_today_outlined),
+                  tooltip: 'Choose date',
+                  onPressed: _pickDate,
+                ),
               ],
             ),
           ),
-
-          // Content body
+          const Divider(height: 1),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: _loadDevotion,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  )
-                : _devotion == null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.menu_book_outlined, size: 56, color: colorScheme.outline),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Devotion Pending for ${_formatDate(_currentDate)}',
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'The devotional content for this day is being prepared by the pastoral team. Please check back soon or browse another day.',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : ListView(
-                    padding: const EdgeInsets.all(18),
-                    children: [
-                      // Title
-                      Text(
-                        _devotion!['title']?.toString() ?? 'Daily Devotion',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'By ${_devotion!['author'] ?? 'Pastor Healings E. Azuike'}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Anchor Scripture Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
-                        ),
+                    ? Center(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              children: [
-                                Icon(Icons.format_quote, color: colorScheme.primary, size: 22),
-                                const SizedBox(width: 8),
-                                BibleReferenceText(
-                                  text: _devotion!['anchorScripture']?.toString() ?? '',
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ],
+                            Text(_error!),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              onPressed: _loadDevotion,
+                              child: const Text('Try again'),
                             ),
-                            if (_devotion!['scriptureText'] != null) ...[
-                              const SizedBox(height: 8),
-                              SelectableText(
-                                '"${_devotion!['scriptureText']}"',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontStyle: FontStyle.italic,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                            if (_devotion!['scriptureReading'] != null) ...[
-                              const SizedBox(height: 8),
-                              BibleReferenceText(
-                                text:
-                                    'Scripture Reading: ${_devotion!['scriptureReading']}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 18),
-
-                      // Main Devotional Content
-                      SelectableText(
-                        _devotion!['content']?.toString() ?? '',
-                        style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
-                      ),
-                      const SizedBox(height: 22),
-
-                      // Thought for the day
-                      if (_devotion!['thoughtForTheDay'] != null) ...[
-                        Card(
-                          elevation: 0,
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(Icons.lightbulb_outline, color: Colors.amber.shade800),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        hasGrowthPrompts
-                                            ? 'Growth Practice & Reflection'
-                                            : 'Thought for Today',
-                                        style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        thoughtForTheDay,
-                                        style: theme.textTheme.bodyMedium,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.all(20),
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: colors.primary,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Confession & Prayer
-                      if (_devotion!['confession'] != null || _devotion!['prayer'] != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: colorScheme.secondaryContainer.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (_devotion!['confession'] != null) ...[
-                                Text(
-                                  'Daily Confession',
-                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                SelectableText(
-                                  _devotion!['confession']?.toString() ?? '',
-                                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                              if (_devotion!['prayer'] != null) ...[
-                                Text(
-                                  'Prayer Point',
-                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                SelectableText(
-                                  _devotion!['prayer']?.toString() ?? '',
-                                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // One-year Bible reading plan
-                      if (_devotion!['oneYearBibleReading'] != null) ...[
-                        Card(
-                          margin: EdgeInsets.zero,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            leading: const Icon(Icons.auto_stories_outlined),
-                            title: const Text('One-Year Bible Reading Plan'),
-                            subtitle: BibleReferenceText(
-                              text: _devotion!['oneYearBibleReading']?.toString() ?? '',
+                          if (anchor.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            BibleReferenceText(
+                              text: anchor,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            trailing: const Icon(Icons.open_in_new, size: 18),
-                            onTap: () => context.go(
-                              BibleReferenceText.firstReferenceRoute(
-                                    _devotion!['oneYearBibleReading']?.toString() ?? '',
-                                  ) ??
-                                  '/bible',
+                          ],
+                          if (reading != null && reading.trim().isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            BibleReferenceText(
+                              text: reading,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colors.primary,
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      if (_devotion!['bibleReading'] != null) ...[
-                        Card(
-                          margin: EdgeInsets.zero,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            leading: const Icon(Icons.menu_book_outlined),
-                            title: const Text("Today's Bible Passage"),
-                            subtitle: BibleReferenceText(
-                              text: _devotion!['bibleReading']?.toString() ?? '',
+                          ],
+                          if (scriptureText != null &&
+                              scriptureText.trim().isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            BibleReferenceText(
+                              text: scriptureText,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontStyle: FontStyle.italic,
+                                height: 1.55,
+                              ),
                             ),
-                            trailing: const Icon(Icons.open_in_new, size: 18),
-                            onTap: () => context.go(
-                              BibleReferenceText.firstReferenceRoute(
-                                    _devotion!['bibleReading']?.toString() ?? '',
-                                  ) ??
-                                  '/bible',
+                          ],
+                          if (content.isNotEmpty) ...[
+                            const SizedBox(height: 22),
+                            BibleReferenceText(
+                              text: content,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                height: 1.7,
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-
-                      // Personal Reflection Notes
-                      Text(
-                        'My Personal Reflection Notes',
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _notesController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'What did the Holy Spirit speak to you today?',
-                          border: const OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            icon: _savingNote
-                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                : const Icon(Icons.save_outlined),
-                            onPressed: _saveNotes,
-                            tooltip: 'Save Notes',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Complete button
-                      FilledButton.icon(
-                        onPressed: _toggleComplete,
-                        icon: Icon(
-                          _devotion!['isCompleted'] == true ? Icons.check_circle : Icons.check_circle_outline,
-                        ),
-                        label: Text(
-                          _devotion!['isCompleted'] == true
-                              ? 'Completed Today’s Devotion'
-                              : 'Mark as Completed',
-                        ),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: _devotion!['isCompleted'] == true ? Colors.green : null,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-                  ),
           ),
         ],
       ),

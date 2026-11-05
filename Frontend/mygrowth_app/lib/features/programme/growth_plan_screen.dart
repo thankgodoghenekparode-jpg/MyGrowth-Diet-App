@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/models/programme_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/bible_reference_text.dart';
@@ -32,8 +33,8 @@ class _GrowthPlanView extends ConsumerStatefulWidget {
 }
 
 class _GrowthPlanViewState extends ConsumerState<_GrowthPlanView> {
-  int _year = DateTime.now().year;
-  int _month = DateTime.now().month;
+  int _year = appDateNow().year;
+  int _month = appDateNow().month;
 
   @override
   Widget build(BuildContext context) {

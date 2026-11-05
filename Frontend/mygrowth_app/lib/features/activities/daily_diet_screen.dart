@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/models/activity_models.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
@@ -33,18 +34,18 @@ class _DailyDietView extends ConsumerStatefulWidget {
 class _DailyDietViewState extends ConsumerState<_DailyDietView> {
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  DateTime _selected = _dateOnly(DateTime.now());
+  DateTime _selected = _dateOnly(appToday());
 
   @override
   Widget build(BuildContext context) {
     final programme = ref.watch(currentProgrammeProvider);
-    final today = _dateOnly(DateTime.now());
+    final today = _dateOnly(appToday());
     final programmeStart = programme.maybeWhen(
       data: (p) => p?.startDate == null ? null : _dateOnly(p!.startDate!),
       orElse: () => null,
     );
-    final minDate = programmeStart == null || programmeStart.isAfter(today)
-        ? today.subtract(const Duration(days: 45))
+    final minDate = programmeStart == null || programmeStart.isBefore(appStartDate)
+        ? appStartDate
         : programmeStart;
     if (_selected.isBefore(minDate)) _selected = minDate;
     if (_selected.isAfter(today)) _selected = today;

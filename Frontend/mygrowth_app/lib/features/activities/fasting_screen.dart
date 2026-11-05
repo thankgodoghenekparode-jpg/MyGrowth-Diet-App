@@ -6,6 +6,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/models/activity_models.dart';
 import '../../core/models/programme_models.dart';
 import '../../core/network/api_client.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
@@ -36,13 +37,17 @@ class _FastingView extends ConsumerStatefulWidget {
 }
 
 class _FastingViewState extends ConsumerState<_FastingView> {
-  DateTime _month = _monthOf(DateTime.now());
+  DateTime _month = _monthOf(appDateNow());
 
   static DateTime _monthOf(DateTime d) => DateTime(d.year, d.month);
 
   void _shift(int months) {
+    final nextMonth = DateTime(_month.year, _month.month + months, 1);
+    if (nextMonth.isBefore(DateTime(appStartDate.year, appStartDate.month))) {
+      return;
+    }
     setState(() {
-      _month = DateTime(_month.year, _month.month + months, 1);
+      _month = nextMonth;
     });
   }
 
@@ -304,7 +309,7 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final checklist = ref.watch(dailyChecklistProvider(_date));
-    final today = DateTime.now();
+    final today = appDateNow();
     final isFuture = DateTime(_date.year, _date.month, _date.day)
         .isAfter(DateTime(today.year, today.month, today.day));
     final isToday = _date.year == today.year &&

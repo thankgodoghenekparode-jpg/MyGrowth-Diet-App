@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/models/daily_diet_models.dart';
 import '../../core/models/programme_models.dart';
 import '../../core/network/api_client.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
@@ -43,12 +44,12 @@ class _DailyDietView extends ConsumerStatefulWidget {
 }
 
 class _DailyDietViewState extends ConsumerState<_DailyDietView> {
-  DateTime _selected = dailyDietDateOnly(DateTime.now());
+  DateTime _selected = dailyDietDateOnly(appToday());
   String? _handledInitialSectionKey;
 
   @override
   Widget build(BuildContext context) {
-    final today = dailyDietDateOnly(DateTime.now());
+    final today = dailyDietDateOnly(appToday());
     final dateISO = dailyDietDateISO(_selected);
     final bundleAsync = ref.watch(dailyDietProvider(dateISO));
     final programmeAsync = ref.watch(currentProgrammeProvider);
@@ -133,16 +134,15 @@ class _DateBounds {
   final DateTime min;
   final DateTime max;
 
-  /// The programme window when it is known, widened so the member can still
-  /// look back at recent days before the programme started.
+  /// Keep the member's calendar inside the app's programme period.
   factory _DateBounds.resolve(AsyncValue<AnnualProgramme?> programme, DateTime today) {
-    DateTime min = today.subtract(const Duration(days: 45));
+    DateTime min = appStartDate;
     DateTime max = today.add(const Duration(days: 365));
 
     final value = programme.value;
     final start = value?.startDate;
     final end = value?.endDate;
-    if (start != null && start.isBefore(min)) min = dailyDietDateOnly(start);
+    if (start != null && start.isAfter(min)) min = dailyDietDateOnly(start);
     if (end != null && end.isAfter(max)) max = dailyDietDateOnly(end);
     if (max.isBefore(today)) max = today;
 

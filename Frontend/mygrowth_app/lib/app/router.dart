@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
+import '../core/utils/app_date.dart';
 import '../core/widgets/brand_logo.dart';
 import '../features/activities/fasting_screen.dart';
 import '../features/bible/bible_reader_screen.dart';
@@ -308,7 +309,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           child: DailyDietSectionScreen(
             sectionId: state.pathParameters['id']!,
             dateISO: state.uri.queryParameters['date'] ??
-                dailyDietDateISO(DateTime.now()),
+                dailyDietDateISO(appToday()),
           ),
         )),
       ),

@@ -7,6 +7,7 @@ import '../../core/models/activity_models.dart';
 import '../../core/models/programme_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -35,18 +36,22 @@ class _BibleReadingView extends ConsumerStatefulWidget {
 }
 
 class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
-  DateTime _month = _monthOf(DateTime.now());
+  DateTime _month = _monthOf(appDateNow());
 
   static DateTime _monthOf(DateTime d) => DateTime(d.year, d.month);
 
   DateTime get _today {
-    final now = DateTime.now();
+    final now = appDateNow();
     return DateTime(now.year, now.month, now.day);
   }
 
   void _shift(int months) {
+    final nextMonth = DateTime(_month.year, _month.month + months, 1);
+    if (nextMonth.isBefore(DateTime(appStartDate.year, appStartDate.month))) {
+      return;
+    }
     setState(() {
-      _month = DateTime(_month.year, _month.month + months, 1);
+      _month = nextMonth;
     });
   }
 
@@ -320,7 +325,7 @@ class _RecordTodayReading extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final today = DateTime.now();
+    final today = appDateNow();
     final date = DateTime(today.year, today.month, today.day);
     final checklist = ref.watch(dailyChecklistProvider(date));
 

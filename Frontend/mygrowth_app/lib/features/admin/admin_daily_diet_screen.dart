@@ -6,6 +6,7 @@ import '../../core/models/daily_diet_models.dart';
 import '../../core/models/material_models.dart';
 import '../../core/models/programme_models.dart';
 import '../../core/network/api_client.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
@@ -35,7 +36,7 @@ class AdminDailyDietScreen extends ConsumerStatefulWidget {
 
 class _AdminDailyDietScreenState extends ConsumerState<AdminDailyDietScreen> {
   int? _year;
-  DateTime _date = DateTime.now();
+  DateTime _date = appToday();
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +45,7 @@ class _AdminDailyDietScreenState extends ConsumerState<AdminDailyDietScreen> {
     final year = _year ??
         (programmes.isNotEmpty
             ? programmes.first.year
-            : DateTime.now().year);
+            : appDateNow().year);
 
     return DefaultTabController(
       length: 2,

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/activity_models.dart';
 import '../../core/network/api_client.dart';
+import '../../core/utils/app_date.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_badge.dart';
@@ -23,7 +24,7 @@ import '../programme/programme_providers.dart';
 /// Passing `DateTime.now()` directly would mint a new key on every rebuild,
 /// re-fetching the daily checklist in an endless loop.
 DateTime _today() {
-  final now = DateTime.now();
+  final now = appDateNow();
   return DateTime(now.year, now.month, now.day);
 }
 
@@ -100,7 +101,7 @@ class DashboardScreen extends ConsumerWidget {
     final programme = ref.watch(currentProgrammeProvider);
     final checklist = ref.watch(dailyChecklistProvider(_today()));
     final announcements = ref.watch(announcementsProvider);
-    final now = DateTime.now();
+    final now = appDateNow();
     final greeting = now.hour < 12
         ? 'Good morning'
         : now.hour < 17
@@ -530,7 +531,7 @@ class _RecordActivitySheetState extends ConsumerState<_RecordActivitySheet> {
     setState(() => _busy = true);
     final client = ref.read(apiClientProvider);
     final date = DateFormat('yyyy-MM-dd')
-        .format(widget.activity.date ?? DateTime.now());
+        .format(widget.activity.date ?? appToday());
     final body = {
       'activityId': widget.activity.id,
       'date': date,
