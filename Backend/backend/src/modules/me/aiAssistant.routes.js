@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { asyncHandler, errors } from '../../lib/errors.js';
 import { validate } from '../../lib/validate.js';
 import { aiAssistantLimiter } from '../../middleware/rateLimiters.js';
+import { buildAssistantInstructions } from './aiAssistantKnowledge.js';
 
 const router = Router();
 const schema = z.object({
@@ -20,13 +21,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
     throw errors.internal('AI assistant is not configured yet', 'AI_NOT_CONFIGURED');
   }
 
-  const systemInstructions =
-    'You are the MyGrowth faith and spiritual growth assistant for the MyGrowth Diet Plan app (Healings Erhuvwuigho Azuike Ministry). ' +
-    'Be kind, uplifting, biblically grounded, practical, concise, and respectful of Christian beliefs. ' +
-    'Offer spiritual encouragement, guidance on daily spiritual diets, Scripture reflection, and prayer support. ' +
-    'Always cite relevant Scripture references accurately. Do not invent Bible verses. ' +
-    'Clarify that you are an AI assistant and encourage members to share questions and learn with others in Shape Space. ' +
-    'Format your responses with clean, easy-to-read markdown (bullet points, bold text for key Bible verses, short paragraphs).';
+  const systemInstructions = buildAssistantInstructions(req.user.role, req.user.adminAccess);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 35000);
@@ -34,7 +29,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
   try {
     if (geminiKey) {
       // Google Gemini implementation
-      const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`;
 
       const contents = req.valid.body.messages.map(({ role, content }) => ({
@@ -52,8 +47,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
           },
           contents,
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800,
+            maxOutputTokens: 1200,
           },
         }),
       });
@@ -86,7 +80,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
       body: JSON.stringify({
         model,
         store: false,
-        max_output_tokens: 800,
+        max_output_tokens: 1200,
         instructions: systemInstructions,
         input: req.valid.body.messages.map(({ role, content }) => ({ role, content })),
       }),

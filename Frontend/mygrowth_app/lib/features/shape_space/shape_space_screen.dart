@@ -51,7 +51,8 @@ class _ShapeSpaceScreenState extends ConsumerState<ShapeSpaceScreen> {
       final data = await ref
           .read(apiClientProvider)
           .get('/shape-space/questions')
-          .timeout(const Duration(seconds: 20));
+          // The production API can take a while to wake after an idle period.
+          .timeout(const Duration(seconds: 60));
       if (!mounted) return;
       setState(() {
         _questions = List<Map<String, dynamic>>.from(
@@ -80,7 +81,7 @@ class _ShapeSpaceScreenState extends ConsumerState<ShapeSpaceScreen> {
       final data = await ref
           .read(apiClientProvider)
           .get('/shape-space/questions/${question['id']}')
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 60));
       if (!mounted || data is! Map) return;
       setState(() {
         _selectedQuestion = Map<String, dynamic>.from(

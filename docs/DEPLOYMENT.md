@@ -153,9 +153,10 @@ account that can create administrators and grant administrative access.
 
 ## 6. Run the API
 
-To enable the AI Assistant, set `OPENAI_API_KEY` in the backend host's secret
-environment settings. `OPENAI_MODEL` is optional and defaults to
-`gpt-4.1-mini`. Do not put the provider key in the Flutter or Vercel frontend.
+To enable the AI Assistant, set either `OPENAI_API_KEY` or `GEMINI_API_KEY` in
+the backend host's secret environment settings. Gemini is selected when both
+keys are set. `OPENAI_MODEL` and `GEMINI_MODEL` optionally select the provider
+model. Never put provider keys in the Flutter or Vercel frontend.
 
 Foreground (for a first smoke test):
 

@@ -110,6 +110,7 @@ reuse detection.
 | GET | `/me/dashboard` | Member | Aggregated home payload. |
 | GET | `/me/progress` | Member | Progress summary; `period` = `week`\|`month`\|`year`\|`all` (+ optional `from`/`to`). Returns both a detailed `activities` block and the flat keys the Flutter `ProgressSummary` consumes (`totalActivities`, `completedActivities`, `inProgressActivities`, `skippedActivities`, `totalMinutesRecorded`, `reportsSubmitted`, `sessionsCompleted`, `currentStreakDays`, `byCategory` as a `{category: count}` map, and `byMonth` as a `[{year, month, completed, total}]` list). |
 | GET | `/me/activities` | Member | Today's / requested day's activity checklist. |
+| POST | `/me/ai-assistant` | Member | Ask the AI app and spiritual-growth assistant. Body: `messages` (1–12 `{role: user\|assistant, content}` entries). Requires `OPENAI_API_KEY` or `GEMINI_API_KEY` on the backend. |
 
 ---
 

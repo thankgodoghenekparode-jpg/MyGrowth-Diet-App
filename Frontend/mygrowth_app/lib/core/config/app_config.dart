@@ -15,11 +15,12 @@ class AppConfig {
   /// each user has a configurable time zone (default Africa/Lagos).
   static const String defaultTimeZone = 'Africa/Lagos';
 
-  /// API base URL. Override at build time with:
+  /// API base URL defaults to the deployed backend so mobile release builds
+  /// work without extra flags. Override for local development with:
   /// `flutter build web --dart-define=API_BASE_URL=https://api.example.com/api/v1`
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:4000/api/v1',
+    defaultValue: 'https://mygrowth-diet-app.onrender.com/api/v1',
   );
 
   /// When true, a tiny in-memory demo dataset is used only if the backend is
