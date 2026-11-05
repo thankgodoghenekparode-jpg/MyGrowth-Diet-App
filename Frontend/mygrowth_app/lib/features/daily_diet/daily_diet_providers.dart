@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,6 +11,49 @@ import '../../core/network/api_client.dart';
 /// Tolerant map parse — the API always answers with JSON objects here.
 Map<String, dynamic> _asMap(dynamic data) =>
     data is Map<String, dynamic> ? data : const {};
+
+Future<Map<String, dynamic>> _withJanuaryBibleStudy(
+  Map<String, dynamic> json,
+  String date,
+) async {
+  if (!date.startsWith('2027-01-')) return json;
+
+  final study = jsonDecode(
+    await rootBundle.loadString('assets/january_bible_study.json'),
+  ) as Map<String, dynamic>;
+  final rawSections = json['sections'];
+  if (rawSections is! List) return json;
+
+  final sections = <dynamic>[];
+  for (final rawSection in rawSections) {
+    if (rawSection is! Map) {
+      sections.add(rawSection);
+      continue;
+    }
+
+    final section = Map<String, dynamic>.from(rawSection);
+    if (section['key'] == 'bible_study' && section['content'] is Map) {
+      final content = Map<String, dynamic>.from(section['content'] as Map);
+      final details = content['details'] is Map
+          ? Map<String, dynamic>.from(content['details'] as Map)
+          : <String, dynamic>{};
+      content['title'] = study['title'];
+      content['body'] = study['content'];
+      details.addAll({
+        'topic': study['topic'],
+        'month': 'January',
+        'year': 2027,
+        'teachings': <String>[],
+        'declarations': <String>[],
+      });
+      content['details'] = details;
+      section['content'] = content;
+    }
+    sections.add(section);
+  }
+
+  return {...json, 'sections': sections};
+}
 
 /// The Daily Diet for a single day.
 ///
@@ -23,7 +67,7 @@ final dailyDietProvider =
   final cacheKey = userId == null ? null : 'mgdp.dailyDiet.$userId.$date';
   try {
     final data = await client.get('/daily-diet', query: {'date': date});
-    final json = _asMap(data);
+    final json = await _withJanuaryBibleStudy(_asMap(data), date);
     if (cacheKey != null && json.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(cacheKey, jsonEncode(json));
@@ -34,8 +78,9 @@ final dailyDietProvider =
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(cacheKey);
     if (saved == null) rethrow;
-    final json = jsonDecode(saved);
-    if (json is! Map<String, dynamic>) rethrow;
+    final cached = jsonDecode(saved);
+    if (cached is! Map<String, dynamic>) rethrow;
+    final json = await _withJanuaryBibleStudy(cached, date);
     return DailyDietBundle.fromJson(json);
   }
 });
