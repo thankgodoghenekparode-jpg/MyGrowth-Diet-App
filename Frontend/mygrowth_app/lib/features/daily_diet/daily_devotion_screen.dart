@@ -125,6 +125,15 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
         ?.toString();
     final scriptureText = _devotion?['scriptureText']?.toString();
     final content = _devotion?['content']?.toString() ?? '';
+    final declaration = _devotion?['confession']?.toString() ?? '';
+    final growthNotes = _devotion?['thoughtForTheDay']?.toString() ?? '';
+    final growthParts = growthNotes.split(
+      RegExp(r'\n\s*Reflection(?: Question)?:\s*', caseSensitive: false),
+    );
+    final growthPractice = growthParts.first
+        .replaceFirst(RegExp(r'^Growth Practice:\s*', caseSensitive: false), '')
+        .trim();
+    final reflection = growthParts.length > 1 ? growthParts[1].trim() : '';
 
     return Scaffold(
       appBar: widget.embedded
@@ -209,7 +218,10 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                               ),
                             ),
                           ],
-                          if (reading != null && reading.trim().isNotEmpty) ...[
+                          if (reading != null &&
+                              reading.trim().isNotEmpty &&
+                              reading.trim().toLowerCase() !=
+                                  anchor.trim().toLowerCase()) ...[
                             const SizedBox(height: 8),
                             BibleReferenceText(
                               text: reading,
@@ -236,6 +248,54 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                               text: content,
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 height: 1.7,
+                              ),
+                            ),
+                          ],
+                          if (declaration.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            Text(
+                              'Declaration',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            BibleReferenceText(
+                              text: declaration,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
+                          if (growthPractice.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            Text(
+                              'Growth Practice',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            BibleReferenceText(
+                              text: growthPractice,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
+                          if (reflection.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            Text(
+                              'Reflection',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            BibleReferenceText(
+                              text: reflection,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                height: 1.6,
                               ),
                             ),
                           ],
