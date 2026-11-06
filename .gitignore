@@ -39,3 +39,5 @@ Frontend/mygrowth_app/android/local.properties
 Frontend/mygrowth_app/ios/Pods/
 
 .analysis_state/
+
+.appdata_state/
