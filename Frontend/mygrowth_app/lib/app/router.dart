@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
+import '../core/theme/app_colors.dart';
 import '../core/utils/app_date.dart';
 import '../core/widgets/brand_logo.dart';
 import '../features/activities/fasting_screen.dart';
@@ -65,20 +66,38 @@ import '../app/area_shell.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
+final splashAnimationProvider =
+    NotifierProvider<SplashAnimationController, bool>(
+      SplashAnimationController.new,
+    );
+
+class SplashAnimationController extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void reset() => state = false;
+  void complete() => state = true;
+}
+
 /// Listens to auth state changes so GoRouter can re-evaluate redirects.
 class _AuthStateNotifier extends ChangeNotifier {
   _AuthStateNotifier(this._ref) {
     _sub = _ref.listen<AuthState>(authControllerProvider, (_, _) {
       notifyListeners();
     });
+    _splashSub = _ref.listen<bool>(splashAnimationProvider, (_, _) {
+      notifyListeners();
+    });
   }
 
   final Ref _ref;
   late final ProviderSubscription _sub;
+  late final ProviderSubscription _splashSub;
 
   @override
   void dispose() {
     _sub.close();
+    _splashSub.close();
     super.dispose();
   }
 }
@@ -95,7 +114,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
       final path = state.uri.path;
-      final onAuthPage = path == '/login' ||
+      final onAuthPage =
+          path == '/login' ||
           path == '/register' ||
           path == '/forgot-password' ||
           path.startsWith('/reset-password');
@@ -105,6 +125,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           auth.status == AuthStatus.loading) {
         return path == '/splash' ? null : '/splash';
       }
+
+      // Let the logo reveal finish before routing to the signed-in or auth area.
+      if (path == '/splash' && !ref.read(splashAnimationProvider)) return null;
 
       if (!auth.isAuthenticated) {
         return onAuthPage ? null : '/login';
@@ -137,13 +160,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/splash',
-        pageBuilder: (_, _) =>
-            _fade(const MaterialPage(child: SplashScreen())),
+        pageBuilder: (_, _) => _fade(const MaterialPage(child: SplashScreen())),
       ),
       GoRoute(
         path: '/login',
-        pageBuilder: (_, _) =>
-            _fade(const MaterialPage(child: LoginScreen())),
+        pageBuilder: (_, _) => _fade(const MaterialPage(child: LoginScreen())),
       ),
       GoRoute(
         path: '/register',
@@ -157,11 +178,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/reset-password',
-        pageBuilder: (_, state) => _fade(MaterialPage(
-          child: ResetPasswordScreen(
-            token: state.uri.queryParameters['token'] ?? '',
+        pageBuilder: (_, state) => _fade(
+          MaterialPage(
+            child: ResetPasswordScreen(
+              token: state.uri.queryParameters['token'] ?? '',
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/setup-profile',
@@ -178,50 +201,62 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           child: shell,
         ),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/home',
-              pageBuilder: (_, _) =>
-                  const NoTransitionPage(child: MoreScreen(area: AppArea.member)),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/diet',
-              pageBuilder: (_, state) => NoTransitionPage(
-                child: DailyDietScreen(
-                  initialSectionKey: state.uri.queryParameters['section'],
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                pageBuilder: (_, _) => const NoTransitionPage(
+                  child: MoreScreen(area: AppArea.member),
                 ),
               ),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/bible',
-              pageBuilder: (_, state) => NoTransitionPage(
-                child: BibleReaderScreen(
-                  initialBook: state.uri.queryParameters['book'],
-                  initialChapter:
-                      int.tryParse(state.uri.queryParameters['chapter'] ?? ''),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/diet',
+                pageBuilder: (_, state) => NoTransitionPage(
+                  child: DailyDietScreen(
+                    initialSectionKey: state.uri.queryParameters['section'],
+                  ),
                 ),
               ),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/plan',
-              pageBuilder: (_, _) =>
-                  const NoTransitionPage(child: GrowthPlanScreen()),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/devotion',
-              pageBuilder: (_, _) => const NoTransitionPage(
-                child: DailyDevotionScreen(embedded: true),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/bible',
+                pageBuilder: (_, state) => NoTransitionPage(
+                  child: BibleReaderScreen(
+                    initialBook: state.uri.queryParameters['book'],
+                    initialChapter: int.tryParse(
+                      state.uri.queryParameters['chapter'] ?? '',
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/plan',
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: GrowthPlanScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/devotion',
+                pageBuilder: (_, _) => const NoTransitionPage(
+                  child: DailyDevotionScreen(embedded: true),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -229,22 +264,23 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dashboard',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(MaterialPage(
-          child: _MemberPage(
-            title: 'Dashboard',
-            child: DashboardScreen(),
+        pageBuilder: (_, _) => _fade(
+          MaterialPage(
+            child: _MemberPage(title: 'Dashboard', child: DashboardScreen()),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/partnership',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(child: MinistryPartnershipScreen())),
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: MinistryPartnershipScreen())),
       ),
       GoRoute(
         path: '/admin/ministry-partnerships',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(child: AdminMinistryPartnershipsScreen())),
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: AdminMinistryPartnershipsScreen())),
       ),
       GoRoute(
         path: '/prayer',
@@ -284,17 +320,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: ':id',
-            pageBuilder: (_, state) => _fade(MaterialPage(
-              child: MaterialDetailScreen(materialId: state.pathParameters['id']!),
-            )),
+            pageBuilder: (_, state) => _fade(
+              MaterialPage(
+                child: MaterialDetailScreen(
+                  materialId: state.pathParameters['id']!,
+                ),
+              ),
+            ),
           ),
         ],
       ),
       GoRoute(
         path: '/goals',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) =>
-            _fade(const MaterialPage(child: GoalsScreen())),
+        pageBuilder: (_, _) => _fade(const MaterialPage(child: GoalsScreen())),
       ),
       GoRoute(
         path: '/fasting',
@@ -305,13 +344,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/daily-diet/section/:id',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, state) => _fade(MaterialPage(
-          child: DailyDietSectionScreen(
-            sectionId: state.pathParameters['id']!,
-            dateISO: state.uri.queryParameters['date'] ??
-                dailyDietDateISO(appToday()),
+        pageBuilder: (_, state) => _fade(
+          MaterialPage(
+            child: DailyDietSectionScreen(
+              sectionId: state.pathParameters['id']!,
+              dateISO:
+                  state.uri.queryParameters['date'] ??
+                  dailyDietDateISO(appToday()),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/prayer/partners',
@@ -327,22 +369,29 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'new/:type',
-            pageBuilder: (_, state) => _fade(MaterialPage(
-              child:
-                  ReportFormScreen(type: state.pathParameters['type']!),
-            )),
+            pageBuilder: (_, state) => _fade(
+              MaterialPage(
+                child: ReportFormScreen(type: state.pathParameters['type']!),
+              ),
+            ),
           ),
           GoRoute(
             path: 'edit/:id',
-            pageBuilder: (_, state) => _fade(MaterialPage(
-              child: ReportFormScreen(reportId: state.pathParameters['id']!),
-            )),
+            pageBuilder: (_, state) => _fade(
+              MaterialPage(
+                child: ReportFormScreen(reportId: state.pathParameters['id']!),
+              ),
+            ),
           ),
           GoRoute(
             path: ':id',
-            pageBuilder: (_, state) => _fade(MaterialPage(
-              child: ReportDetailScreen(reportId: state.pathParameters['id']!),
-            )),
+            pageBuilder: (_, state) => _fade(
+              MaterialPage(
+                child: ReportDetailScreen(
+                  reportId: state.pathParameters['id']!,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -392,228 +441,272 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           child: shell,
         ),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/admin',
-              pageBuilder: (_, _) =>
-                  const NoTransitionPage(child: AdminMoreScreen()),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/admin/members',
-              pageBuilder: (_, _) =>
-                  const NoTransitionPage(child: AdminMembersScreen()),
-              routes: [
-                GoRoute(
-                  path: ':id',
-                  parentNavigatorKey: rootNavigatorKey,
-                  pageBuilder: (_, state) => _fade(MaterialPage(
-                    child: _AdminPage(
-                      title: 'Member profile',
-                      child: AdminMemberDetailScreen(
-                          memberId: state.pathParameters['id']!),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin',
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: AdminMoreScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/members',
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: AdminMembersScreen()),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    parentNavigatorKey: rootNavigatorKey,
+                    pageBuilder: (_, state) => _fade(
+                      MaterialPage(
+                        child: _AdminPage(
+                          title: 'Member profile',
+                          child: AdminMemberDetailScreen(
+                            memberId: state.pathParameters['id']!,
+                          ),
+                        ),
+                      ),
                     ),
-                  )),
-                ),
-              ],
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/admin/reports',
-              pageBuilder: (_, _) =>
-                  const NoTransitionPage(child: AdminReportsScreen()),
-              routes: [
-                GoRoute(
-                  path: ':id',
-                  parentNavigatorKey: rootNavigatorKey,
-                  pageBuilder: (_, state) => _fade(MaterialPage(
-                    child: _AdminPage(
-                      title: 'Report',
-                      child: AdminReportDetailScreen(
-                          reportId: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/reports',
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: AdminReportsScreen()),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    parentNavigatorKey: rootNavigatorKey,
+                    pageBuilder: (_, state) => _fade(
+                      MaterialPage(
+                        child: _AdminPage(
+                          title: 'Report',
+                          child: AdminReportDetailScreen(
+                            reportId: state.pathParameters['id']!,
+                          ),
+                        ),
+                      ),
                     ),
-                  )),
-                ),
-              ],
-            ),
-          ]),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
 
       GoRoute(
         path: '/admin/dashboard',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(MaterialPage(
-          child: _AdminPage(
-            title: 'Dashboard',
-            child: AdminDashboardScreen(),
+        pageBuilder: (_, _) => _fade(
+          MaterialPage(
+            child: _AdminPage(
+              title: 'Dashboard',
+              child: AdminDashboardScreen(),
+            ),
           ),
-        )),
+        ),
       ),
 
       // ----------------------------------------- admin full-screen routes
       GoRoute(
         path: '/admin/access',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Admin access',
-            child: AdminAccessScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Admin access',
+              child: AdminAccessScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/shape-space',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Shape Space Q&A',
-            child: AdminShapeSpaceScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Shape Space Q&A',
+              child: AdminShapeSpaceScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/programmes',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Programmes',
-            child: AdminProgrammesScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Programmes',
+              child: AdminProgrammesScreen(),
+            ),
           ),
-        )),
+        ),
         routes: [
           GoRoute(
             path: 'edit/:id',
-            pageBuilder: (_, state) => _fade(MaterialPage(
-              child: _AdminPage(
-                title: 'Edit programme',
-                child: ProgrammeEditScreen(
-                    programmeId: state.pathParameters['id']),
+            pageBuilder: (_, state) => _fade(
+              MaterialPage(
+                child: _AdminPage(
+                  title: 'Edit programme',
+                  child: ProgrammeEditScreen(
+                    programmeId: state.pathParameters['id'],
+                  ),
+                ),
               ),
-            )),
+            ),
           ),
           GoRoute(
             path: 'new',
-            pageBuilder: (_, _) => _fade(const MaterialPage(
-              child: _AdminPage(
-                title: 'New programme',
-                child: ProgrammeEditScreen(),
+            pageBuilder: (_, _) => _fade(
+              const MaterialPage(
+                child: _AdminPage(
+                  title: 'New programme',
+                  child: ProgrammeEditScreen(),
+                ),
               ),
-            )),
+            ),
           ),
         ],
       ),
       GoRoute(
         path: '/admin/monthly-plans',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Monthly plans',
-            child: AdminMonthlyPlansScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Monthly plans',
+              child: AdminMonthlyPlansScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/weekly-plans',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Weekly plans',
-            child: AdminWeeklyPlansScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Weekly plans',
+              child: AdminWeeklyPlansScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/materials',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Materials',
-            child: AdminMaterialsScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Materials',
+              child: AdminMaterialsScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/daily-diet',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Daily Diet',
-            child: AdminDailyDietScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Daily Diet',
+              child: AdminDailyDietScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/activities',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Activities',
-            child: AdminActivitiesScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Activities',
+              child: AdminActivitiesScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/prayer-partners',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Prayer partners',
-            child: AdminPrayerPartnersScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Prayer partners',
+              child: AdminPrayerPartnersScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/announcements',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Announcements',
-            child: AdminAnnouncementsScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Announcements',
+              child: AdminAnnouncementsScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/connect-links',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Connect with me links',
-            child: AdminConnectLinksScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Connect with me links',
+              child: AdminConnectLinksScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/analytics',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Analytics',
-            child: AdminAnalyticsScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Analytics',
+              child: AdminAnalyticsScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/audit-logs',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Audit log',
-            child: AdminAuditLogsScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(
+              title: 'Audit log',
+              child: AdminAuditLogsScreen(),
+            ),
           ),
-        )),
+        ),
       ),
       GoRoute(
         path: '/admin/settings',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(const MaterialPage(
-          child: _AdminPage(
-            title: 'Settings',
-            child: AdminSettingsScreen(),
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _AdminPage(title: 'Settings', child: AdminSettingsScreen()),
           ),
-        )),
+        ),
       ),
     ],
     errorBuilder: (context, state) => _NotFoundScreen(location: state.uri.path),
@@ -702,20 +795,20 @@ class _AdminPage extends StatelessWidget {
 }
 
 String _memberShellTitle(int index) => switch (index) {
-      0 => 'Home',
-      1 => 'Daily Diet',
-      2 => 'Bible',
-      3 => 'My Growth Plan',
-      4 => 'Devotion',
-      _ => 'Home',
-    };
+  0 => 'Home',
+  1 => 'Daily Diet',
+  2 => 'Bible',
+  3 => 'My Growth Plan',
+  4 => 'Devotion',
+  _ => 'Home',
+};
 
 String _adminShellTitle(int index) => switch (index) {
-      0 => 'Home',
-      1 => 'Members',
-      2 => 'Reports & Reviews',
-      _ => 'Home',
-    };
+  0 => 'Home',
+  1 => 'Members',
+  2 => 'Reports & Reviews',
+  _ => 'Home',
+};
 
 /// Cold-start splash: restores the session then lets the router redirect.
 class SplashScreen extends ConsumerStatefulWidget {
@@ -725,41 +818,170 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _nameOpacity;
+  late final Animation<Offset> _nameSlide;
+  bool _sessionStarted = false;
+
   @override
   void initState() {
     super.initState();
-    // Restore once on mount; the router's redirect moves us to the landing
-    // area as soon as the auth state settles.
+    _controller =
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 2200),
+          )
+          ..forward().whenComplete(() {
+            if (mounted) ref.read(splashAnimationProvider.notifier).complete();
+          });
+    _logoScale = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, .48, curve: Curves.easeOutBack),
+    );
+    _nameOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(.12, .58, curve: Curves.easeOut),
+    );
+    _nameSlide = Tween<Offset>(
+      begin: const Offset(.18, 0),
+      end: Offset.zero,
+    ).animate(_nameOpacity);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _sessionStarted) return;
+      _sessionStarted = true;
+      ref.read(splashAnimationProvider.notifier).reset();
       ref.read(authControllerProvider.notifier).bootstrapSession();
     });
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _SplashLogo(),
-            SizedBox(height: 16),
-            CircularProgressIndicator(),
-          ],
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => Stack(
+            fit: StackFit.expand,
+            children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ScaleTransition(
+                          scale: _logoScale,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(2),
+                            child: const ClipOval(child: BrandLogo(size: 116)),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        FadeTransition(
+                          opacity: _nameOpacity,
+                          child: SlideTransition(
+                            position: _nameSlide,
+                            child: Text(
+                              'HEALINGS\nE. AZUIKE',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: AppColors.brandText,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.08,
+                                    letterSpacing: 1.2,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              IgnorePointer(
+                child: CustomPaint(
+                  size: Size(constraints.maxWidth, constraints.maxHeight),
+                  painter: _SplashLightSweepPainter(_controller),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _SplashLogo extends StatelessWidget {
-  const _SplashLogo();
+class _SplashLightSweepPainter extends CustomPainter {
+  const _SplashLightSweepPainter(this.animation);
+
+  final Animation<double> animation;
 
   @override
-  Widget build(BuildContext context) {
-    return const BrandLogo(size: 76);
+  void paint(Canvas canvas, Size size) {
+    final progress = Curves.easeInOutCubic.transform(
+      ((animation.value - .28) / .56).clamp(0.0, 1.0).toDouble(),
+    );
+    if (progress <= 0 || progress >= 1) return;
+
+    final centerX = -size.width * .25 + (size.width * 1.5 * progress);
+    final centerY = size.height / 2;
+    final rect = Rect.fromCenter(
+      center: Offset(centerX, centerY),
+      width: 180,
+      height: 2,
+    );
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        colors: [
+          Color(0x006FCBFF),
+          Color(0xAA8ED8FF),
+          Color(0xFFFFFFFF),
+          Color(0xCC64BFFF),
+          Color(0x006FCBFF),
+        ],
+      ).createShader(rect)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    canvas.drawRect(rect, paint);
+
+    final flarePaint = Paint()
+      ..color = const Color(0x998ED8FF)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(Offset(centerX, centerY), 4, flarePaint);
   }
+
+  @override
+  bool shouldRepaint(covariant _SplashLightSweepPainter oldDelegate) =>
+      oldDelegate.animation.value != animation.value;
+
+  @override
+  bool shouldRebuildSemantics(covariant CustomPainter oldDelegate) => false;
+
+  @override
+  bool hitTest(Offset position) => false;
+
+  @override
+  bool get willChange => true;
+
+  @override
+  Listenable? get repaint => animation;
 }
 
 class _NotFoundScreen extends StatelessWidget {
@@ -777,11 +999,17 @@ class _NotFoundScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.explore_outlined, size: 48, color: Color(0xFF7A8494)),
+              const Icon(
+                Icons.explore_outlined,
+                size: 48,
+                color: Color(0xFF7A8494),
+              ),
               const SizedBox(height: 16),
-              Text('We couldn’t find “$location”.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'We couldn’t find “$location”.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => context.go('/home'),
@@ -794,4 +1022,3 @@ class _NotFoundScreen extends StatelessWidget {
     );
   }
 }
-

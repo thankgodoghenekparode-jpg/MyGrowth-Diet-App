@@ -81,11 +81,16 @@ class _GrowthPlanViewState extends ConsumerState<_GrowthPlanView> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.event_note_outlined,
-                          size: 18, color: AppColors.navy700),
+                      Icon(
+                        Icons.event_note_outlined,
+                        size: 18,
+                        color: AppColors.navy700,
+                      ),
                       const SizedBox(width: AppSpacing.xs),
-                      Text('Programme year',
-                          style: Theme.of(context).textTheme.titleSmall),
+                      Text(
+                        'Programme year',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -247,8 +252,8 @@ class _ProgramReviewSection extends ConsumerWidget {
             final columns = constraints.maxWidth >= 900
                 ? 4
                 : constraints.maxWidth >= 600
-                    ? 3
-                    : 2;
+                ? 3
+                : 2;
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -269,8 +274,8 @@ class _ProgramReviewSection extends ConsumerWidget {
                         data: (value) => _showPlanContent(
                           context,
                           title: item.title,
-                          text: value?.dailyAffirmation?.trim().isNotEmpty ==
-                                  true
+                          text:
+                              value?.dailyAffirmation?.trim().isNotEmpty == true
                               ? value!.dailyAffirmation!
                               : 'The daily affirmation has not been published yet.',
                           icon: item.icon,
@@ -301,26 +306,25 @@ class _ProgramReviewSection extends ConsumerWidget {
                         children: [
                           Icon(item.icon, size: 19, color: AppColors.navy700),
                           const Spacer(),
-                          Icon(Icons.chevron_right,
-                              size: 20, color: AppColors.inkMuted),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 20,
+                            color: AppColors.inkMuted,
+                          ),
                         ],
                       ),
                       Text(
                         item.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
+                        style: Theme.of(context).textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       Text(
                         item.subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
+                        style: Theme.of(context).textTheme.labelSmall
                             ?.copyWith(color: AppColors.inkMuted),
                       ),
                     ],
@@ -358,13 +362,13 @@ class _ProgrammeOverviewCard extends ConsumerWidget {
             child: ExpansionTile(
               shape: const Border(),
               collapsedShape: const Border(),
-              leading:
-                  Icon(Icons.auto_awesome_outlined, color: AppColors.gold600),
+              leading: Icon(
+                Icons.auto_awesome_outlined,
+                color: AppColors.gold600,
+              ),
               title: Text(
                 'Programme overview',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
+                style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(
@@ -455,25 +459,23 @@ class _MonthlyPlanContent extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ---------------------------------------------------- theme
+            // ------------------------------------------------ study topic
             TitledCard(
               icon: Icons.menu_book_outlined,
-              title: 'Theme & Study Topic',
+              title: 'Study Topic',
               onTap: () => _showPlanContent(
                 context,
-                title: 'Theme & Study Topic',
+                title: 'Study Topic',
                 text: (plan.theme == null || plan.theme!.trim().isEmpty)
-                    ? 'The theme for this month is being prepared.'
+                    ? 'The study topic for this month is being prepared.'
                     : plan.theme!,
                 icon: Icons.menu_book_outlined,
               ),
               child: Text(
                 (plan.theme == null || plan.theme!.trim().isEmpty)
-                    ? 'The theme for this month is being prepared.'
+                    ? 'The study topic for this month is being prepared.'
                     : plan.theme!,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
+                style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(height: 1.45),
               ),
             ),
@@ -509,9 +511,7 @@ class _MonthlyPlanContent extends ConsumerWidget {
                 ),
                 child: BibleReferenceText(
                   text: plan.bibleReadingGuidance!,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
+                  style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(height: 1.55, color: AppColors.inkSecondary),
                 ),
               ),
@@ -608,30 +608,31 @@ class _MonthlyPlanContent extends ConsumerWidget {
                 text: plan.reflectionQuestions.isEmpty
                     ? 'Reflection questions for this month haven’t been published yet.'
                     : plan.reflectionQuestions
-                        .asMap()
-                        .entries
-                        .map((entry) => '${entry.key + 1}. ${entry.value}')
-                        .join('\n\n'),
+                          .asMap()
+                          .entries
+                          .map((entry) => '${entry.key + 1}. ${entry.value}')
+                          .join('\n\n'),
                 icon: Icons.edit_note_outlined,
               ),
               child: plan.reflectionQuestions.isEmpty
                   ? Text(
                       'Reflection questions for this month haven’t been '
                       'published yet.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
+                      style: Theme.of(context).textTheme.bodySmall
                           ?.copyWith(color: AppColors.inkMuted),
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (var i = 0;
-                            i < plan.reflectionQuestions.length;
-                            i++)
+                        for (
+                          var i = 0;
+                          i < plan.reflectionQuestions.length;
+                          i++
+                        )
                           Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: AppSpacing.xs),
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.xs,
+                            ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -725,8 +726,10 @@ void _showPlanContent(
                 Icon(icon, color: AppColors.navy700),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: Text(title,
-                      style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
                 IconButton(
                   tooltip: 'Close',
@@ -742,16 +745,12 @@ void _showPlanContent(
                 child: bibleReferences
                     ? BibleReferenceText(
                         text: text,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
+                        style: Theme.of(context).textTheme.bodyLarge
                             ?.copyWith(height: 1.6),
                       )
                     : Text(
                         text,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
+                        style: Theme.of(context).textTheme.bodyLarge
                             ?.copyWith(height: 1.6),
                       ),
               ),
@@ -773,9 +772,7 @@ class _GuidanceText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context)
-          .textTheme
-          .bodyMedium
+      style: Theme.of(context).textTheme.bodyMedium
           ?.copyWith(height: 1.55, color: AppColors.inkSecondary),
     );
   }
@@ -853,18 +850,26 @@ class _WeekCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.view_week_outlined,
-                  size: 18, color: AppColors.navy700),
+              Icon(
+                Icons.view_week_outlined,
+                size: 18,
+                color: AppColors.navy700,
+              ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
                   'Week ${week.weekNumber}',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               if (dateRange != null)
-                StatusBadge(label: dateRange, tone: AppBadgeTone.navy, small: true),
+                StatusBadge(
+                  label: dateRange,
+                  tone: AppBadgeTone.navy,
+                  small: true,
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
