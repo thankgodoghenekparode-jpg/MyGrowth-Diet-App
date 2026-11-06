@@ -1,3 +1,4 @@
+import 'package:mygrowth_app/core/auth/auth_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -155,3 +156,4 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 }
+
