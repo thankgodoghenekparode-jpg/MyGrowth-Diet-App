@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
-import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/section_header.dart';
 
@@ -83,7 +82,7 @@ class _MinistryPartnershipScreenState extends ConsumerState<MinistryPartnershipS
         const SizedBox(height: 20),
         TextField(controller: _amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Amount (NGN)', prefixText: '₦ ', border: OutlineInputBorder())),
         const SizedBox(height: 14),
-        DropdownButtonFormField<String>(value: _frequency, decoration: const InputDecoration(labelText: 'Frequency', border: OutlineInputBorder()), items: const [
+        DropdownButtonFormField<String>(initialValue: _frequency, decoration: const InputDecoration(labelText: 'Frequency', border: OutlineInputBorder()), items: const [
           DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
           DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
           DropdownMenuItem(value: 'YEARLY', child: Text('Yearly')),

@@ -100,7 +100,7 @@ class TitledCard extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
               if (onTap != null) ...[
                 if (trailing != null) const SizedBox(width: AppSpacing.xs),
                 Icon(Icons.chevron_right, size: 20, color: AppColors.inkMuted),

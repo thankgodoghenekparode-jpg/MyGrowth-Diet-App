@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import prisma from '../../db/index.js';
-import { validate } from '../../middleware/validate.js';
+import { validate } from '../../lib/validate.js';
 import { errors } from '../../lib/errors.js';
-import { auditLog } from '../../lib/audit.js';
+import { audit } from '../../lib/audit.js';
 
 export const adminConnectRouter = Router();
 
@@ -42,7 +42,7 @@ adminConnectRouter.post('/connect-links', validate({ body: connectSchema }), asy
         createdById: req.user?.id ?? null,
       },
     });
-    await auditLog({
+    await audit({
       req,
       actorId: req.user?.id ?? null,
       actorRole: req.user?.role ?? null,
@@ -72,7 +72,7 @@ adminConnectRouter.patch('/connect-links/:id', validate({ body: connectSchema.pa
     if (req.body.sortOrder !== undefined) data.sortOrder = req.body.sortOrder;
     if (req.body.isActive !== undefined) data.isActive = req.body.isActive;
     const link = await prisma.connectLink.update({ where: { id: req.params.id }, data });
-    await auditLog({
+    await audit({
       req,
       actorId: req.user?.id ?? null,
       actorRole: req.user?.role ?? null,
@@ -94,7 +94,7 @@ adminConnectRouter.delete('/connect-links/:id', async (req, res, next) => {
     const existing = await prisma.connectLink.findUnique({ where: { id: req.params.id } });
     if (!existing) throw errors.notFound('Connect link not found');
     await prisma.connectLink.delete({ where: { id: req.params.id } });
-    await auditLog({
+    await audit({
       req,
       actorId: req.user?.id ?? null,
       actorRole: req.user?.role ?? null,

@@ -13,7 +13,6 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/toast.dart';
-import 'admin_providers.dart';
 import 'admin_shared.dart';
 
 final adminConnectLinksProvider = FutureProvider.autoDispose<List<ConnectLink>>((ref) async {
@@ -143,7 +142,7 @@ class _AdminConnectLinksBodyState extends ConsumerState<_AdminConnectLinksBody> 
                                   label: const Text('Edit'),
                                 ),
                                 TextButton.icon(
-                                  onPressed: () => _confirmDelete(context, ref, link),
+                                  onPressed: () => _confirmDelete(ref, link),
                                   icon: const Icon(Icons.delete_outline, size: 18),
                                   label: const Text('Delete'),
                                 ),
@@ -162,7 +161,7 @@ class _AdminConnectLinksBodyState extends ConsumerState<_AdminConnectLinksBody> 
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, ConnectLink link) async {
+  Future<void> _confirmDelete(WidgetRef ref, ConnectLink link) async {
     final ok = await confirmDialog(
       context,
       title: 'Delete link?',
