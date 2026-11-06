@@ -33,4 +33,6 @@ if ($staged | Select-String -Pattern '(^|/)\.env$') {
 
 git commit -m $Message
 git push
-Write-Host "Done. Vercel and Render are redeploying."
+if ($LASTEXITCODE -ne 0) { Write-Host 'PUSH FAILED. Run git push again.'; exit 1 }
+Write-Host 'Done. Vercel and Render are redeploying.'
+
