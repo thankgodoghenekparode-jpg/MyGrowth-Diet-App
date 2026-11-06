@@ -3,7 +3,7 @@ import { z } from 'zod';
 import prisma from '../../db/index.js';
 import { asyncHandler, errors } from '../../lib/errors.js';
 import { validate, dateSchema, uuidSchema } from '../../lib/validate.js';
-import { assertOwner } from '../../middleware/auth.js';
+import { assertOwner, requireMonthlyAccess } from '../../middleware/auth.js';
 import { dateFromISO, isoDate } from '../../lib/dates.js';
 import { resolveProgrammeForDate, resolveMonthlyPlan, monthOf, yearOf } from '../../lib/programme.js';
 
@@ -54,6 +54,7 @@ function recordShape(r) {
  */
 router.get(
   '/activities',
+  requireMonthlyAccess,
   validate({
     query: z
       .object({

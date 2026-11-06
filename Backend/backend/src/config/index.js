@@ -32,6 +32,14 @@ export const config = {
     .filter(Boolean),
   appBaseUrl: process.env.APP_BASE_URL || 'http://localhost:4000',
 
+  monnify: {
+    apiKey: process.env.MONNIFY_API_KEY || '',
+    secretKey: process.env.MONNIFY_SECRET_KEY || '',
+    contractCode: process.env.MONNIFY_CONTRACT_CODE || '',
+    baseUrl: process.env.MONNIFY_BASE_URL || 'https://sandbox.monnify.com',
+    amount: int('MONTHLY_ACCESS_AMOUNT_NGN', 1000),
+  },
+
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'dev_access_secret_change_me',
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_change_me',

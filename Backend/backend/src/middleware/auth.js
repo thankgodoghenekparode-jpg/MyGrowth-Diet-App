@@ -52,6 +52,20 @@ export const requireApprovedMember = asyncHandler(async (req, res, next) => {
   next();
 });
 
+/** Paid entitlement gate for published member content. */
+export const requireMonthlyAccess = asyncHandler(async (req, res, next) => {
+  if ((req.user.role === 'ADMIN' || req.user.role === 'MAIN_ADMIN') && req.user.adminAccess === 'ACTIVE') {
+    return next();
+  }
+  const access = await prisma.monthlyAccess.findUnique({ where: { userId: req.user.id } });
+  if (!access || access.expiresAt <= new Date()) {
+    throw errors.forbidden('Subscribe for ₦1,000 to access this month’s content.', 'MONTHLY_ACCESS_REQUIRED', {
+      subscriptionPath: '/api/v1/subscription/status',
+    });
+  }
+  next();
+});
+
 /**
  * Admin gate: MAIN_ADMIN or ADMIN with granted (ACTIVE) administrative access.
  * Failed attempts by authenticated non-admins are recorded as audit entries

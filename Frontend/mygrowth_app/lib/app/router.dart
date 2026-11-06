@@ -55,6 +55,7 @@ import '../features/prayer_partners/prayer_room_screen.dart';
 import '../features/partnerships/ministry_partnership_screen.dart';
 import '../features/admin/admin_ministry_partnerships_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/subscription/subscription_screen.dart';
 import '../features/programme/bible_reading_screen.dart';
 import '../features/programme/growth_plan_screen.dart';
 import '../features/progress/progress_screen.dart';
@@ -267,6 +268,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (_, _) => _fade(
           MaterialPage(
             child: _MemberPage(title: 'Dashboard', child: DashboardScreen()),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/subscription',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, state) => _fade(
+          MaterialPage(
+            child: _MemberPage(
+              title: 'Monthly access',
+              child: SubscriptionScreen(
+                paymentReference: state.uri.queryParameters['paymentReference'],
+              ),
+            ),
           ),
         ),
       ),

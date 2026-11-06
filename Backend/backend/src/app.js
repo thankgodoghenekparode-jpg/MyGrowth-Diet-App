@@ -6,7 +6,7 @@ import config from './config/index.js';
 import { logger } from './lib/logger.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 import { globalLimiter, authLimiter } from './middleware/rateLimiters.js';
-import { requireAuth, requireApprovedMember } from './middleware/auth.js';
+import { requireAuth, requireApprovedMember, requireMonthlyAccess } from './middleware/auth.js';
 
 import authRoutes from './modules/auth/routes.js';
 import meProfileRoutes from './modules/me/profile.routes.js';
@@ -29,6 +29,7 @@ import filesRoutes from './modules/files/files.routes.js';
 import adminRoutes from './modules/admin/index.js';
 import cronRoutes, { healthHandler } from './modules/cron/cron.routes.js';
 import { partnershipsRouter } from './modules/partnerships/partnerships.routes.js';
+import subscriptionRoutes from './modules/subscription/subscription.routes.js';
 
 export function createApp() {
   const app = express();
@@ -68,7 +69,7 @@ export function createApp() {
   );
 
   app.use(cookieParser());
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '1mb', verify(req, res, buffer) { req.rawBody = Buffer.from(buffer); } }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
   app.use(globalLimiter);
 
@@ -92,16 +93,20 @@ export function createApp() {
   // Cron tick (secret-guarded)
   app.use('/api/v1/cron', cronRoutes);
 
+  // Individual subscription routes authenticate themselves; the webhook is
+  // public by design and validates Monnify's signature itself.
+  app.use('/api/v1/subscription', subscriptionRoutes);
+
   // Authenticated member context
   app.use('/api/v1/me', requireAuth, meProfileRoutes, meActivityRoutes, meGoalRoutes, meDashboardRoutes, reportsRoutes, reflectionsRoutes, notificationsRoutes, aiAssistantRoutes);
 
   // Published content for members (approved only)
-  app.use('/api/v1/programmes', requireAuth, requireApprovedMember, programmesRoutes);
-  app.use('/api/v1/daily-diet', requireAuth, requireApprovedMember, dailyDietRoutes);
-  app.use('/api/v1/materials', requireAuth, requireApprovedMember, materialsRoutes);
+  app.use('/api/v1/programmes', requireAuth, requireApprovedMember, requireMonthlyAccess, programmesRoutes);
+  app.use('/api/v1/daily-diet', requireAuth, requireApprovedMember, requireMonthlyAccess, dailyDietRoutes);
+  app.use('/api/v1/materials', requireAuth, requireApprovedMember, requireMonthlyAccess, materialsRoutes);
   app.use('/api/v1/announcements', requireAuth, requireApprovedMember, announcementsRoutes);
   app.use('/api/v1/shape-space', requireAuth, requireApprovedMember, shapeSpaceRoutes);
-  app.use('/api/v1/devotions', requireAuth, requireApprovedMember, devotionsRouter);
+  app.use('/api/v1/devotions', requireAuth, requireApprovedMember, requireMonthlyAccess, devotionsRouter);
 
   // Prayer partners (any authenticated, approved member)
   app.use('/api/v1/prayer-partners', requireAuth, requireApprovedMember, prayerPartnersRoutes);

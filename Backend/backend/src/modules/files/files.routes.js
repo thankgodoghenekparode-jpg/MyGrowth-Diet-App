@@ -127,6 +127,12 @@ router.get(
     const publishedMaterial = file.materialAsFile.some(
       (m) => m.status === 'PUBLISHED' && m.visibility === 'ALL_MEMBERS'
     );
+    if (publishedMaterial && !isAdmin) {
+      const access = await prisma.monthlyAccess.findUnique({ where: { userId: user.id } });
+      if (!access || access.expiresAt <= new Date()) {
+        throw errors.forbidden('Subscribe for ₦1,000 to access this month’s content.', 'MONTHLY_ACCESS_REQUIRED');
+      }
+    }
     const isAvatar = await prisma.user.findFirst({
       where: { id: user.id, avatarFileId: file.id },
       select: { id: true },

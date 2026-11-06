@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../network/api_client.dart';
 import '../theme/app_colors.dart';
@@ -81,6 +82,10 @@ class ErrorState extends StatelessWidget {
   final VoidCallback? onRetry;
   final bool compact;
 
+  bool get _needsMonthlyAccess =>
+      error is ApiException &&
+      (error as ApiException).code == 'MONTHLY_ACCESS_REQUIRED';
+
   String get _message {
     if (error is ApiException) {
       final e = error as ApiException;
@@ -104,6 +109,11 @@ class ErrorState extends StatelessWidget {
             ),
             if (onRetry != null)
               TextButton(onPressed: onRetry, child: const Text('Retry')),
+            if (_needsMonthlyAccess)
+              TextButton(
+                onPressed: () => context.push('/subscription'),
+                child: const Text('Subscribe'),
+              ),
           ],
         ),
       );
@@ -137,6 +147,14 @@ class ErrorState extends StatelessWidget {
                 variant: AppButtonVariant.outlined,
                 icon: Icons.refresh_rounded,
                 onPressed: onRetry,
+              ),
+            ],
+            if (_needsMonthlyAccess) ...[
+              const SizedBox(height: AppSpacing.sm),
+              AppButton(
+                label: 'View monthly access',
+                icon: Icons.workspace_premium_rounded,
+                onPressed: () => context.push('/subscription'),
               ),
             ],
           ],

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import prisma from '../../db/index.js';
 import { asyncHandler, errors } from '../../lib/errors.js';
 import { validate, uuidSchema, dateSchema } from '../../lib/validate.js';
-import { assertOwner } from '../../middleware/auth.js';
+import { assertOwner, requireMonthlyAccess } from '../../middleware/auth.js';
 import { DateTime } from 'luxon';
 import { isoDate, dateFromISO, weekKey, monthKey } from '../../lib/dates.js';
 import { resolveProgrammeForDate, resolveMonthlyPlan, monthOf, yearOf } from '../../lib/programme.js';
@@ -18,6 +18,7 @@ const PRAYER_CATEGORIES = ['prayer', 'fasting_and_prayer', 'prayer_and_affirmati
  */
 router.get(
   '/dashboard',
+  requireMonthlyAccess,
   asyncHandler(async (req, res) => {
     const user = req.user;
     const tzName = user.timezone || 'Africa/Lagos';
