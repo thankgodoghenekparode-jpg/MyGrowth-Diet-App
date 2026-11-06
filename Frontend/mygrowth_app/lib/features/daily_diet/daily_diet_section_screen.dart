@@ -254,7 +254,7 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
           ? AppSpacing.pagePaddingMobile
           : const EdgeInsets.all(AppSpacing.xl),
       children: [
-        _IntroCard(section: section),
+        _IntroCard(section: section, bundle: bundle),
         const SizedBox(height: AppSpacing.md),
         switch (section.behaviour) {
           DailyDietBehaviour.timer => _PrayerBlock(
@@ -302,14 +302,29 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
 
 /// The section title, its scope and whatever the administrator wrote.
 class _IntroCard extends StatelessWidget {
-  const _IntroCard({required this.section});
+  const _IntroCard({required this.section, required this.bundle});
 
   final DailyDietSection section;
+  final DailyDietBundle bundle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final content = section.content;
+    final isDeclarations = section.key == 'declarations';
+    final dayDeclarations = section.dayContent?.declarations ?? const <String>[];
+    final dayBody = section.dayContent?.hasBody == true
+        ? section.dayContent!.body
+        : null;
+    final dailyDeclaration = (dayDeclarations.isNotEmpty
+            ? dayDeclarations.first
+            : dayBody ?? bundle.programme?.dailyAffirmation)
+        ?.trim();
+    final introBody = isDeclarations
+        ? (dailyDeclaration?.isNotEmpty == true ? dailyDeclaration : null)
+        : content?.hasBody == true
+            ? content!.body
+            : null;
 
     return AppCard(
       child: Column(
@@ -342,7 +357,14 @@ class _IntroCard extends StatelessWidget {
                         color: AppColors.ink,
                       ),
                     ),
-                    if (content != null)
+                    if (isDeclarations)
+                      Text(
+                        'Daily declaration',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.inkMuted,
+                        ),
+                      )
+                    else if (content != null)
                       Text(
                         '${content.scope.label} • ${content.title}',
                         style: theme.textTheme.labelSmall?.copyWith(
@@ -358,17 +380,17 @@ class _IntroCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(section.description!, style: theme.textTheme.bodySmall),
           ],
-          if (content != null &&
-              content.hasBody &&
-              section.key != 'proverbs_reading') ...[
+          if (introBody != null && section.key != 'proverbs_reading') ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
-              switch (section.key) {
-                'bible_study' => 'Study content',
-                'literature_reading' => 'Reading content',
-                'scripture_reading' => 'Reading guidance',
-                _ => 'Content',
-              },
+              isDeclarations
+                  ? 'Daily declaration'
+                  : switch (section.key) {
+                      'bible_study' => 'Study content',
+                      'literature_reading' => 'Reading content',
+                      'scripture_reading' => 'Reading guidance',
+                      _ => 'Content',
+                    },
               style: theme.textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -377,7 +399,17 @@ class _IntroCard extends StatelessWidget {
             AppCard(
               color: AppColors.surfaceMuted,
               child: BibleReferenceText(
-                text: content.body!,
+                text: introBody,
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+              ),
+            ),
+          ],
+          if (isDeclarations && introBody == null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppCard(
+              color: AppColors.surfaceMuted,
+              child: Text(
+                'No daily declaration has been published yet.',
                 style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
               ),
             ),
@@ -433,7 +465,18 @@ class _TextBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = section.content;
+    final content = section.key == 'declarations'
+        ? section.monthContent ??
+            (section.content?.scope == DailyDietScope.month
+                ? section.content
+                : null)
+        : section.content;
+    final monthlyConfession = bundle.monthlyPlan?.monthlyConfession?.trim();
+    final declarations = content?.declarations.isNotEmpty == true
+        ? content!.declarations
+        : monthlyConfession?.isNotEmpty == true
+            ? [monthlyConfession!]
+            : const <String>[];
     final theme = Theme.of(context);
     final date = DateTime.tryParse(bundle.date);
     final proverbsReading = section.key == 'proverbs_reading' && date != null
@@ -535,18 +578,18 @@ class _TextBlock extends StatelessWidget {
             ),
           ),
         ],
-        if (content?.declarations.isNotEmpty ?? false) ...[
+        if (declarations.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.md),
           SectionHeader(
-            title: 'Declare out loud',
+            title: 'Declarations of the month',
             icon: Icons.record_voice_over_rounded,
-            subtitle: '${content!.declarations.length} declaration(s)',
+            subtitle: '${declarations.length} declaration(s)',
           ),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = 0; i < content.declarations.length; i++) ...[
+                for (var i = 0; i < declarations.length; i++) ...[
                   if (i > 0) const Divider(height: AppSpacing.lg),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,7 +602,7 @@ class _TextBlock extends StatelessWidget {
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
                         child: Text(
-                          content.declarations[i],
+                          declarations[i],
                           style: theme.textTheme.bodyMedium?.copyWith(
                             height: 1.5,
                             fontWeight: FontWeight.w600,
@@ -574,10 +617,11 @@ class _TextBlock extends StatelessWidget {
           ),
         ],
         if ((content?.teachings.isEmpty ?? true) &&
-            (content?.declarations.isEmpty ?? true) &&
+            declarations.isEmpty &&
             content?.reading == null &&
             content?.topic == null &&
             section.key != 'proverbs_reading' &&
+            section.key != 'declarations' &&
             (content?.hasBody ?? false)) ...[
           const SizedBox(height: AppSpacing.md),
           AppCard(

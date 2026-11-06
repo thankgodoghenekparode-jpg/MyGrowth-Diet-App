@@ -413,6 +413,8 @@ class DailyDietSection {
     required this.allowNote,
     required this.trackCompletion,
     this.content,
+    this.dayContent,
+    this.monthContent,
     this.materials = const [],
     this.completion,
     this.status = DailyDietStatus.notStarted,
@@ -428,6 +430,8 @@ class DailyDietSection {
   final bool allowNote;
   final bool trackCompletion;
   final DailyDietContent? content;
+  final DailyDietContent? dayContent;
+  final DailyDietContent? monthContent;
   final List<DailyDietMaterial> materials;
   final DailyDietCompletion? completion;
   final DailyDietStatus status;
@@ -453,6 +457,8 @@ class DailyDietSection {
 
   factory DailyDietSection.fromJson(Map<String, dynamic> json) {
     final rawContent = json['content'];
+    final rawDayContent = json['dayContent'];
+    final rawMonthContent = json['monthContent'];
     final rawCompletion = json['completion'];
     final rawMaterials = json['materials'];
     return DailyDietSection(
@@ -467,6 +473,12 @@ class DailyDietSection {
       trackCompletion: json['trackCompletion'] as bool? ?? true,
       content: rawContent is Map<String, dynamic>
           ? DailyDietContent.fromJson(rawContent)
+          : null,
+      dayContent: rawDayContent is Map<String, dynamic>
+          ? DailyDietContent.fromJson(rawDayContent)
+          : null,
+      monthContent: rawMonthContent is Map<String, dynamic>
+          ? DailyDietContent.fromJson(rawMonthContent)
           : null,
       materials: rawMaterials is List
           ? rawMaterials

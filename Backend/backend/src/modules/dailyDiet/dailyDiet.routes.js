@@ -215,10 +215,14 @@ router.get(
     const materialById = new Map(materials.map((m) => [m.id, m]));
 
     const contentBySection = new Map();
+    const scopedContentBySection = new Map();
     for (const anchor of anchors) {
       for (const c of contents) {
         if (isoDate(c.date) !== anchor.date) continue;
         if (c.scope !== anchor.scope) continue;
+        const scoped = scopedContentBySection.get(c.sectionId) ?? {};
+        scoped[c.scope.toLowerCase()] = c;
+        scopedContentBySection.set(c.sectionId, scoped);
         // The anchors are ordered DAY → WEEK → MONTH, so the first match wins.
         if (!contentBySection.has(c.sectionId)) {
           contentBySection.set(c.sectionId, c);
@@ -256,6 +260,16 @@ router.get(
         categoryKey: s.key,
         categoryLabel: humanizeCategory(s.key),
         content: contentShape(content),
+        ...(s.key === 'declarations'
+          ? {
+              dayContent: contentShape(
+                scopedContentBySection.get(s.id)?.day ?? null
+              ),
+              monthContent: contentShape(
+                scopedContentBySection.get(s.id)?.month ?? null
+              ),
+            }
+          : {}),
         materials: attached,
         completion: completionShape(completion),
         status: completion?.status ?? 'NOT_STARTED',
