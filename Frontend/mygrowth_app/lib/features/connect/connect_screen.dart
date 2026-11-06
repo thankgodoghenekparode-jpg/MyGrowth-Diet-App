@@ -25,6 +25,9 @@ final connectLinksProvider = FutureProvider.autoDispose<List<ConnectLink>>((ref)
 class ConnectScreen extends ConsumerWidget {
   const ConnectScreen({super.key});
 
+  static final Uri _personalLink =
+      Uri.parse('https://linktr.ee/HealingsE.Azuike');
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final links = ref.watch(connectLinksProvider);
@@ -42,6 +45,54 @@ class ConnectScreen extends ConsumerWidget {
               title: 'Connect with me',
               subtitle: 'Links and QR codes to reach out',
               icon: Icons.link_outlined,
+            ),
+            AppCard(
+              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Column(
+                children: [
+                  Text(
+                    'Connect with me',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Scan this QR code to find and connect with me online.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.inkSecondary,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/images/connect_with_me_qr.jpeg',
+                      width: 240,
+                      height: 240,
+                      fit: BoxFit.contain,
+                      semanticLabel: 'QR code for Healings E. Azuike Linktree',
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton.icon(
+                    onPressed: () => _openPersonalLink(context),
+                    icon: const Icon(Icons.open_in_new),
+                    label: const Text('Open my Linktree'),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  SelectableText(
+                    'https://linktr.ee/HealingsE.Azuike',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.inkSecondary,
+                        ),
+                  ),
+                ],
+              ),
             ),
             links.when(
               loading: () => const CardListSkeleton(count: 3),
@@ -170,6 +221,10 @@ class ConnectScreen extends ConsumerWidget {
     final uri = Uri.tryParse(link.url);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _openPersonalLink(BuildContext context) async {
+    await launchUrl(_personalLink, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _copyLink(BuildContext context, ConnectLink link) async {
