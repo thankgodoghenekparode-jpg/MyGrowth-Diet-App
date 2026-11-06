@@ -152,12 +152,13 @@ router.post('/verify/:reference', requireAuth, requireApprovedMember, asyncHandl
   res.json(result);
 }));
 
-// Monnify webhooks are public callbacks. Signature verification protects the
-// production endpoint; sandbox does not attach the signature header.
+// Monnify sandbox callbacks do not include a signature. Verify signatures for
+// live (and any non-sandbox) endpoints, regardless of the app's NODE_ENV.
 router.post('/webhook', asyncHandler(async (req, res) => {
   if (!configured()) throw errors.internal('Subscription payments are not configured yet', 'PAYMENT_NOT_CONFIGURED');
   const signature = req.get('monnify-signature');
-  if (config.env === 'production' || signature) {
+  const isSandbox = new URL(config.monnify.baseUrl).hostname === 'sandbox.monnify.com';
+  if (!isSandbox || signature) {
     const expected = createHmac('sha512', config.monnify.secretKey)
       .update(req.rawBody || Buffer.from(JSON.stringify(req.body)))
       .digest('hex');
