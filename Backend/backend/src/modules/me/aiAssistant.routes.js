@@ -30,8 +30,8 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
   try {
     if (geminiKey) {
       // Google Gemini implementation
-      let model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-      const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
+      let model = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+      const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash';
 
       const contents = req.valid.body.messages.map(({ role, content }) => ({
         role: role === 'assistant' ? 'model' : 'user',
