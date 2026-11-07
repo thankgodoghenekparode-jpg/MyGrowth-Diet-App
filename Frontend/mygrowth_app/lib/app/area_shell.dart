@@ -473,7 +473,7 @@ class _BottomNav extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: 72,
           child: Row(
             children: [
               for (var i = 0; i < destinations.length; i++)
@@ -515,12 +515,23 @@ class _BottomNavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              selected ? destination.activeIcon : destination.icon,
-              size: 23,
-              color: selected ? AppColors.navy800 : AppColors.inkMuted,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              width: 48,
+              height: 30,
+              decoration: BoxDecoration(
+                color: selected ? AppColors.brandSurface : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                selected ? destination.activeIcon : destination.icon,
+                size: 20,
+                color: selected ? AppColors.inkOnDark : AppColors.inkMuted,
+              ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               destination.label,
               maxLines: 1,

@@ -131,12 +131,45 @@ class DashboardScreen extends ConsumerWidget {
                   children: [
                     Text(
                       '$greeting, ${firstName.isEmpty ? 'friend' : firstName}',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontSize: 25,
+                            letterSpacing: -0.25,
+                          ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
-                      DateFormat('EEEE, d MMMM').format(now),
-                      style: Theme.of(context).textTheme.bodySmall,
+                      'Grow. Learn. Live it.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.inkSecondary,
+                          ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.paleChampagne,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.calendar_today_rounded,
+                              size: 13, color: AppColors.goldText),
+                          const SizedBox(width: 6),
+                          Text(
+                            DateFormat('EEEE, d MMMM').format(now),
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppColors.goldText,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

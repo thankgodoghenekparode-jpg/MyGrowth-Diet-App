@@ -41,7 +41,7 @@ class AppearanceController extends Notifier<AppearanceMode> {
   AppearanceMode build() {
     // Restore the saved choice shortly after the first frame.
     Future<void>.microtask(_restore);
-    return AppearanceMode.system;
+    return AppearanceMode.light;
   }
 
   Future<void> _restore() async {
@@ -52,7 +52,8 @@ class AppearanceController extends Notifier<AppearanceMode> {
     final mode = switch (raw) {
       'light' => AppearanceMode.light,
       'dark' => AppearanceMode.dark,
-      _ => AppearanceMode.system,
+      'system' => AppearanceMode.system,
+      _ => AppearanceMode.light,
     };
     state = mode;
   }

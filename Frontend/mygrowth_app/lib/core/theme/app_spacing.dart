@@ -18,7 +18,7 @@ class AppSpacing {
     vertical: md,
   );
   static const EdgeInsets cardPadding = EdgeInsets.all(md);
-  static const BorderRadius cardRadius = BorderRadius.all(Radius.circular(14));
+  static const BorderRadius cardRadius = BorderRadius.all(Radius.circular(18));
   static const BorderRadius controlRadius = BorderRadius.all(Radius.circular(10));
 }
 
