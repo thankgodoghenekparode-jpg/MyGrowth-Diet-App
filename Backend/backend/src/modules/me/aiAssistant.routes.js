@@ -25,7 +25,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
   const systemInstructions = buildAssistantInstructions(req.user.role, req.user.adminAccess);
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 35000);
+  const timeout = setTimeout(() => controller.abort(), 60000);
 
   try {
     if (geminiKey) {
@@ -49,6 +49,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
           contents,
           generationConfig: {
             maxOutputTokens: 1200,
+            thinkingConfig: { thinkingLevel: 'low' },
           },
         }),
       });
