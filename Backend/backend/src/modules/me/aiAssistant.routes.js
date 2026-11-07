@@ -4,6 +4,7 @@ import { asyncHandler, errors } from '../../lib/errors.js';
 import { validate } from '../../lib/validate.js';
 import { aiAssistantLimiter } from '../../middleware/rateLimiters.js';
 import { buildAssistantInstructions } from './aiAssistantKnowledge.js';
+import { logger } from '../../lib/logger.js';
 
 const router = Router();
 const schema = z.object({
@@ -54,6 +55,9 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
 
       if (!upstream.ok) {
         const status = upstream.status;
+        const providerError = await upstream.json().catch(() => ({}));
+        const providerCode = providerError.error?.status || providerError.error?.code || `HTTP_${status}`;
+        logger.warn(`AI Gemini request failed: HTTP ${status}, code=${providerCode}, model=${model}`);
         if (status === 400 || status === 401 || status === 403) {
           throw errors.internal('Google Gemini credentials or model configuration need attention', 'AI_PROVIDER_AUTH');
         }
@@ -88,6 +92,9 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
 
     if (!upstream.ok) {
       const status = upstream.status;
+      const providerError = await upstream.json().catch(() => ({}));
+      const providerCode = providerError.error?.code || providerError.error?.type || `HTTP_${status}`;
+      logger.warn(`AI OpenAI request failed: HTTP ${status}, code=${providerCode}, model=${model}`);
       if (status === 401 || status === 403) throw errors.internal('AI provider credentials need attention', 'AI_PROVIDER_AUTH');
       throw errors.internal('The assistant is temporarily unavailable', 'AI_UNAVAILABLE');
     }
@@ -105,6 +112,7 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
   } catch (error) {
     if (error.name === 'AbortError') throw errors.internal('The assistant took too long to respond', 'AI_TIMEOUT');
     if (error.status) throw error;
+    logger.warn(`AI provider network/response error: ${error.name || 'Error'}`);
     throw errors.internal('The assistant is temporarily unavailable', 'AI_UNAVAILABLE');
   } finally {
     clearTimeout(timeout);
