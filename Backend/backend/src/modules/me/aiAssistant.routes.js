@@ -31,42 +31,66 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
     if (geminiKey) {
       // Google Gemini implementation
       let model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-      const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash';
+      const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
 
       const contents = req.valid.body.messages.map(({ role, content }) => ({
         role: role === 'assistant' ? 'model' : 'user',
         parts: [{ text: content }],
       }));
 
-      const requestModel = (targetModel) => fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetModel)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
-        {
-          method: 'POST',
-          signal: controller.signal,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: systemInstructions }],
-            },
-            contents,
-            generationConfig: {
-              maxOutputTokens: 1200,
-              thinkingConfig: { thinkingLevel: 'low' },
-            },
-          }),
+      const requestModel = async (targetModel) => {
+        const attemptController = new AbortController();
+        const abortWithRequest = () => attemptController.abort();
+        const attemptTimeout = setTimeout(abortWithRequest, 20000);
+        controller.signal.addEventListener('abort', abortWithRequest, { once: true });
+        try {
+          const upstream = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetModel)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
+            {
+              method: 'POST',
+              signal: attemptController.signal,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                systemInstruction: {
+                  parts: [{ text: systemInstructions }],
+                },
+                contents,
+                generationConfig: {
+                  maxOutputTokens: 1200,
+                  thinkingConfig: { thinkingLevel: 'low' },
+                },
+              }),
+            }
+          );
+          const payload = await upstream.json().catch(() => ({}));
+          return { upstream, payload, timedOut: false };
+        } catch (error) {
+          if (error.name === 'AbortError' && !controller.signal.aborted) {
+            return { upstream: null, payload: {}, timedOut: true };
+          }
+          throw error;
+        } finally {
+          clearTimeout(attemptTimeout);
+          controller.signal.removeEventListener('abort', abortWithRequest);
         }
-      );
+      };
 
-      let upstream = await requestModel(model);
-      if (upstream.status === 503 && fallbackModel !== model) {
-        logger.warn(`AI Gemini primary model unavailable; retrying with model=${fallbackModel}`);
+      let result = await requestModel(model);
+      if ((result.timedOut || result.upstream.status === 503) && fallbackModel !== model) {
+        const reason = result.timedOut ? 'timed out' : 'returned HTTP 503';
+        logger.warn(`AI Gemini primary model ${reason}; retrying with model=${fallbackModel}`);
         model = fallbackModel;
-        upstream = await requestModel(model);
+        result = await requestModel(model);
       }
+      if (result.timedOut) {
+        logger.warn(`AI Gemini request timed out: model=${model}`);
+        throw errors.internal('The assistant took too long to respond', 'AI_TIMEOUT');
+      }
+      const { upstream, payload } = result;
 
       if (!upstream.ok) {
         const status = upstream.status;
-        const providerError = await upstream.json().catch(() => ({}));
+        const providerError = payload;
         const providerCode = providerError.error?.status || providerError.error?.code || `HTTP_${status}`;
         logger.warn(`AI Gemini request failed: HTTP ${status}, code=${providerCode}, model=${model}`);
         if (status === 400 || status === 401 || status === 403) {
@@ -75,7 +99,6 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
         throw errors.internal('The AI assistant is temporarily unavailable', 'AI_UNAVAILABLE');
       }
 
-      const payload = await upstream.json();
       const answer = (payload.candidates?.[0]?.content?.parts || [])
         .map((part) => part.text || '')
         .filter(Boolean)
