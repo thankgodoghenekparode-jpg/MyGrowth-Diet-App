@@ -16,6 +16,7 @@ class AppTextField extends StatefulWidget {
     this.errorText,
     this.validator,
     this.obscure = false,
+    this.autofillHints,
     this.keyboardType,
     this.textInputAction,
     this.maxLines = 1,
@@ -38,6 +39,7 @@ class AppTextField extends StatefulWidget {
   final String? errorText;
   final FormFieldValidator<String>? validator;
   final bool obscure;
+  final Iterable<String>? autofillHints;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final int maxLines;
@@ -81,6 +83,7 @@ class _AppTextFieldState extends State<AppTextField> {
         TextFormField(
           controller: widget.controller,
           obscureText: _obscured,
+          autofillHints: widget.autofillHints,
           validator: widget.validator,
           keyboardType: widget.keyboardType,
           textInputAction: widget.textInputAction,

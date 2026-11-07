@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
@@ -54,6 +55,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             phone: _phone.text.trim(),
           );
       if (!mounted) return;
+      TextInput.finishAutofillContext(shouldSave: true);
       Toast.success(
           context, 'Account created. Welcome to MyGrowth Diet App!');
       context.go('/setup-profile');
@@ -84,9 +86,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
         ],
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
+      child: AutofillGroup(
+        child: Form(
+          key: _formKey,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
@@ -111,6 +114,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               required: true,
               controller: _email,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.username],
               prefixIcon: Icons.mail_outline_rounded,
               validator: (v) {
                 final value = v?.trim() ?? '';
@@ -134,6 +138,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               required: true,
               controller: _password,
               obscure: true,
+              autofillHints: const [AutofillHints.newPassword],
               helper: 'At least 8 characters',
               prefixIcon: Icons.lock_outline_rounded,
               validator: (v) {
@@ -149,6 +154,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               required: true,
               controller: _confirm,
               obscure: true,
+              autofillHints: const [AutofillHints.newPassword],
               prefixIcon: Icons.lock_outline_rounded,
               validator: (v) =>
                   v != _password.text ? 'Passwords do not match' : null,
@@ -173,6 +179,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               onPressed: _submit,
             ),
           ],
+          ),
         ),
       ),
     );

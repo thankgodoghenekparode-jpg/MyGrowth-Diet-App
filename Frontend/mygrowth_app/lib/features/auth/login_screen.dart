@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
@@ -141,6 +142,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _password.text,
           );
       if (!mounted) return;
+      TextInput.finishAutofillContext(shouldSave: true);
       final auth = ref.read(authControllerProvider);
       final user = auth.user;
       Toast.success(context, 'Welcome back${user == null ? '' : ', ${user.name.split(' ').first}'}!');
@@ -178,9 +180,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ],
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
+      child: AutofillGroup(
+        child: Form(
+          key: _formKey,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppTextField(
@@ -188,6 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               required: true,
               controller: _email,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.username],
               textInputAction: TextInputAction.next,
               prefixIcon: Icons.mail_outline_rounded,
               hint: 'you@example.com',
@@ -206,6 +210,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               required: true,
               controller: _password,
               obscure: true,
+              autofillHints: const [AutofillHints.password],
               textInputAction: TextInputAction.done,
               prefixIcon: Icons.lock_outline_rounded,
               onSubmitted: (_) => _submit(),
@@ -230,6 +235,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             const SizedBox(height: AppSpacing.md),
             const _PrivacyNotice(),
           ],
+          ),
         ),
       ),
     );
