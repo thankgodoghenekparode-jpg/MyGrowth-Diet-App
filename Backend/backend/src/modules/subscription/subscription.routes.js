@@ -152,13 +152,14 @@ router.post('/verify/:reference', requireAuth, requireApprovedMember, asyncHandl
   res.json(result);
 }));
 
-// Monnify sandbox callbacks do not include a signature. Verify signatures for
-// live (and any non-sandbox) endpoints, regardless of the app's NODE_ENV.
+// Monnify sandbox callbacks are documented without a signature. Ignore any
+// signature header in sandbox; successful payments are still verified directly
+// with Monnify before access is granted. Live callbacks must be signed.
 router.post('/webhook', asyncHandler(async (req, res) => {
   if (!configured()) throw errors.internal('Subscription payments are not configured yet', 'PAYMENT_NOT_CONFIGURED');
   const signature = req.get('monnify-signature');
   const isSandbox = new URL(config.monnify.baseUrl).hostname === 'sandbox.monnify.com';
-  if (!isSandbox || signature) {
+  if (!isSandbox) {
     const expected = createHmac('sha512', config.monnify.secretKey)
       .update(req.rawBody || Buffer.from(JSON.stringify(req.body)))
       .digest('hex');
