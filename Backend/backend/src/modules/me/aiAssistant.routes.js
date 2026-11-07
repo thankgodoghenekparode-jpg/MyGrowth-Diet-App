@@ -30,29 +30,39 @@ router.post('/ai-assistant', aiAssistantLimiter, validate({ body: schema }), asy
   try {
     if (geminiKey) {
       // Google Gemini implementation
-      const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`;
+      let model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+      const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash';
 
       const contents = req.valid.body.messages.map(({ role, content }) => ({
         role: role === 'assistant' ? 'model' : 'user',
         parts: [{ text: content }],
       }));
 
-      const upstream = await fetch(endpoint, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemInstructions }],
-          },
-          contents,
-          generationConfig: {
-            maxOutputTokens: 1200,
-            thinkingConfig: { thinkingLevel: 'low' },
-          },
-        }),
-      });
+      const requestModel = (targetModel) => fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetModel)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
+        {
+          method: 'POST',
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: systemInstructions }],
+            },
+            contents,
+            generationConfig: {
+              maxOutputTokens: 1200,
+              thinkingConfig: { thinkingLevel: 'low' },
+            },
+          }),
+        }
+      );
+
+      let upstream = await requestModel(model);
+      if (upstream.status === 503 && fallbackModel !== model) {
+        logger.warn(`AI Gemini primary model unavailable; retrying with model=${fallbackModel}`);
+        model = fallbackModel;
+        upstream = await requestModel(model);
+      }
 
       if (!upstream.ok) {
         const status = upstream.status;
