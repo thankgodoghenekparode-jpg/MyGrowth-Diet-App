@@ -11,7 +11,6 @@ import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/feedback_states.dart';
-import '../../core/widgets/growth_photo_panel.dart';
 import '../../core/widgets/pagination.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/toast.dart';
@@ -101,15 +100,6 @@ class _MaterialsBodyState extends ConsumerState<_MaterialsBody> {
       child: ListView(
         padding: adminPadding(context),
         children: [
-          GrowthPhotoPanel(
-            image: 'assets/images/admin_materials.jpg',
-            height: compact ? 170 : 210,
-            tag: 'RESOURCE LIBRARY',
-            title: 'Equip every member',
-            caption:
-                'Curate the study guides, messages and resources that support growth.',
-          ),
-          const SizedBox(height: AppSpacing.lg),
           SectionHeader(
             title: 'Materials Library',
             subtitle: 'Upload files or link external resources for members',

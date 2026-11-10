@@ -45,6 +45,7 @@ import '../features/daily_diet/daily_devotion_screen.dart';
 import '../features/daily_diet/daily_diet_section_screen.dart';
 import '../features/materials/material_detail_screen.dart';
 import '../features/materials/materials_screen.dart';
+import '../features/more/more_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/notifications/reminders_screen.dart';
 import '../features/shape_space/shape_space_screen.dart';
@@ -205,8 +206,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: DashboardScreen()),
+                pageBuilder: (_, _) => const NoTransitionPage(
+                  child: MoreScreen(area: AppArea.member),
+                ),
               ),
             ],
           ),
@@ -225,27 +227,34 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/bible-reading',
-                pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: BibleReadingScreen()),
+                path: '/bible',
+                pageBuilder: (_, state) => NoTransitionPage(
+                  child: BibleReaderScreen(
+                    initialBook: state.uri.queryParameters['book'],
+                    initialChapter: int.tryParse(
+                      state.uri.queryParameters['chapter'] ?? '',
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/progress',
+                path: '/plan',
                 pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: ProgressScreen()),
+                    const NoTransitionPage(child: GrowthPlanScreen()),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
-                pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: ProfileScreen()),
+                path: '/devotion',
+                pageBuilder: (_, _) => const NoTransitionPage(
+                  child: DailyDevotionScreen(embedded: true),
+                ),
               ),
             ],
           ),
@@ -260,33 +269,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           MaterialPage(
             child: _MemberPage(title: 'Dashboard', child: DashboardScreen()),
           ),
-        ),
-      ),
-      GoRoute(
-        path: '/bible',
-        parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, state) => _fade(
-          MaterialPage(
-            child: BibleReaderScreen(
-              initialBook: state.uri.queryParameters['book'],
-              initialChapter: int.tryParse(
-                state.uri.queryParameters['chapter'] ?? '',
-              ),
-            ),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: '/plan',
-        parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) =>
-            _fade(const MaterialPage(child: GrowthPlanScreen())),
-      ),
-      GoRoute(
-        path: '/devotion',
-        parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(
-          const MaterialPage(child: DailyDevotionScreen(embedded: false)),
         ),
       ),
       GoRoute(
@@ -338,6 +320,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: RemindersScreen())),
+      ),
+      GoRoute(
+        path: '/bible-reading',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: BibleReadingScreen())),
       ),
       GoRoute(
         path: '/materials',
@@ -429,6 +417,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             _fade(const MaterialPage(child: ReflectionsScreen())),
       ),
       GoRoute(
+        path: '/progress',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: ProgressScreen())),
+      ),
+      GoRoute(
         path: '/announcements',
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
@@ -445,6 +439,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: NotificationsScreen())),
+      ),
+      GoRoute(
+        path: '/profile',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: ProfileScreen())),
       ),
 
       // ---------------------------------------------------- admin shell
@@ -811,10 +811,10 @@ class _AdminPage extends StatelessWidget {
 
 String _memberShellTitle(int index) => switch (index) {
   0 => 'Home',
-  1 => 'Growth Diet',
-  2 => 'Bible Reading Plan',
-  3 => 'My Progress',
-  4 => 'Profile',
+  1 => 'Daily Diet',
+  2 => 'Bible',
+  3 => 'My Growth Plan',
+  4 => 'Devotion',
   _ => 'Home',
 };
 
