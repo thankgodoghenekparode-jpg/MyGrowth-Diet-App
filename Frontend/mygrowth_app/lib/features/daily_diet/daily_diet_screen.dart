@@ -13,6 +13,7 @@ import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/growth_photo_panel.dart';
 import '../../core/widgets/toast.dart';
 import '../programme/programme_providers.dart';
 import 'daily_diet_providers.dart';
@@ -91,6 +92,14 @@ class _DailyDietViewState extends ConsumerState<_DailyDietView> {
             ? AppSpacing.pagePaddingMobile
             : const EdgeInsets.all(AppSpacing.xl),
         children: [
+          GrowthPhotoPanel(
+            image: 'assets/images/prayer.jpg',
+            height: Breakpoints.isCompact(context) ? 175 : 225,
+            tag: 'GROW. LEARN. LIVE IT.',
+            title: 'Your Daily Growth',
+            caption: 'A steady rhythm of prayer, Scripture, and purpose.',
+          ),
+          const SizedBox(height: AppSpacing.lg),
           _DayHeader(date: _selected, today: today),
           const SizedBox(height: AppSpacing.md),
           _DateStrip(
@@ -135,7 +144,10 @@ class _DateBounds {
   final DateTime max;
 
   /// Keep the member's calendar inside the app's programme period.
-  factory _DateBounds.resolve(AsyncValue<AnnualProgramme?> programme, DateTime today) {
+  factory _DateBounds.resolve(
+    AsyncValue<AnnualProgramme?> programme,
+    DateTime today,
+  ) {
     DateTime min = appStartDate;
     DateTime max = today.add(const Duration(days: 365));
 
@@ -297,8 +309,8 @@ class _DayChip extends StatelessWidget {
     final fg = selected
         ? AppColors.onPrimary
         : enabled
-            ? AppColors.ink
-            : AppColors.inkMuted;
+        ? AppColors.ink
+        : AppColors.inkMuted;
     return Semantics(
       selected: selected,
       button: enabled,
@@ -321,7 +333,9 @@ class _DayChip extends StatelessWidget {
               Text(
                 DateFormat.E().format(day),
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: selected ? AppColors.onPrimary : AppColors.inkSecondary,
+                  color: selected
+                      ? AppColors.onPrimary
+                      : AppColors.inkSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -401,9 +415,7 @@ class _DayContent extends StatelessWidget {
           'Open a section to read what was published for this day and mark it '
           'done.',
           textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .labelSmall
+          style: Theme.of(context).textTheme.labelSmall
               ?.copyWith(color: AppColors.inkMuted),
         ),
       ],
@@ -430,7 +442,9 @@ class _ProgressCard extends StatelessWidget {
               StatusBadge(
                 label: '${progress.completed} of ${progress.total} done',
                 tone: done ? AppBadgeTone.success : AppBadgeTone.navy,
-                icon: done ? Icons.check_circle_rounded : Icons.timelapse_rounded,
+                icon: done
+                    ? Icons.check_circle_rounded
+                    : Icons.timelapse_rounded,
               ),
               const Spacer(),
               if (bundle.programme != null)
@@ -525,7 +539,11 @@ class _SectionTileState extends ConsumerState<_SectionTile> {
           );
         }
         if (mounted) {
-          Toast.show(context, message: 'Marked as not done', tone: ToastTone.info);
+          Toast.show(
+            context,
+            message: 'Marked as not done',
+            tone: ToastTone.info,
+          );
         }
       } else {
         await writer.save(
@@ -534,16 +552,16 @@ class _SectionTileState extends ConsumerState<_SectionTile> {
           status: DailyDietStatus.completed,
         );
         if (mounted) {
-          Toast.show(context, message: 'Done. Well done!', tone: ToastTone.success);
+          Toast.show(
+            context,
+            message: 'Done. Well done!',
+            tone: ToastTone.success,
+          );
         }
       }
     } catch (error) {
       if (mounted) {
-        Toast.show(
-          context,
-          message: _messageFor(error),
-          tone: ToastTone.error,
-        );
+        Toast.show(context, message: _messageFor(error), tone: ToastTone.error);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -551,9 +569,7 @@ class _SectionTileState extends ConsumerState<_SectionTile> {
   }
 
   void _open() {
-    context.push(
-      '/daily-diet/section/${section.id}?date=${widget.dateISO}',
-    );
+    context.push('/daily-diet/section/${section.id}?date=${widget.dateISO}');
   }
 
   @override

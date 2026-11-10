@@ -14,7 +14,7 @@ import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/feedback_states.dart';
-import '../../core/widgets/image_carousel.dart';
+import '../../core/widgets/growth_photo_panel.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/toast.dart';
 import '../programme/programme_providers.dart';
@@ -27,69 +27,6 @@ DateTime _today() {
   final now = appDateNow();
   return DateTime(now.year, now.month, now.day);
 }
-
-const memberHomeSlides = <CarouselSlide>[
-  CarouselSlide(
-    image: 'assets/images/slide_1.jpg',
-    title: 'Transformative Books',
-    caption: 'Dear Teenager, Dear Teen Parents & Scripted Life by Pastor Healings E. Azuike.',
-    icon: Icons.menu_book_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/slide_2.jpg',
-    title: 'Healings E. Azuike',
-    caption: 'Available on Selar · Inspiring and empowering believers worldwide.',
-    icon: Icons.star_outline_rounded,
-  ),
-  CarouselSlide(
-    image: 'assets/images/slide_3.jpg',
-    title: 'The Fear of Failing',
-    caption: 'Failure is not the end, fear is. Step boldly into God’s glorious calling.',
-    icon: Icons.auto_stories_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/slide_4.jpg',
-    title: 'Out With It',
-    caption: 'The world needs it — unleash the God-given treasures within your spirit.',
-    icon: Icons.public_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/slide_5.jpg',
-    title: 'Spiritual Growth Books',
-    caption: 'Faith-building literature to equip your mind and empower your daily walk.',
-    icon: Icons.local_library_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/bible.jpg',
-    title: 'Devotional',
-    caption: 'Follow the reading plan and let Scripture shape your week.',
-    icon: Icons.auto_stories_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/diet.jpg',
-    title: 'Today’s Growth Diet',
-    caption: 'Your daily activities, ready to record honestly.',
-    icon: Icons.today_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/prayer.jpg',
-    title: 'Prayer Point',
-    caption: 'Meet God in the quiet place, then pray with a partner.',
-    icon: Icons.self_improvement_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/plan.jpg',
-    title: 'Proverbs',
-    caption: 'Monthly and weekly guidance for your journey.',
-    icon: Icons.menu_book_outlined,
-  ),
-  CarouselSlide(
-    image: 'assets/images/materials.jpg',
-    title: 'Study Materials',
-    caption: 'Resources to equip and strengthen your faith.',
-    icon: Icons.local_library_outlined,
-  ),
-];
 
 /// Member dashboard: today at a glance, plan highlights, progress and news.
 class DashboardScreen extends ConsumerWidget {
@@ -105,8 +42,8 @@ class DashboardScreen extends ConsumerWidget {
     final greeting = now.hour < 12
         ? 'Good morning'
         : now.hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
     final firstName = (user?.name ?? '').trim().split(RegExp(r'\s+')).first;
 
     return RefreshIndicator(
@@ -125,6 +62,21 @@ class DashboardScreen extends ConsumerWidget {
           // ------------------------------------------------ welcome + date
           Row(
             children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: AppColors.navy700,
+                foregroundColor: Colors.white,
+                child: Text(
+                  firstName.isEmpty
+                      ? 'M'
+                      : firstName.substring(0, 1).toUpperCase(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,17 +85,14 @@ class DashboardScreen extends ConsumerWidget {
                       '$greeting, ${firstName.isEmpty ? 'friend' : firstName}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontSize: 25,
-                            letterSpacing: -0.25,
-                          ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontSize: 25, letterSpacing: -0.25),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       'Grow. Learn. Live it.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.inkSecondary,
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: AppColors.inkSecondary),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Container(
@@ -158,12 +107,16 @@ class DashboardScreen extends ConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.calendar_today_rounded,
-                              size: 13, color: AppColors.goldText),
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 13,
+                            color: AppColors.goldText,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             DateFormat('EEEE, d MMMM').format(now),
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
                                   color: AppColors.goldText,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -174,18 +127,34 @@ class DashboardScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              _NotificationBell(unread: ref.watch(unreadNotificationCountProvider)),
+              _NotificationBell(
+                unread: ref.watch(unreadNotificationCountProvider),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // ------------------------------------------------- hero carousel
-          //
-          // Placeholder picture strip — see [memberHomeSlides] to swap images.
-          ImageCarousel(
-            slides: memberHomeSlides,
-            height: Breakpoints.isCompact(context) ? 190 : 240,
-            onTapSlide: (_) => context.go('/plan'),
+          // ------------------------------------------------ photo-led welcome
+          GrowthPhotoPanel(
+            image: 'assets/images/prayer.jpg',
+            height: Breakpoints.isCompact(context) ? 215 : 270,
+            tag: 'TODAY’S WORD',
+            title: 'A moment in the Word',
+            caption: 'Read, reflect, and carry God’s truth with you today.',
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.tonalIcon(
+                onPressed: () => context.go('/diet'),
+                icon: const Icon(Icons.arrow_forward_rounded, size: 17),
+                label: const Text('Continue today'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accentSoft,
+                  foregroundColor: AppColors.brandText,
+                  minimumSize: const Size(0, 38),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -228,6 +197,65 @@ class DashboardScreen extends ConsumerWidget {
               );
             },
           ),
+          const SizedBox(height: AppSpacing.md),
+          checklist.when(
+            loading: () => const SkeletonBox(height: 92, radius: 18),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (items) {
+              final completed = items.where((a) => a.isCompleted).length;
+              final ratio = items.isEmpty ? 0.0 : completed / items.length;
+              return AppCard(
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 68,
+                      height: 68,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CircularProgressIndicator(
+                            value: ratio,
+                            strokeWidth: 7,
+                            backgroundColor: AppColors.surfaceMuted,
+                            color: AppColors.gold600,
+                          ),
+                          Center(
+                            child: Text(
+                              '${(ratio * 100).round()}%',
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    color: AppColors.brandText,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your growth today',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '$completed of ${items.length} activities recorded',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 9),
+                          ProgressBar(value: ratio),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           const SizedBox(height: AppSpacing.xl),
 
           // ------------------------------------------- today's activities
@@ -259,8 +287,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 );
               }
-              final completed =
-                  items.where((a) => a.isCompleted).length;
+              final completed = items.where((a) => a.isCompleted).length;
               return AppCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,7 +321,8 @@ class DashboardScreen extends ConsumerWidget {
                           onPressed: () => context.go('/diet'),
                           icon: const Icon(Icons.expand_more_rounded, size: 18),
                           label: Text(
-                              'See ${items.length - 4} more activities'),
+                            'See ${items.length - 4} more activities',
+                          ),
                         ),
                       ),
                   ],
@@ -308,9 +336,8 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           Padding(
             padding: EdgeInsets.symmetric(
-                horizontal: Breakpoints.isCompact(context)
-                    ? 0
-                    : 0),
+              horizontal: Breakpoints.isCompact(context) ? 0 : 0,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -322,20 +349,26 @@ class DashboardScreen extends ConsumerWidget {
                       onTap: () => context.go('/materials'),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
                         child: Row(
                           children: [
-                            Icon(Icons.local_library_outlined,
-                                color: AppColors.iconAccent),
+                            Icon(
+                              Icons.local_library_outlined,
+                              color: AppColors.iconAccent,
+                            ),
                             const SizedBox(width: AppSpacing.sm),
-                            Text('Materials',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w700)),
+                            Text(
+                              'Materials',
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
                             const Spacer(),
-                            Icon(Icons.chevron_right_rounded,
-                                color: AppColors.inkMuted),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.inkMuted,
+                            ),
                           ],
                         ),
                       ),
@@ -388,24 +421,30 @@ class DashboardScreen extends ConsumerWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.campaign_outlined,
-                                size: 20, color: AppColors.gold600),
+                            Icon(
+                              Icons.campaign_outlined,
+                              size: 20,
+                              color: AppColors.gold600,
+                            ),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(a.title,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall),
+                                  Text(
+                                    a.title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall,
+                                  ),
                                   const SizedBox(height: 2),
                                   Text(
                                     a.body,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall,
                                   ),
                                 ],
                               ),
@@ -464,14 +503,14 @@ class _ActivityTile extends ConsumerWidget {
               activity.isCompleted
                   ? Icons.check_circle_rounded
                   : activity.isInProgress
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
               size: 22,
               color: activity.isCompleted
                   ? AppColors.success
                   : activity.isInProgress
-                      ? AppColors.gold500
-                      : AppColors.inkMuted,
+                  ? AppColors.gold500
+                  : AppColors.inkMuted,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
@@ -481,13 +520,13 @@ class _ActivityTile extends ConsumerWidget {
                   Text(
                     activity.title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          decoration: activity.isCompleted
-                              ? TextDecoration.lineThrough
-                              : null,
-                          color: activity.isCompleted
-                              ? AppColors.inkSecondary
-                              : AppColors.ink,
-                        ),
+                      decoration: activity.isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
+                      color: activity.isCompleted
+                          ? AppColors.inkSecondary
+                          : AppColors.ink,
+                    ),
                   ),
                   if (activity.categoryLabel != null)
                     Text(
@@ -578,20 +617,22 @@ class _RecordActivitySheetState extends ConsumerState<_RecordActivitySheet> {
       if (existing == null) {
         await client.post('/me/activity-records', body: body);
       } else {
-        await client.patch('/me/activity-records/${existing.id}', body: {
-          'status': _status,
-          if (_note.text.trim().isNotEmpty) 'note': _note.text.trim(),
-          if (_duration.text.trim().isNotEmpty)
-            'actualDuration': _duration.text.trim(),
-        });
+        await client.patch(
+          '/me/activity-records/${existing.id}',
+          body: {
+            'status': _status,
+            if (_note.text.trim().isNotEmpty) 'note': _note.text.trim(),
+            if (_duration.text.trim().isNotEmpty)
+              'actualDuration': _duration.text.trim(),
+          },
+        );
       }
       if (!mounted) return;
       ref.invalidate(dailyChecklistProvider(_today()));
       Navigator.of(context).pop();
       final message = switch (_status) {
         'COMPLETED' => 'Recorded. Well done on keeping your diet plan!',
-        'SKIPPED' =>
-          'Saved. It’s okay — consistency grows one day at a time.',
+        'SKIPPED' => 'Saved. It’s okay — consistency grows one day at a time.',
         'IN_PROGRESS' => 'Saved. You can update this later today.',
         _ => 'Saved.',
       };
@@ -614,8 +655,10 @@ class _RecordActivitySheetState extends ConsumerState<_RecordActivitySheet> {
         Row(
           children: [
             Expanded(
-              child: Text(widget.activity.title,
-                  style: Theme.of(context).textTheme.titleLarge),
+              child: Text(
+                widget.activity.title,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
             AppIconButton(
               icon: Icons.close_rounded,
@@ -625,8 +668,10 @@ class _RecordActivitySheetState extends ConsumerState<_RecordActivitySheet> {
         ),
         if (widget.activity.description != null) ...[
           const SizedBox(height: AppSpacing.xs),
-          Text(widget.activity.description!,
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            widget.activity.description!,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
         const SizedBox(height: AppSpacing.md),
         Text('How did it go?', style: Theme.of(context).textTheme.titleSmall),
@@ -663,12 +708,7 @@ class _RecordActivitySheetState extends ConsumerState<_RecordActivitySheet> {
           hint: 'Anything you’d like to remember about this activity',
         ),
         const SizedBox(height: AppSpacing.md),
-        AppButton(
-          label: 'Save',
-          busy: _busy,
-          expand: true,
-          onPressed: _save,
-        ),
+        AppButton(label: 'Save', busy: _busy, expand: true, onPressed: _save),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Activity records are self-reported. Be honest and gracious with '
@@ -703,7 +743,8 @@ class _MonthlyConfession extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SectionHeader(
-              title: '${DateFormat('MMMM').format(DateTime(year, month))} Focus',
+              title:
+                  '${DateFormat('MMMM').format(DateTime(year, month))} Focus',
               subtitle: plan.theme,
               icon: Icons.auto_awesome_outlined,
               actionLabel: 'Details',

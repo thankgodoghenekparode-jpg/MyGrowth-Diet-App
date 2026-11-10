@@ -11,6 +11,7 @@ import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/growth_photo_panel.dart';
 import 'progress_providers.dart';
 
 /// My Progress: self-reported participation metrics, a monthly bar chart
@@ -32,6 +33,22 @@ class ProgressScreen extends ConsumerWidget {
             ? AppSpacing.pagePaddingMobile
             : const EdgeInsets.all(AppSpacing.xl),
         children: [
+          GrowthPhotoPanel(
+            image: 'assets/images/progress.jpg',
+            height: Breakpoints.isCompact(context) ? 185 : 230,
+            tag: 'YOUR JOURNEY',
+            title: 'Celebrate your growth',
+            caption: 'Small faithful steps are worth celebrating.',
+            child: const Align(
+              alignment: Alignment.centerRight,
+              child: Icon(
+                Icons.emoji_events_rounded,
+                color: Color(0xFFD4AF7C),
+                size: 38,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
           Text('My Progress', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 2),
           Text(
@@ -96,18 +113,15 @@ class _ProgressBody extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.favorite_outline,
-                  size: 18, color: AppColors.navy600),
+              Icon(Icons.favorite_outline, size: 18, color: AppColors.navy600),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   'These metrics reflect participation in your diet plan — '
                   'they are self-reported records, not a measure of your '
                   'spiritual worth. Grace covers every gap.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.inkSecondary,
-                        height: 1.45,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: AppColors.inkSecondary, height: 1.45),
                 ),
               ),
             ],
@@ -131,8 +145,8 @@ class _StatTileGrid extends StatelessWidget {
         final columns = constraints.maxWidth >= 720
             ? 3
             : constraints.maxWidth >= 440
-                ? 2
-                : 1;
+            ? 2
+            : 1;
         const spacing = AppSpacing.sm;
         final tileWidth =
             (constraints.maxWidth - spacing * (columns - 1)) / columns;
@@ -169,7 +183,8 @@ class _StatTileGrid extends StatelessWidget {
           ),
           StatTile(
             label: 'Current streak',
-            value: '${summary.currentStreakDays} day${summary.currentStreakDays == 1 ? '' : 's'}',
+            value:
+                '${summary.currentStreakDays} day${summary.currentStreakDays == 1 ? '' : 's'}',
             caption: 'of recorded days',
             icon: Icons.local_fire_department_outlined,
             tone: StatTileTone.gold,
@@ -233,7 +248,8 @@ class _MonthlyChart extends StatelessWidget {
                           BarChartRodData(
                             toY: months[i].completed.toDouble(),
                             width: 16,
-                            color: months[i].month == now.month &&
+                            color:
+                                months[i].month == now.month &&
                                     months[i].year == now.year
                                 ? AppColors.gold500
                                 : AppColors.navy700,
@@ -244,9 +260,11 @@ class _MonthlyChart extends StatelessWidget {
                   ],
                   titlesData: FlTitlesData(
                     topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                     rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                     leftTitles: const AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -266,8 +284,9 @@ class _MonthlyChart extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              DateFormat.MMM()
-                                  .format(DateTime(2000, months[index].month)),
+                              DateFormat.MMM().format(
+                                DateTime(2000, months[index].month),
+                              ),
                               style: Theme.of(context).textTheme.labelSmall,
                             ),
                           );
@@ -300,23 +319,19 @@ class _CategoryBreakdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final entries = summary.byCategory.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    final maxCount =
-        entries.isEmpty ? 0 : entries.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    final maxCount = entries.isEmpty
+        ? 0
+        : entries.map((e) => e.value).reduce((a, b) => a > b ? a : b);
 
     return TitledCard(
       icon: Icons.donut_small_outlined,
       title: 'By category',
-      trailing: Text(
-        'Recorded',
-        style: Theme.of(context).textTheme.labelSmall,
-      ),
+      trailing: Text('Recorded', style: Theme.of(context).textTheme.labelSmall),
       child: entries.isEmpty
           ? Text(
               'No recorded activities yet. Your categories will appear here '
               'as you check things off in the Daily Diet.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
+              style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: AppColors.inkMuted),
             )
           : Column(

@@ -14,6 +14,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/bible_reference_text.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/growth_photo_panel.dart';
 import '../activities/record_activity_sheet.dart';
 import '../programme/programme_providers.dart';
 
@@ -64,9 +65,11 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(
-            monthlyPlanProvider((year: _month.year, month: _month.month)));
+          monthlyPlanProvider((year: _month.year, month: _month.month)),
+        );
         ref.invalidate(
-            weeklyPlansProvider((year: _month.year, month: _month.month)));
+          weeklyPlansProvider((year: _month.year, month: _month.month)),
+        );
         ref.invalidate(dailyChecklistProvider(_today));
         await Future<void>.delayed(const Duration(milliseconds: 300));
       },
@@ -75,7 +78,18 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
             ? AppSpacing.pagePaddingMobile
             : const EdgeInsets.all(AppSpacing.xl),
         children: [
-          Text('Bible Reading', style: Theme.of(context).textTheme.headlineSmall),
+          GrowthPhotoPanel(
+            image: 'assets/images/bible.jpg',
+            height: Breakpoints.isCompact(context) ? 175 : 225,
+            tag: 'DAILY SCRIPTURE',
+            title: 'Grow in the Word',
+            caption: 'Stay rooted in Scripture, one day at a time.',
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Bible Reading',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           const SizedBox(height: 2),
           Text(
             'Read along with the monthly guidance and keep your place with '
@@ -96,9 +110,7 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
                 child: Text(
                   DateFormat('MMMM yyyy').format(_month),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
+                  style: Theme.of(context).textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -117,8 +129,9 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
             error: (e, _) => ErrorState(
               error: e,
               compact: true,
-              onRetry: () => ref.invalidate(monthlyPlanProvider(
-                  (year: _month.year, month: _month.month))),
+              onRetry: () => ref.invalidate(
+                monthlyPlanProvider((year: _month.year, month: _month.month)),
+              ),
             ),
             data: (plan) {
               final guidance = plan?.bibleReadingGuidance?.trim();
@@ -128,15 +141,16 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.auto_stories_outlined,
-                            size: 18, color: AppColors.gold600),
+                        Icon(
+                          Icons.auto_stories_outlined,
+                          size: 18,
+                          color: AppColors.gold600,
+                        ),
                         const SizedBox(width: AppSpacing.xs),
                         Expanded(
                           child: Text(
                             'Reading guidance — ${DateFormat('MMMM').format(_month)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -146,24 +160,26 @@ class _BibleReadingViewState extends ConsumerState<_BibleReadingView> {
                     InkWell(
                       onTap: guidance != null && guidance.isNotEmpty
                           ? () => context.go(
-                                BibleReferenceText.firstReferenceRoute(guidance) ??
-                                    '/bible',
-                              )
+                              BibleReferenceText.firstReferenceRoute(
+                                    guidance,
+                                  ) ??
+                                  '/bible',
+                            )
                           : null,
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: BibleReferenceText(
-                          text:
-                          (guidance == null || guidance.isEmpty)
+                          text: (guidance == null || guidance.isEmpty)
                               ? 'Reading guidance for this month hasn’t been '
-                                  'published yet. It will appear here as soon as '
-                                  'your ministry adds it.'
+                                    'published yet. It will appear here as soon as '
+                                    'your ministry adds it.'
                               : guidance,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(height: 1.55, color: AppColors.inkSecondary),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                height: 1.55,
+                                color: AppColors.inkSecondary,
+                              ),
                         ),
                       ),
                     ),
@@ -264,8 +280,11 @@ class _WeeklyReadingCard extends StatelessWidget {
               color: AppColors.navy100,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.menu_book_outlined,
-                size: 19, color: AppColors.navy700),
+            child: Icon(
+              Icons.menu_book_outlined,
+              size: 19,
+              color: AppColors.navy700,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -277,18 +296,23 @@ class _WeeklyReadingCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Week ${week.weekNumber}',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                     if (dates != null)
                       StatusBadge(
-                          label: dates, tone: AppBadgeTone.navy, small: true),
+                        label: dates,
+                        tone: AppBadgeTone.navy,
+                        small: true,
+                      ),
                   ],
                 ),
                 const SizedBox(height: 2),
                 BibleReferenceText(
-                  text: (week.bibleReading == null ||
+                  text:
+                      (week.bibleReading == null ||
                           week.bibleReading!.trim().isEmpty)
                       ? 'Reading for this week hasn’t been published yet.'
                       : week.bibleReading!,
@@ -360,15 +384,16 @@ class _RecordTodayReading extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline,
-                            size: 18, color: AppColors.info),
+                        Icon(
+                          Icons.info_outline,
+                          size: 18,
+                          color: AppColors.info,
+                        ),
                         const SizedBox(width: AppSpacing.xs),
                         Expanded(
                           child: Text(
                             'Nothing to record here today',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
+                            style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -380,9 +405,7 @@ class _RecordTodayReading extends ConsumerWidget {
                       'Proverbs reading activity. Reading activities are '
                       'published with your daily plan — you can record them '
                       'from the Daily Diet checklist.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
+                      style: Theme.of(context).textTheme.bodySmall
                           ?.copyWith(height: 1.45),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -406,8 +429,11 @@ class _RecordTodayReading extends ConsumerWidget {
                       color: AppColors.gold100,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.menu_book,
-                        size: 19, color: AppColors.gold600),
+                    child: Icon(
+                      Icons.menu_book,
+                      size: 19,
+                      color: AppColors.gold600,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -438,7 +464,9 @@ class _RecordTodayReading extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   AppButton(
-                    label: alreadyRecorded ? 'Update' : 'Record today’s reading',
+                    label: alreadyRecorded
+                        ? 'Update'
+                        : 'Record today’s reading',
                     icon: Icons.fact_check_outlined,
                     onPressed: () =>
                         showRecordActivitySheet(context, activity: reading!),
