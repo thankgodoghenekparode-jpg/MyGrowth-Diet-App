@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/daily_diet_models.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/provider_cache.dart';
+import '../daily_diet/daily_diet_providers.dart';
 import 'admin_shared.dart';
 
 /// The Daily Diet structure for a programme year.
@@ -11,6 +13,8 @@ import 'admin_shared.dart';
 /// behaviour.
 final adminDailyDietSectionsProvider = FutureProvider.autoDispose
     .family<List<AdminDailyDietSection>, int>((ref, year) async {
+  keepProviderAliveFor(ref);
+  ref.watch(authControllerProvider.select((state) => state.user?.id));
   final client = ref.watch(apiClientProvider);
   final data = await client.get(
     '/admin/daily-diet/sections',
@@ -25,6 +29,8 @@ typedef AdminDailyDietContentQuery = ({int year, int? month, String? date});
 final adminDailyDietContentProvider = FutureProvider.autoDispose
     .family<List<AdminDailyDietContent>, AdminDailyDietContentQuery>(
   (ref, q) async {
+    keepProviderAliveFor(ref);
+    ref.watch(authControllerProvider.select((state) => state.user?.id));
     final client = ref.watch(apiClientProvider);
     final data = await client.get('/admin/daily-diet/content', query: {
       'year': '${q.year}',
@@ -52,6 +58,7 @@ class AdminDailyDietController {
   void _refresh(int year) {
     _ref.invalidate(adminDailyDietSectionsProvider(year));
     _ref.invalidate(adminDailyDietContentProvider);
+    _ref.invalidate(dailyDietProvider);
   }
 
   /// Creates or updates a section.

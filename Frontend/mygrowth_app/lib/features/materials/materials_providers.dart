@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/material_models.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/provider_cache.dart';
 import '../../core/widgets/pagination.dart';
 
 /// Search / filter / sort state for the Study Materials library.
@@ -87,9 +86,7 @@ const defaultMaterialCategories = <String>[
 final materialsListProvider = FutureProvider.autoDispose
     .family<PagedResult<MaterialItem>, bool>(
   (ref, saved) async {
-    final keepAlive = ref.keepAlive();
-    final timer = Timer(const Duration(seconds: 30), keepAlive.close);
-    ref.onDispose(timer.cancel);
+    keepProviderAliveFor(ref);
     ref.watch(authControllerProvider.select((state) => state.user?.id));
     final filters = ref.watch(materialsFiltersProvider);
     final client = ref.watch(apiClientProvider);

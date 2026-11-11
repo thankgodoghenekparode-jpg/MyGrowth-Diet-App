@@ -288,6 +288,7 @@ class _WeeklyPlansBodyState extends ConsumerState<_WeeklyPlansBody> {
     );
     if (mounted) {
       ref.invalidate(adminWeeklyPlansProvider);
+      ref.invalidate(weeklyPlansProvider((year: _year, month: _month)));
       ref.invalidate(currentProgrammeProvider);
     }
   }

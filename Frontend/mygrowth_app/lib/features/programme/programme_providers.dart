@@ -6,10 +6,12 @@ import '../../../core/models/activity_models.dart';
 import '../../../core/models/notification_models.dart';
 import '../../../core/models/programme_models.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/provider_cache.dart';
 
 /// The published programme for the current (or selected) year.
 final currentProgrammeProvider = FutureProvider.autoDispose<AnnualProgramme?>(
   (ref) async {
+    keepProviderAliveFor(ref);
     final client = ref.watch(apiClientProvider);
     final year = DateTime.now().year;
     final data = await client.get('/programmes', query: {'year': '$year'});
@@ -28,6 +30,7 @@ final currentProgrammeProvider = FutureProvider.autoDispose<AnnualProgramme?>(
 /// All published programme years (for year switching).
 final programmeYearsProvider = FutureProvider.autoDispose<List<AnnualProgramme>>(
   (ref) async {
+    keepProviderAliveFor(ref);
     final client = ref.watch(apiClientProvider);
     final data = await client.get('/programmes');
     return _asJsonList(data).map(AnnualProgramme.fromJson).toList();
@@ -43,6 +46,7 @@ final programmeYearsProvider = FutureProvider.autoDispose<List<AnnualProgramme>>
 final monthlyPlansProvider =
     FutureProvider.autoDispose.family<List<MonthlyPlan>, int>(
   (ref, year) async {
+    keepProviderAliveFor(ref);
     final client = ref.watch(apiClientProvider);
     Future<List<MonthlyPlan>> fetch(int y) async {
       final data = await client.get('/programmes/$y/monthly-plans');
@@ -76,6 +80,7 @@ final monthlyPlanProvider =
 final weeklyPlansProvider = FutureProvider.autoDispose
     .family<List<WeeklyPlan>, ({int year, int month})>(
   (ref, key) async {
+    keepProviderAliveFor(ref);
     final client = ref.watch(apiClientProvider);
     final data = await client
         .get('/programmes/weekly-plans', query: {

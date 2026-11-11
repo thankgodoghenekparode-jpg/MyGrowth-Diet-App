@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/daily_diet_models.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/provider_cache.dart';
 
 /// Tolerant map parse — the API always answers with JSON objects here.
 Map<String, dynamic> _asMap(dynamic data) =>
@@ -62,6 +63,7 @@ Future<Map<String, dynamic>> _withJanuaryBibleStudy(
 /// attached to it and the member's own tick-offs.
 final dailyDietProvider =
     FutureProvider.autoDispose.family<DailyDietBundle, String>((ref, date) async {
+  keepProviderAliveFor(ref);
   final client = ref.watch(apiClientProvider);
   final userId = ref.watch(authControllerProvider).user?.id;
   final cacheKey = userId == null ? null : 'mgdp.dailyDiet.$userId.$date';
@@ -89,6 +91,8 @@ final dailyDietProvider =
 final dailyDietProgressProvider = FutureProvider.autoDispose
     .family<List<DailyDietDayProgress>, DailyDietProgressRange>(
   (ref, range) async {
+    keepProviderAliveFor(ref);
+    ref.watch(authControllerProvider.select((state) => state.user?.id));
     final client = ref.watch(apiClientProvider);
     final data = await client.get('/daily-diet/progress', query: {
       'from': range.from,
@@ -173,6 +177,7 @@ class DailyDietCompletionWriter {
       'attachmentFileId': ?attachmentFileId,
     });
     _ref.invalidate(dailyDietProvider(date));
+    _ref.invalidate(dailyDietProgressProvider);
     final completion = _asMap(response)['completion'];
     if (completion is Map<String, dynamic>) {
       return DailyDietCompletion.fromJson(completion);
@@ -187,6 +192,7 @@ class DailyDietCompletionWriter {
   }) async {
     await _client.delete('/daily-diet/completions/$completionId');
     _ref.invalidate(dailyDietProvider(date));
+    _ref.invalidate(dailyDietProgressProvider);
   }
 
   /// Uploads a member file and returns its id.
