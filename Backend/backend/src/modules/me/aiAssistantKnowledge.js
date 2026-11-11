@@ -12,7 +12,7 @@ Member areas and how to use them
 - Dashboard: a summary of the member's activity and progress.
 - Daily Diet: open the day’s admin-published activities, read section instructions/materials, record completion and use any enabled timer, report or partner shortcut. This is a day-by-day programme structure configured by administrators.
 - Daily Devotion: open “Daily Devotional Read” or “Daily Devotion” in navigation. Browse the 365-day devotional entries, Scripture, reflection and related content. It is separate from the Daily Diet activity structure.
-- Bible: read the bundled Bible translations, including KJV, NLT, AMP, TPT, WEB and BSB. The Bible reader can work offline after the content is available on the device.
+- Bible: read the bundled WEB translation, or download KJV, NLT, AMP, TPT and BSB when online. Native app downloads are cached on the device for offline reading.
 - Bible Reading: use the reading plan and mark reading progress.
 - My Growth Plan: browse the published programme, monthly plans and weekly plans. Content availability depends on what administrators have published.
 - Prayer Room: use prayer and prayer-partner features.

@@ -76,6 +76,7 @@ class ApiClient {
 
   static const _accessKey = 'mgdp.accessToken';
   static const _refreshKey = 'mgdp.refreshToken';
+  static const _requestTimeout = Duration(seconds: 25);
 
   Future<void> Function()? onSessionExpired;
   Future<void> Function(String accessToken)? onTokensUpdated;
@@ -252,6 +253,7 @@ class ApiClient {
     Map<String, String>? query,
     Object? body,
     bool retried = false,
+    int getRetry = 0,
   }) async {
     final uri = _resolve(path, query);
     final jsonBody = body == null ? null : jsonEncode(body);
@@ -261,9 +263,23 @@ class ApiClient {
       final request = http.Request(method, uri)
         ..headers.addAll(_headers());
       if (jsonBody != null) request.body = jsonBody;
-      final streamed = await _client.send(request);
-      response = await http.Response.fromStream(streamed);
+      final streamed = await _client.send(request).timeout(_requestTimeout);
+      response =
+          await http.Response.fromStream(streamed).timeout(_requestTimeout);
     } on TimeoutException {
+      if (method == 'GET' && getRetry < 2) {
+        await Future<void>.delayed(
+          Duration(milliseconds: 300 * (1 << getRetry)),
+        );
+        return _send(
+          method,
+          path,
+          query: query,
+          body: body,
+          retried: retried,
+          getRetry: getRetry + 1,
+        );
+      }
       throw ApiException(
         0,
         'timeout',
@@ -271,6 +287,19 @@ class ApiClient {
         isNetworkError: true,
       );
     } catch (e) {
+      if (method == 'GET' && getRetry < 2) {
+        await Future<void>.delayed(
+          Duration(milliseconds: 300 * (1 << getRetry)),
+        );
+        return _send(
+          method,
+          path,
+          query: query,
+          body: body,
+          retried: retried,
+          getRetry: getRetry + 1,
+        );
+      }
       debugPrint('Network error on $method ${uri.path}: $e');
       throw ApiException(
         0,
@@ -282,10 +311,33 @@ class ApiClient {
 
     onConnectionRestored?.call();
 
+    if (method == 'GET' &&
+        const {502, 503, 504}.contains(response.statusCode) &&
+        getRetry < 2) {
+      await Future<void>.delayed(
+        Duration(milliseconds: 300 * (1 << getRetry)),
+      );
+      return _send(
+        method,
+        path,
+        query: query,
+        body: body,
+        retried: retried,
+        getRetry: getRetry + 1,
+      );
+    }
+
     if (response.statusCode == 401 && !retried && path != '/auth/refresh') {
       final refreshed = await _tryRefresh();
       if (refreshed == true) {
-        return _send(method, path, query: query, body: body, retried: true);
+        return _send(
+          method,
+          path,
+          query: query,
+          body: body,
+          retried: true,
+          getRetry: getRetry,
+        );
       }
       if (refreshed == false) {
         final cb = onSessionExpired;
@@ -320,7 +372,7 @@ class ApiClient {
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refreshToken': _refreshToken}),
-      );
+      ).timeout(_requestTimeout);
       if (response.statusCode == 200) {
         final decoded = jsonDecode(utf8.decode(response.bodyBytes));
         final data = decoded is Map<String, dynamic>

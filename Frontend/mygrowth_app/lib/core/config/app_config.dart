@@ -23,8 +23,17 @@ class AppConfig {
     defaultValue: 'https://mygrowth-diet-app.onrender.com/api/v1',
   );
 
+  /// Public, cacheable Bible translations loaded when a member selects one
+  /// other than the bundled WEB translation.
+  static const String bibleContentBaseUrl = String.fromEnvironment(
+    'BIBLE_CONTENT_BASE_URL',
+    defaultValue: 'https://mygrowth-diet-app.onrender.com/bibles',
+  );
+
   /// When true, a tiny in-memory demo dataset is used only if the backend is
   /// unreachable, purely so the UI can be previewed. Never enabled by default.
-  static const bool allowOfflinePreview =
-      bool.fromEnvironment('ALLOW_OFFLINE_PREVIEW', defaultValue: false);
+  static const bool allowOfflinePreview = bool.fromEnvironment(
+    'ALLOW_OFFLINE_PREVIEW',
+    defaultValue: false,
+  );
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
@@ -85,6 +87,10 @@ const defaultMaterialCategories = <String>[
 final materialsListProvider = FutureProvider.autoDispose
     .family<PagedResult<MaterialItem>, bool>(
   (ref, saved) async {
+    final keepAlive = ref.keepAlive();
+    final timer = Timer(const Duration(seconds: 30), keepAlive.close);
+    ref.onDispose(timer.cancel);
+    ref.watch(authControllerProvider.select((state) => state.user?.id));
     final filters = ref.watch(materialsFiltersProvider);
     final client = ref.watch(apiClientProvider);
     final data = await client.get('/materials', query: {

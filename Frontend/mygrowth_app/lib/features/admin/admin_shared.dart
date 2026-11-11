@@ -195,7 +195,7 @@ const Map<String, String> _categoryLabels = {
 String activityCategoryLabel(String key) =>
     _categoryLabels[key] ?? humanizeStatus(key);
 
-/// Debounced search box: fires [onChanged] ~450ms after typing stops.
+/// Debounced search box: fires [onChanged] ~300ms after typing stops.
 class AdminSearchField extends StatefulWidget {
   const AdminSearchField({
     super.key,
@@ -225,7 +225,7 @@ class _AdminSearchFieldState extends State<AdminSearchField> {
 
   void _fire([String? value]) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 450), () {
+    _debounce = Timer(const Duration(milliseconds: 300), () {
       widget.onChanged((value ?? _controller.text).trim());
     });
   }

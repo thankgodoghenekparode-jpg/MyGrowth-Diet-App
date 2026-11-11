@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/material_models.dart';
@@ -277,6 +279,9 @@ typedef AdminMaterialsQuery = ({
 final adminMaterialsProvider = FutureProvider.autoDispose
     .family<PagedResult<MaterialItem>, AdminMaterialsQuery>(
   (ref, q) async {
+    final keepAlive = ref.keepAlive();
+    final timer = Timer(const Duration(seconds: 30), keepAlive.close);
+    ref.onDispose(timer.cancel);
     final client = ref.watch(apiClientProvider);
     final data = await client.get('/admin/materials', query: {
       'page': '${q.page}',

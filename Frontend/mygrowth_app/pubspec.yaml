@@ -45,6 +45,7 @@ dependencies:
   http_parser: ^4.1.2
   file_picker: ^13.1.0
   image_picker: ^1.2.4
+  path_provider: ^2.1.5
   url_launcher: ^6.3.1
   flutter_secure_storage: ^11.2.0
 
@@ -75,11 +76,6 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/bible/web.json
-    - assets/bible/bsb.json
-    - assets/bible/kjv.json
-    - assets/bible/nlt.json
-    - assets/bible/amp.json
-    - assets/bible/tpt.json
     - assets/devotions.json
     - assets/january_bible_study.json
     - assets/DAILY DECLARATION.docx

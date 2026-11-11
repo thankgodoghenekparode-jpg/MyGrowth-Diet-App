@@ -96,7 +96,7 @@ class _FilterBarState extends ConsumerState<_FilterBar> {
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
+    _debounce = Timer(const Duration(milliseconds: 300), () {
       ref.read(materialsFiltersProvider.notifier).setSearch(value);
     });
   }
