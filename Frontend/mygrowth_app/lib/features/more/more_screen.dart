@@ -65,7 +65,7 @@ class MoreScreen extends ConsumerWidget {
           _GreetingStrip(
             greeting:
                 '$greeting, ${firstName.isEmpty ? 'friend' : firstName}',
-            subtitle: 'Grow. Learn. Live it.',
+            subtitle: 'Grow, learn, and become.',
             initials: user?.initials ?? '?',
           ),
           const SizedBox(height: AppSpacing.lg),

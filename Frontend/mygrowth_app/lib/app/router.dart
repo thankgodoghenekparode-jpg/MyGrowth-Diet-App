@@ -251,9 +251,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/devotion',
+                path: '/progress',
                 pageBuilder: (_, _) => const NoTransitionPage(
-                  child: DailyDevotionScreen(embedded: true),
+                  child: ProgressScreen(),
                 ),
               ),
             ],
@@ -269,6 +269,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           MaterialPage(
             child: _MemberPage(title: 'Dashboard', child: DashboardScreen()),
           ),
+        ),
+      ),
+      GoRoute(
+        path: '/devotion',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(child: DailyDevotionScreen()),
         ),
       ),
       GoRoute(
@@ -415,12 +422,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: ReflectionsScreen())),
-      ),
-      GoRoute(
-        path: '/progress',
-        parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) =>
-            _fade(const MaterialPage(child: ProgressScreen())),
       ),
       GoRoute(
         path: '/announcements',
@@ -814,7 +815,7 @@ String _memberShellTitle(int index) => switch (index) {
   1 => 'Daily Diet',
   2 => 'Bible',
   3 => 'My Growth Plan',
-  4 => 'Devotion',
+  4 => 'Progress',
   _ => 'Home',
 };
 

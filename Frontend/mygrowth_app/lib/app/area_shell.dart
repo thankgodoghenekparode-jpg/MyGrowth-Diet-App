@@ -20,8 +20,7 @@ const memberBottomDestinations = [
   NavDestination('Plan', Icons.event_note_outlined, Icons.event_note_rounded,
       '/plan'),
   NavDestination(
-      'Devotion', Icons.auto_stories_outlined, Icons.auto_stories_rounded,
-      '/devotion'),
+      'Progress', Icons.insights_outlined, Icons.insights_rounded, '/progress'),
 ];
 
 /// Destinations available in the admin bottom navigation (compact devices).
