@@ -83,19 +83,19 @@ class MoreScreen extends ConsumerWidget {
             title: 'Quick actions',
             subtitle: 'Your everyday tools, one tap away',
           ),
-          _QuickActionRow(actions: actions.take(4).toList()),
-          const SizedBox(height: AppSpacing.md),
-          _QuickActionRow(actions: actions.skip(4).take(4).toList()),
+          _QuickActionRow(actions: actions),
           const SizedBox(height: AppSpacing.lg),
 
-          // --------------------------------------------------- all the tools
-          SectionHeader(
-            title: area == AppArea.admin ? 'Admin services' : 'All services',
-            subtitle: 'Everything else in the app',
-            icon: Icons.grid_view_rounded,
-          ),
-          _ToolGrid(tools: tools),
-          const SizedBox(height: AppSpacing.lg),
+          if (area == AppArea.admin) ...[
+            // Keep the full tool grid on the admin landing page.
+            SectionHeader(
+              title: 'Admin services',
+              subtitle: 'Everything else in the app',
+              icon: Icons.grid_view_rounded,
+            ),
+            _ToolGrid(tools: tools),
+            const SizedBox(height: AppSpacing.lg),
+          ],
 
           // ------------------------------------------- full-width call to action
           _PromoBanner(
@@ -624,7 +624,7 @@ class _CircleAction extends StatelessWidget {
   }
 }
 
-/// One row of four quick actions (icon, label, one-line caption).
+/// Responsive grid of quick actions with readable labels and captions.
 class _QuickActionRow extends StatelessWidget {
   const _QuickActionRow({required this.actions});
 
@@ -634,19 +634,27 @@ class _QuickActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     if (actions.isEmpty) return const SizedBox.shrink();
     final wide = !Breakpoints.isCompact(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (var i = 0; i < actions.length; i++) ...[
-          if (i > 0) SizedBox(width: wide ? AppSpacing.md : AppSpacing.sm),
-          Expanded(
-            child: _QuickActionTile(
-              action: actions[i],
-              onTap: () => context.go(actions[i].path),
-            ),
-          ),
-        ],
-      ],
+    final columns = wide ? 4 : 2;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final spacing = wide ? AppSpacing.md : AppSpacing.sm;
+        final itemWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final action in actions)
+              SizedBox(
+                width: itemWidth,
+                child: _QuickActionTile(
+                  action: action,
+                  onTap: () => context.go(action.path),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -667,43 +675,42 @@ class _QuickActionTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 6,
-            vertical: AppSpacing.sm,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   color: AppColors.green50,
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(action.icon, color: AppColors.iconAccent, size: 22),
+                child: Icon(action.icon, color: AppColors.iconAccent, size: 21),
               ),
-              const SizedBox(height: 6),
-              Text(
-                action.label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                action.caption,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
-                  fontSize: 10.5,
-                  height: 1.2,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      action.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      action.caption,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppColors.inkMuted,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
