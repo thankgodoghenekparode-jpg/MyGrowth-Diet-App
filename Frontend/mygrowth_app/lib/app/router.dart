@@ -59,7 +59,6 @@ import '../features/profile/profile_screen.dart';
 import '../features/subscription/subscription_screen.dart';
 import '../features/programme/bible_reading_screen.dart';
 import '../features/programme/growth_plan_screen.dart';
-import '../features/progress/progress_screen.dart';
 import '../features/reflections/reflections_screen.dart';
 import '../features/reports/report_detail_screen.dart';
 import '../features/reports/report_form_screen.dart';
@@ -236,9 +235,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/progress',
+                path: '/assistant',
                 pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: ProgressScreen()),
+                    const NoTransitionPage(
+                      child: AiAssistantScreen(showAppBar: false),
+                    ),
               ),
             ],
           ),
@@ -327,12 +328,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: ShapeSpaceScreen())),
-      ),
-      GoRoute(
-        path: '/assistant',
-        parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) =>
-            _fade(const MaterialPage(child: AiAssistantScreen())),
       ),
       GoRoute(
         path: '/reminders',
@@ -812,9 +807,9 @@ class _AdminPage extends StatelessWidget {
 
 String _memberShellTitle(int index) => switch (index) {
   0 => 'Home',
-  1 => 'Growth Diet',
-  2 => 'Bible Plan',
-  3 => 'Progress',
+  1 => "Today's Diet",
+  2 => 'Bible',
+  3 => 'AI Assistance',
   4 => 'Profile',
   _ => 'Home',
 };

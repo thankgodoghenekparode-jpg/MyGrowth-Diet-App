@@ -15,10 +15,10 @@ const memberBottomDestinations = [
   NavDestination('Home', Icons.home_outlined, Icons.home_rounded, '/home'),
   NavDestination(
       'Today\'s Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
-  NavDestination('Bible Plan', Icons.menu_book_outlined,
-      Icons.menu_book_rounded, '/bible-reading'),
-  NavDestination(
-      'Plan', Icons.event_note_outlined, Icons.event_note_rounded, '/plan'),
+  NavDestination('Bible', Icons.menu_book_outlined,
+      Icons.menu_book_rounded, '/bible'),
+  NavDestination('AI Assistance', Icons.auto_awesome_outlined,
+      Icons.auto_awesome_rounded, '/assistant'),
   NavDestination(
       'Profile', Icons.person_outline_rounded, Icons.person_rounded, '/profile'),
 ];

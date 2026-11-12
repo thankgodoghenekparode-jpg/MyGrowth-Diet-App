@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/activity_models.dart';
 import '../../core/theme/app_colors.dart';
@@ -61,25 +59,10 @@ class MemberHomeScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           _GrowthProgressCard(progress: progress),
           const SizedBox(height: 22),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  "Today's Activities",
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.go('/diet'),
-                child: const Text('See all'),
-              ),
-            ],
-          ),
           Text(
-            DateFormat('EEEE, d MMMM').format(now),
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: AppColors.inkSecondary),
+            "Today's Activities",
+            style: Theme.of(context).textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           checklist.when(
@@ -105,17 +88,6 @@ class MemberHomeScreen extends ConsumerWidget {
                         ),
                     ],
                   ),
-          ),
-          const SizedBox(height: 10),
-          FilledButton.icon(
-            onPressed: () => context.go('/diet'),
-            icon: const Icon(Icons.checklist_rounded),
-            label: const Text("Open today's activities"),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.navy800,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
           ),
           const SizedBox(height: 20),
         ],
@@ -428,57 +400,64 @@ class _ActivityCard extends StatelessWidget {
       _ => Icons.auto_stories_rounded,
     };
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Material(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.paleChampagne,
-                    borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.inkMuted.withValues(alpha: .22)),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: AppColors.paleChampagne,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(icon, color: AppColors.goldText, size: 20),
                   ),
-                  child: Icon(icon, color: AppColors.goldText),
-                ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        activity.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if ((activity.description ?? activity.categoryLabel ?? '')
-                          .isNotEmpty)
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          activity.description ?? activity.categoryLabel!,
+                          activity.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.inkSecondary,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                    ],
+                        if ((activity.description ?? activity.categoryLabel ?? '')
+                            .isNotEmpty)
+                          Text(
+                            activity.description ?? activity.categoryLabel!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.inkSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  complete ? Icons.check_circle_rounded : Icons.chevron_right,
-                  color: complete ? AppColors.success : AppColors.inkMuted,
-                ),
-              ],
+                  Icon(
+                    complete ? Icons.check_circle_rounded : Icons.chevron_right,
+                    color: complete ? AppColors.success : AppColors.inkMuted,
+                    size: 21,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -5,7 +5,9 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/network/api_client.dart';
 
 class AiAssistantScreen extends ConsumerStatefulWidget {
-  const AiAssistantScreen({super.key});
+  const AiAssistantScreen({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   ConsumerState<AiAssistantScreen> createState() => _AiAssistantScreenState();
@@ -81,7 +83,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Assistant')),
+      appBar: widget.showAppBar
+          ? AppBar(title: const Text('AI Assistant'))
+          : null,
       body: SafeArea(
         top: false,
         child: Column(
