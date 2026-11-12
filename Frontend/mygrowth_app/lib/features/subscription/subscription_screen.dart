@@ -23,6 +23,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   bool _loading = true;
   bool _working = false;
   String? _message;
+  String _selectedPlanId = '1_month';
 
   @override
   void initState() {
@@ -66,7 +67,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       _message = null;
     });
     try {
-      final result = await ref.read(apiClientProvider).post('/subscription/checkout');
+      final result = await ref.read(apiClientProvider).post(
+        '/subscription/checkout',
+        body: {'planId': _selectedPlanId},
+      );
       final url = result is Map ? result['checkoutUrl'] as String? : null;
       if (url == null || !await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) {
         throw Exception('Could not open Monnify checkout.');
@@ -86,6 +90,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final active = status['active'] == true;
     final expires = DateTime.tryParse(status['expiresAt']?.toString() ?? '');
     final configured = status['paymentConfigured'] == true;
+    final plans = status['plans'] is List
+        ? (status['plans'] as List)
+            .whereType<Map>()
+            .map((plan) => Map<String, dynamic>.from(plan))
+            .toList()
+        : <Map<String, dynamic>>[
+            {
+              'id': '1_month',
+              'label': '1 month',
+              'durationDays': status['periodDays'] ?? 30,
+              'price': status['price'] ?? 1000,
+            },
+          ];
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -102,38 +119,61 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             children: [
               Icon(Icons.workspace_premium_rounded, size: 42, color: AppColors.iconAccent),
               const SizedBox(height: AppSpacing.md),
-              Text(active ? 'Your monthly access is active' : 'Unlock this month’s content',
+              Text(active ? 'Your access is active' : 'Choose your access period',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: AppSpacing.sm),
               Text(active && expires != null
                   ? 'Access is available until ${DateFormat('d MMMM yyyy').format(expires.toLocal())}.'
-                  : 'Get full access to the Growth Diet, study materials, programme plans and devotions for 30 days.'),
+                  : 'Get full access to the Growth Diet, study materials, programme plans and devotions.'),
               const SizedBox(height: AppSpacing.md),
-              Text('₦${status['price'] ?? 1000} / 30 days',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.brandText, fontWeight: FontWeight.w800)),
-              const SizedBox(height: AppSpacing.lg),
               if (_loading)
                 const Center(child: CircularProgressIndicator())
-              else if (!active && kIsWeb)
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _working || !configured ? null : _subscribe,
-                    icon: _working
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.lock_open_rounded),
-                    label: Text(configured ? 'Subscribe with Monnify' : 'Payments are being set up'),
+              else ...[
+                Text('Select an access plan', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: AppSpacing.sm),
+                RadioGroup<String>(
+                  groupValue: _selectedPlanId,
+                  onChanged: (value) {
+                    if (!_working && value != null) {
+                      setState(() => _selectedPlanId = value);
+                    }
+                  },
+                  child: Column(
+                    children: plans.map((plan) {
+                      final planId = plan['id']?.toString() ?? '';
+                      final durationDays = plan['durationDays'] ?? 30;
+                      final price = NumberFormat.currency(
+                        locale: 'en_NG',
+                        symbol: '₦',
+                        decimalDigits: 0,
+                      ).format((plan['price'] as num?) ?? 0);
+                      return RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: AppColors.brandText,
+                        value: planId,
+                        title: Text(plan['label']?.toString() ?? 'Subscription'),
+                        subtitle: Text('$price • $durationDays days'),
+                      );
+                    }).toList(),
                   ),
-                )
-              else if (!active)
-                const Text('Subscribe from the web version. In-app purchase billing will be added for store releases.')
-              else if (kIsWeb)
-                OutlinedButton.icon(
-                  onPressed: _subscribe,
-                  icon: const Icon(Icons.autorenew_rounded),
-                  label: const Text('Renew access'),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                if (kIsWeb)
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _working || !configured || plans.isEmpty ? null : _subscribe,
+                      icon: _working
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.lock_open_rounded),
+                      label: Text(configured
+                          ? (active ? 'Renew selected plan' : 'Continue to payment')
+                          : 'Payments are being set up'),
+                    ),
+                  )
+                else
+                  const Text('Complete payment from the web version. In-app purchase billing will be added for store releases.'),
+              ],
               if (_message != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(_message!, style: Theme.of(context).textTheme.bodyMedium),

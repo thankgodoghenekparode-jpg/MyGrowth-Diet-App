@@ -1,0 +1,2 @@
+ALTER TABLE "SubscriptionPayment"
+ADD COLUMN "durationDays" INTEGER NOT NULL DEFAULT 30;

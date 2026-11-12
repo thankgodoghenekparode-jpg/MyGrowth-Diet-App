@@ -6,9 +6,22 @@ import { asyncHandler, errors } from '../../lib/errors.js';
 import { requireAuth, requireApprovedMember } from '../../middleware/auth.js';
 
 const router = Router();
-const ACCESS_DAYS = 30;
+const SUBSCRIPTION_PLANS = [
+  { id: '1_month', label: '1 month', durationDays: 30, priceMultiplier: 1 },
+  { id: '3_months', label: '3 months', durationDays: 90, priceMultiplier: 3 },
+  { id: '1_year', label: '1 year', durationDays: 365, priceMultiplier: 12 },
+];
 let cachedToken = null;
 let tokenExpiresAt = 0;
+
+function subscriptionPlans() {
+  return SUBSCRIPTION_PLANS.map((plan) => ({
+    id: plan.id,
+    label: plan.label,
+    durationDays: plan.durationDays,
+    price: config.monnify.amount * plan.priceMultiplier,
+  }));
+}
 
 function configured() {
   return config.monnify.apiKey && config.monnify.secretKey && config.monnify.contractCode;
@@ -52,7 +65,7 @@ async function grantAccess(payment, transactionReference, paidAt = new Date()) {
 
     const existing = await tx.monthlyAccess.findUnique({ where: { userId: payment.userId } });
     const base = existing?.expiresAt && existing.expiresAt > paidAt ? existing.expiresAt : paidAt;
-    const expiresAt = new Date(base.getTime() + ACCESS_DAYS * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(base.getTime() + payment.durationDays * 24 * 60 * 60 * 1000);
     await tx.monthlyAccess.upsert({
       where: { userId: payment.userId },
       create: { userId: payment.userId, expiresAt },
@@ -103,7 +116,8 @@ router.get('/status', requireAuth, asyncHandler(async (req, res) => {
     expiresAt: access?.expiresAt ?? null,
     price: config.monnify.amount,
     currency: 'NGN',
-    periodDays: ACCESS_DAYS,
+    periodDays: 30,
+    plans: subscriptionPlans(),
     latestPayment,
     paymentConfigured: Boolean(configured()),
   });
@@ -111,12 +125,17 @@ router.get('/status', requireAuth, asyncHandler(async (req, res) => {
 
 router.post('/checkout', requireAuth, requireApprovedMember, asyncHandler(async (req, res) => {
   if (!configured()) throw errors.internal('Subscription payments are not configured yet', 'PAYMENT_NOT_CONFIGURED');
+  const selectedPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === req.body?.planId)
+    || (req.body?.planId == null ? SUBSCRIPTION_PLANS[0] : null);
+  if (!selectedPlan) throw errors.badRequest('Choose a valid subscription duration', 'INVALID_SUBSCRIPTION_PLAN');
+  const amount = config.monnify.amount * selectedPlan.priceMultiplier;
   const paymentReference = `MGDP-${req.user.id.slice(0, 8)}-${randomUUID()}`;
   const payment = await prisma.subscriptionPayment.create({
     data: {
       userId: req.user.id,
       paymentReference,
-      amount: config.monnify.amount,
+      amount,
+      durationDays: selectedPlan.durationDays,
     },
   });
 
@@ -125,14 +144,19 @@ router.post('/checkout', requireAuth, requireApprovedMember, asyncHandler(async 
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      amount: config.monnify.amount,
+      amount,
       customerEmail: req.user.email,
       paymentReference,
-      paymentDescription: 'MyGrowth monthly content access (30 days)',
+      paymentDescription: `MyGrowth content access (${selectedPlan.label})`,
       currencyCode: 'NGN',
       contractCode: config.monnify.contractCode,
       redirectUrl: `${config.frontendUrl}/subscription?paymentReference=${encodeURIComponent(paymentReference)}`,
-      metadata: { userId: req.user.id, product: 'monthly-content-access' },
+      metadata: {
+        userId: req.user.id,
+        product: 'monthly-content-access',
+        planId: selectedPlan.id,
+        durationDays: selectedPlan.durationDays,
+      },
     }),
   });
   const result = await response.json().catch(() => ({}));
