@@ -251,7 +251,7 @@ class _HomeBrandHeader extends StatelessWidget {
                     vertical: 9,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.highlight,
+                    color: AppColors.paleChampagne,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Text(

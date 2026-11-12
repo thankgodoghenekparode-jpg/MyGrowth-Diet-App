@@ -23,6 +23,7 @@ class AppTheme {
     final base = ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: bodyFont,
       colorScheme: ColorScheme.fromSeed(
         seedColor: p.brand,
         brightness: brightness,
@@ -220,10 +221,9 @@ class AppTheme {
     );
   }
 
-  /// Heading font (elegant serif) and body font (clean sans) per the brand
-  /// typography guidance.
-  static const String headingFont = 'PlayfairDisplay';
-  static const String bodyFont = 'Inter';
+  /// Use Montserrat consistently for headings, body text, and controls.
+  static const String headingFont = 'Montserrat';
+  static const String bodyFont = 'Montserrat';
 
   static TextTheme _textTheme(TextTheme base, AppPalette p) {
     final colors = base.apply(
