@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_date.dart';
-import '../core/widgets/brand_logo.dart';
 import '../features/activities/fasting_screen.dart';
 import '../features/bible/bible_reader_screen.dart';
 import '../features/admin/admin_access_screen.dart';
@@ -206,9 +208,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                pageBuilder: (_, _) => const NoTransitionPage(
-                  child: const MemberHomeScreen(),
-                ),
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: const MemberHomeScreen()),
               ),
             ],
           ),
@@ -228,9 +229,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/bible-reading',
-                pageBuilder: (_, _) => const NoTransitionPage(
-                  child: BibleReadingScreen(),
-                ),
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: BibleReadingScreen()),
               ),
             ],
           ),
@@ -247,9 +247,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                pageBuilder: (_, _) => const NoTransitionPage(
-                  child: ProfileScreen(),
-                ),
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: ProfileScreen()),
               ),
             ],
           ),
@@ -289,9 +288,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/devotion',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(
-          const MaterialPage(child: DailyDevotionScreen()),
-        ),
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: DailyDevotionScreen())),
       ),
       GoRoute(
         path: '/subscription',
@@ -837,37 +835,17 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _logoScale;
-  late final Animation<double> _nameOpacity;
-  late final Animation<Offset> _nameSlide;
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  VideoPlayerController? _videoController;
+  Timer? _fallbackTimer;
   bool _sessionStarted = false;
+  bool _splashFinished = false;
 
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(
-            vsync: this,
-            duration: const Duration(milliseconds: 2200),
-          )
-          ..forward().whenComplete(() {
-            if (mounted) ref.read(splashAnimationProvider.notifier).complete();
-          });
-    _logoScale = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0, .48, curve: Curves.easeOutBack),
-    );
-    _nameOpacity = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(.12, .58, curve: Curves.easeOut),
-    );
-    _nameSlide = Tween<Offset>(
-      begin: const Offset(0, .18),
-      end: Offset.zero,
-    ).animate(_nameOpacity);
+    _fallbackTimer = Timer(const Duration(seconds: 6), _finishSplash);
+    _initializeVideo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _sessionStarted) return;
       _sessionStarted = true;
@@ -876,138 +854,61 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     });
   }
 
+  Future<void> _initializeVideo() async {
+    final controller = VideoPlayerController.asset('assets/videos/splash.mp4');
+    _videoController = controller;
+    try {
+      await controller.initialize();
+      if (!mounted) return;
+      await controller.setLooping(false);
+      await controller.setVolume(0);
+      controller.addListener(_handleVideoUpdate);
+      await controller.play();
+      if (controller.value.isCompleted) _finishSplash();
+      setState(() {});
+    } catch (_) {
+      _finishSplash();
+    }
+  }
+
+  void _handleVideoUpdate() {
+    final controller = _videoController;
+    if (controller != null && controller.value.isCompleted) _finishSplash();
+  }
+
+  void _finishSplash() {
+    if (_splashFinished) return;
+    _splashFinished = true;
+    _fallbackTimer?.cancel();
+    if (mounted) ref.read(splashAnimationProvider.notifier).complete();
+  }
+
   @override
   void dispose() {
-    _controller.dispose();
+    _fallbackTimer?.cancel();
+    final controller = _videoController;
+    if (controller != null) {
+      controller.removeListener(_handleVideoUpdate);
+      unawaited(controller.dispose());
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = _videoController;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) => Stack(
-            fit: StackFit.expand,
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ScaleTransition(
-                        scale: _logoScale,
-                        child: Container(
-                          width: 112,
-                          height: 112,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          padding: const EdgeInsets.all(2),
-                          child: const ClipOval(child: BrandLogo(size: 108)),
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      FadeTransition(
-                        opacity: _nameOpacity,
-                        child: SlideTransition(
-                          position: _nameSlide,
-                          child: SizedBox(
-                            width: constraints.maxWidth,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                'HEALINGS\nERHUVWUIGHO AZUIKE',
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(
-                                      color: AppColors.brandText,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: constraints.maxWidth < 360
-                                          ? 21
-                                          : 26,
-                                      height: 1.12,
-                                      letterSpacing: .7,
-                                    ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              IgnorePointer(
-                child: CustomPaint(
-                  size: Size(constraints.maxWidth, constraints.maxHeight),
-                  painter: _SplashLightSweepPainter(_controller),
-                ),
-              ),
-            ],
-          ),
-        ),
+      body: Center(
+        child: controller != null && controller.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: controller.value.aspectRatio,
+                child: VideoPlayer(controller),
+              )
+            : const CircularProgressIndicator(color: AppColors.accent),
       ),
     );
   }
-}
-
-class _SplashLightSweepPainter extends CustomPainter {
-  const _SplashLightSweepPainter(this.animation);
-
-  final Animation<double> animation;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final progress = Curves.easeInOutCubic.transform(
-      ((animation.value - .28) / .56).clamp(0.0, 1.0).toDouble(),
-    );
-    if (progress <= 0 || progress >= 1) return;
-
-    final centerX = -size.width * .25 + (size.width * 1.5 * progress);
-    final centerY = size.height / 2;
-    final rect = Rect.fromCenter(
-      center: Offset(centerX, centerY),
-      width: 180,
-      height: 2,
-    );
-    final paint = Paint()
-      ..shader = const LinearGradient(
-        colors: [
-          Color(0x006FCBFF),
-          Color(0xAA8ED8FF),
-          Color(0xFFFFFFFF),
-          Color(0xCC64BFFF),
-          Color(0x006FCBFF),
-        ],
-      ).createShader(rect)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-    canvas.drawRect(rect, paint);
-
-    final flarePaint = Paint()
-      ..color = const Color(0x998ED8FF)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-    canvas.drawCircle(Offset(centerX, centerY), 4, flarePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SplashLightSweepPainter oldDelegate) =>
-      oldDelegate.animation.value != animation.value;
-
-  @override
-  bool shouldRebuildSemantics(covariant CustomPainter oldDelegate) => false;
-
-  @override
-  bool hitTest(Offset position) => false;
-
-  @override
-  bool get willChange => true;
-
-  @override
-  Listenable? get repaint => animation;
 }
 
 class _NotFoundScreen extends StatelessWidget {
