@@ -8,7 +8,6 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/app_date.dart';
-import '../../core/widgets/brand_logo.dart';
 import '../progress/progress_providers.dart';
 
 const _homeScriptures = [
@@ -122,156 +121,12 @@ class _HomeBrandHeader extends StatelessWidget {
   const _HomeBrandHeader();
 
   @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.surface, AppColors.surfaceMuted],
-          ),
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 560) {
-              return Row(
-                children: [
-                  const BrandLogo(size: 46),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'MyGrowth',
-                              style: textTheme.titleMedium?.copyWith(
-                                color: AppColors.brandText,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(width: 7),
-                            Text(
-                              'GROWTH DIET',
-                              style: textTheme.labelSmall?.copyWith(
-                                color: AppColors.accentText,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Grow, Learn, and Become.',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.titleSmall?.copyWith(
-                            color: AppColors.brandText,
-                            fontStyle: FontStyle.italic,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          'Your personal journey of faith and growth',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.labelSmall?.copyWith(
-                            color: AppColors.inkSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }
-            return Row(
-              children: [
-                const BrandLogo(size: 58),
-                const SizedBox(width: 12),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'MyGrowth',
-                      style: textTheme.headlineSmall?.copyWith(
-                        color: AppColors.brandText,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      'GROWTH DIET',
-                      style: textTheme.labelMedium?.copyWith(
-                        color: AppColors.accentText,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 20),
-                Container(width: 1, height: 62, color: AppColors.borderStrong),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Grow, Learn, and Become.',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.headlineSmall?.copyWith(
-                          color: AppColors.brandText,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        'Your personal journey of faith and growth',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.inkSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 18),
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 160),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 9,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.paleChampagne,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Text(
-                    'Consistent in God. Intentional in life.',
-                    textAlign: TextAlign.center,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: AppColors.brandText,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Image.asset(
+        'assets/images/home_brand_banner.png',
+        width: double.infinity,
+        fit: BoxFit.fitWidth,
+        semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
+      );
 }
 
 class _WelcomeHero extends ConsumerWidget {
