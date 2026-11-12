@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/activity_models.dart';
-import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/appearance_section.dart';

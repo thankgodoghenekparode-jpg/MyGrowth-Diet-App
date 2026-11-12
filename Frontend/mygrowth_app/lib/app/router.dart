@@ -209,7 +209,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home',
                 pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: const MemberHomeScreen()),
+                    const NoTransitionPage(child: MemberHomeScreen()),
               ),
             ],
           ),
@@ -905,7 +905,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 aspectRatio: controller.value.aspectRatio,
                 child: VideoPlayer(controller),
               )
-            : const CircularProgressIndicator(color: AppColors.accent),
+            : CircularProgressIndicator(color: AppColors.accent),
       ),
     );
   }
