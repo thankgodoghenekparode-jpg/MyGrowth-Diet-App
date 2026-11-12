@@ -618,6 +618,8 @@ const memberMenuItems = <MenuItem>[
   MenuItem(Icons.alarm_outlined, 'Daily Reminders', '/reminders'),
   MenuItem(Icons.dashboard_outlined, 'Dashboard', '/dashboard',
       image: 'assets/images/dashboard.jpg'),
+  MenuItem(Icons.workspace_premium_outlined, 'Subscription & Access',
+      '/subscription', image: 'assets/images/profile.jpg'),
   MenuItem(Icons.today_outlined, 'Daily Diet', '/diet',
       image: 'assets/images/diet.jpg'),
   MenuItem(Icons.menu_book_outlined, 'Bible', '/bible',

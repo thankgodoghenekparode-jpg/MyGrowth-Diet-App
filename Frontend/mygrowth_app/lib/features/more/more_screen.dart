@@ -65,23 +65,10 @@ class MoreScreen extends ConsumerWidget {
           _GreetingStrip(
             greeting:
                 '$greeting, ${firstName.isEmpty ? 'friend' : firstName}',
-            subtitle: user?.email ?? '',
+            subtitle: 'Grow. Learn. Live it.',
             initials: user?.initials ?? '?',
           ),
           const SizedBox(height: AppSpacing.lg),
-          if (area == AppArea.member) ...[
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.workspace_premium_rounded),
-                title: const Text('Monthly content access'),
-                subtitle: const Text('Subscribe or renew for ₦1,000 per 30 days'),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => context.push('/subscription'),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
-
           // -------------------------------------------------- promo carousel
           ImageCarousel(
             slides: slides,
