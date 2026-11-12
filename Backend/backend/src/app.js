@@ -34,28 +34,9 @@ import subscriptionRoutes from './modules/subscription/subscription.routes.js';
 
 export function createApp() {
   const app = express();
-  const bibleContentDirectory = fileURLToPath(
-    new URL('../public/bibles', import.meta.url)
-  );
 
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
-
-  // These public files are versioned with the application and may be cached
-  // independently from the authenticated, per-user API responses below.
-  app.use(
-    '/bibles',
-    express.static(bibleContentDirectory, {
-      etag: true,
-      maxAge: '7d',
-      setHeaders(res) {
-        res.setHeader(
-          'Cache-Control',
-          'public, max-age=604800, stale-while-revalidate=86400'
-        );
-      },
-    })
-  );
 
   // API responses are authenticated, per-user JSON: never cache them.
   // Without this, browsers revalidate with If-None-Match and can serve a
@@ -85,6 +66,26 @@ export function createApp() {
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Cron-Secret'],
       maxAge: 600,
+    })
+  );
+
+  // These public files are versioned with the application and may be cached
+  // independently from the authenticated, per-user API responses below.
+  // Mount after CORS so Flutter web can fetch them from the Vercel origin.
+  const bibleContentDirectory = fileURLToPath(
+    new URL('../public/bibles', import.meta.url)
+  );
+  app.use(
+    '/bibles',
+    express.static(bibleContentDirectory, {
+      etag: true,
+      maxAge: '7d',
+      setHeaders(res) {
+        res.setHeader(
+          'Cache-Control',
+          'public, max-age=604800, stale-while-revalidate=86400'
+        );
+      },
     })
   );
 
