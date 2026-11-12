@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/activity_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/theme/appearance_section.dart';
 import '../../core/utils/app_date.dart';
 import '../programme/programme_providers.dart';
 import '../progress/progress_providers.dart';
@@ -77,7 +75,6 @@ class MemberHomeScreen extends ConsumerWidget {
               name: firstName.isEmpty ? 'there' : '$firstName!',
               avatarUrl: user?.avatarUrl,
               initials: user?.initials ?? '?',
-              date: now,
               onNotifications: () => context.go('/notifications'),
               onMenu: () => Scaffold.of(shellContext).openDrawer(),
               onReadMore: () => context.go('/devotion'),
@@ -133,7 +130,6 @@ class _WelcomeHero extends ConsumerWidget {
     required this.name,
     required this.avatarUrl,
     required this.initials,
-    required this.date,
     required this.onNotifications,
     required this.onMenu,
     required this.onReadMore,
@@ -144,7 +140,6 @@ class _WelcomeHero extends ConsumerWidget {
   final String name;
   final String? avatarUrl;
   final String initials;
-  final DateTime date;
   final VoidCallback onNotifications;
   final VoidCallback onMenu;
   final VoidCallback onReadMore;
@@ -216,13 +211,6 @@ class _WelcomeHero extends ConsumerWidget {
                               height: 1.1,
                             ),
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            'Keep growing in Christ.',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.white.withValues(alpha: .85),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -233,7 +221,6 @@ class _WelcomeHero extends ConsumerWidget {
                       visualDensity: VisualDensity.compact,
                       icon: const Icon(Icons.menu_rounded, color: Colors.white),
                     ),
-                    const AppearanceToggleButton(onDarkBackground: true),
                     IconButton(
                       onPressed: onNotifications,
                       tooltip: 'Notifications',
@@ -245,8 +232,6 @@ class _WelcomeHero extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                _HomeDateChip(date: date),
                 const Spacer(),
                 Container(
                   width: 42,
@@ -322,35 +307,6 @@ class _SubscribeButton extends StatelessWidget {
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
       textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
-    ),
-  );
-}
-
-class _HomeDateChip extends StatelessWidget {
-  const _HomeDateChip({required this.date});
-
-  final DateTime date;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: .92),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.navy900),
-        const SizedBox(width: 5),
-        Text(
-          DateFormat('EEE, MMM d, yyyy').format(date),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.navy900,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
     ),
   );
 }
