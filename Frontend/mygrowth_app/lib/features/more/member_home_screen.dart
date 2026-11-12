@@ -53,7 +53,6 @@ class MemberHomeScreen extends ConsumerWidget {
               name: firstName.isEmpty ? 'there' : '$firstName!',
               avatarUrl: user?.avatarUrl,
               initials: user?.initials ?? '?',
-              date: now,
               onNotifications: () => context.go('/notifications'),
               onMenu: () => Scaffold.of(shellContext).openDrawer(),
               onReadMore: () => context.go('/devotion'),
@@ -131,7 +130,6 @@ class _WelcomeHero extends ConsumerWidget {
     required this.name,
     required this.avatarUrl,
     required this.initials,
-    required this.date,
     required this.onNotifications,
     required this.onMenu,
     required this.onReadMore,
@@ -141,7 +139,6 @@ class _WelcomeHero extends ConsumerWidget {
   final String name;
   final String? avatarUrl;
   final String initials;
-  final DateTime date;
   final VoidCallback onNotifications;
   final VoidCallback onMenu;
   final VoidCallback onReadMore;
@@ -239,23 +236,6 @@ class _WelcomeHero extends ConsumerWidget {
                       ),
                     ),
                   ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .94),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    DateFormat('EEE, d MMM, yyyy').format(date),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.navy900,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
                 ),
                 const Spacer(),
                 Container(
