@@ -7,10 +7,10 @@ $root = "C:\Users\USER\Desktop\MyGrowth Diet Plan"
 
 if (-not $SkipFrontend) {
   Set-Location "$root\Frontend\mygrowth_app"
-  flutter analyze --no-fatal-infos --no-fatal-warnings
+  flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
   if ($LASTEXITCODE -ne 0) { Write-Host "Analyze found errors. Fix them first."; exit 1 }
 
-  flutter build web --release --dart-define=API_BASE_URL=https://mygrowth-diet-app.onrender.com/api/v1
+  flutter build web --no-pub --release --dart-define=API_BASE_URL=https://mygrowth-diet-app.onrender.com/api/v1
   if ($LASTEXITCODE -ne 0) { Write-Host "Build failed"; exit 1 }
 
   Set-Location $root

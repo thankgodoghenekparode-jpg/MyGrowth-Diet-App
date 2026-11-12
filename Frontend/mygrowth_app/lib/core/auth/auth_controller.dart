@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_user.dart';
+import '../performance/app_performance.dart';
 import '../network/api_client.dart';
 
 /// Auth lifecycle states.
@@ -61,6 +62,15 @@ class AuthController extends Notifier<AuthState> {
 
   /// Restores a persisted session on app start. Returns the user if valid.
   Future<AppUser?> bootstrapSession() async {
+    final stopwatch = Stopwatch()..start();
+    try {
+      return await _restoreSession();
+    } finally {
+      AppPerformance.log('session_restore', stopwatch.elapsed);
+    }
+  }
+
+  Future<AppUser?> _restoreSession() async {
     state = state.copyWith(status: AuthStatus.loading);
     await _api.loadSession();
     if (!_api.hasSession) {
@@ -73,7 +83,8 @@ class AuthController extends Notifier<AuthState> {
       state = AuthState(
         status: AuthStatus.authenticated,
         user: user,
-        needsProfileCompletion: (data['profileCompleted'] as bool? ?? true) == false,
+        needsProfileCompletion:
+            (data['profileCompleted'] as bool? ?? true) == false,
       );
       await _cacheUser(user, state.needsProfileCompletion);
       return user;
@@ -144,7 +155,11 @@ class AuthController extends Notifier<AuthState> {
     final access = data['accessToken'] as String?;
     final refresh = data['refreshToken'] as String?;
     if (access == null) {
-      throw ApiException(500, 'invalid_response', 'Login response was malformed.');
+      throw ApiException(
+        500,
+        'invalid_response',
+        'Login response was malformed.',
+      );
     }
     await _api.saveSession(accessToken: access, refreshToken: refresh);
     final userJson = data['user'] as Map<String, dynamic>?;
@@ -158,7 +173,8 @@ class AuthController extends Notifier<AuthState> {
     state = AuthState(
       status: AuthStatus.authenticated,
       user: user,
-      needsProfileCompletion: (data['profileCompleted'] as bool? ?? true) == false,
+      needsProfileCompletion:
+          (data['profileCompleted'] as bool? ?? true) == false,
     );
     await _cacheUser(user, state.needsProfileCompletion);
   }
@@ -176,10 +192,7 @@ class AuthController extends Notifier<AuthState> {
     final data = await _api.patch('/me', body: patch) as Map<String, dynamic>;
     final user = AppUser.fromJson(data);
     await _cacheUser(user, false);
-    state = state.copyWith(
-      user: user,
-      needsProfileCompletion: false,
-    );
+    state = state.copyWith(user: user, needsProfileCompletion: false);
   }
 
   Future<void> requestPasswordReset(String email) async {
@@ -225,8 +238,9 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return client;
 });
 
-final authControllerProvider =
-    NotifierProvider<AuthController, AuthState>(AuthController.new);
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  AuthController.new,
+);
 
 /// Convenience provider for the signed-in user, or null.
 final currentUserProvider = Provider<AppUser?>(

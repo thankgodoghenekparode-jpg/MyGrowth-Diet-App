@@ -8,6 +8,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
+import '../performance/app_performance.dart';
 
 /// A typed API failure raised by [ApiClient].
 class ApiException implements Exception {
@@ -67,8 +68,8 @@ typedef TokenRefresher = Future<bool> Function();
 ///   [ApiException] with human-readable messages.
 class ApiClient {
   ApiClient({http.Client? client, String? baseUrl})
-      : _client = client ?? http.Client(),
-        baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
+    : _client = client ?? http.Client(),
+      baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
 
   final http.Client _client;
   final String baseUrl;
@@ -125,7 +126,9 @@ class ApiClient {
     } catch (_) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_accessKey, accessToken);
-      if (refreshToken != null) await prefs.setString(_refreshKey, refreshToken);
+      if (refreshToken != null) {
+        await prefs.setString(_refreshKey, refreshToken);
+      }
     }
     final cb = onTokensUpdated;
     if (cb != null) await cb(accessToken);
@@ -183,8 +186,9 @@ class ApiClient {
           fieldName,
           bytes,
           filename: filename,
-          contentType:
-              contentType == null ? null : MediaType.parse(contentType),
+          contentType: contentType == null
+              ? null
+              : MediaType.parse(contentType),
         ),
       );
     fields.forEach((key, value) => multipart.fields[key] = value);
@@ -225,10 +229,10 @@ class ApiClient {
   // -------------------------------------------------------------- helpers
 
   Map<String, String> _headers() => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+  };
 
   Uri _resolve(String path, Map<String, String>? query) {
     final base = Uri.parse(baseUrl);
@@ -255,18 +259,23 @@ class ApiClient {
     bool retried = false,
     int getRetry = 0,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final uri = _resolve(path, query);
     final jsonBody = body == null ? null : jsonEncode(body);
 
     http.Response response;
     try {
-      final request = http.Request(method, uri)
-        ..headers.addAll(_headers());
+      final request = http.Request(method, uri)..headers.addAll(_headers());
       if (jsonBody != null) request.body = jsonBody;
       final streamed = await _client.send(request).timeout(_requestTimeout);
-      response =
-          await http.Response.fromStream(streamed).timeout(_requestTimeout);
+      response = await http.Response.fromStream(streamed)
+          .timeout(_requestTimeout);
     } on TimeoutException {
+      AppPerformance.log(
+        'api_request',
+        stopwatch.elapsed,
+        detail: 'method=$method route=${_safeRoute(path)} outcome=timeout',
+      );
       if (method == 'GET' && getRetry < 2) {
         await Future<void>.delayed(
           Duration(milliseconds: 300 * (1 << getRetry)),
@@ -287,6 +296,12 @@ class ApiClient {
         isNetworkError: true,
       );
     } catch (e) {
+      AppPerformance.log(
+        'api_request',
+        stopwatch.elapsed,
+        detail:
+            'method=$method route=${_safeRoute(path)} outcome=network_error',
+      );
       if (method == 'GET' && getRetry < 2) {
         await Future<void>.delayed(
           Duration(milliseconds: 300 * (1 << getRetry)),
@@ -309,14 +324,18 @@ class ApiClient {
       );
     }
 
+    AppPerformance.log(
+      'api_request',
+      stopwatch.elapsed,
+      detail:
+          'method=$method route=${_safeRoute(path)} status=${response.statusCode}',
+    );
     onConnectionRestored?.call();
 
     if (method == 'GET' &&
         const {502, 503, 504}.contains(response.statusCode) &&
         getRetry < 2) {
-      await Future<void>.delayed(
-        Duration(milliseconds: 300 * (1 << getRetry)),
-      );
+      await Future<void>.delayed(Duration(milliseconds: 300 * (1 << getRetry)));
       return _send(
         method,
         path,
@@ -355,6 +374,12 @@ class ApiClient {
     return _handleResponse(response);
   }
 
+  String _safeRoute(String path) {
+    final segments = path.split('/').where((part) => part.isNotEmpty);
+    final visible = segments.isEmpty ? '' : segments.first;
+    return visible.isEmpty ? '/' : '/$visible';
+  }
+
   /// Returns true when refreshed, false when credentials are invalid, and
   /// null when a temporary failure prevented the refresh attempt.
   Future<bool?> _tryRefresh() async {
@@ -368,17 +393,19 @@ class ApiClient {
     bool? result;
     try {
       final uri = _resolve('/auth/refresh', null);
-      final response = await _client.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refreshToken': _refreshToken}),
-      ).timeout(_requestTimeout);
+      final response = await _client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refreshToken': _refreshToken}),
+          )
+          .timeout(_requestTimeout);
       if (response.statusCode == 200) {
         final decoded = jsonDecode(utf8.decode(response.bodyBytes));
         final data = decoded is Map<String, dynamic>
             ? (decoded['data'] is Map<String, dynamic>
-                ? decoded['data'] as Map<String, dynamic>
-                : decoded)
+                  ? decoded['data'] as Map<String, dynamic>
+                  : decoded)
             : null;
         final access = data?['accessToken'] as String?;
         final refresh = data?['refreshToken'] as String?;
@@ -438,12 +465,7 @@ class ApiClient {
         message = err;
       }
     }
-    return _raise(
-      response.statusCode,
-      code,
-      message,
-      details,
-    );
+    return _raise(response.statusCode, code, message, details);
   }
 
   Never _raise(int status, String code, String message, dynamic details) {
