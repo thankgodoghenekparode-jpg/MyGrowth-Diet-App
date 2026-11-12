@@ -1,4 +1,3 @@
-import 'package:mygrowth_app/core/models/activity_models.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -41,12 +40,12 @@ class MemberHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final now = appDateNow();
-    final firstName = (user?.name ?? '').trim().split(RegExp(r'\s+')).first;
+    final displayName = (user?.name ?? '').trim();
     final greeting = now.hour < 12
-        ? 'Good morning,'
+        ? 'Good morning'
         : now.hour < 17
-        ? 'Good afternoon,'
-        : 'Good evening,';
+        ? 'Good afternoon'
+        : 'Good evening';
     final progress = ref.watch(progressSummaryProvider);
 
     return RefreshIndicator(
@@ -66,7 +65,7 @@ class MemberHomeScreen extends ConsumerWidget {
           Builder(
             builder: (shellContext) => _WelcomeHero(
               greeting: greeting,
-              name: firstName.isEmpty ? 'there' : '$firstName!',
+              name: displayName.isEmpty ? 'there' : displayName,
               avatarUrl: user?.avatarUrl,
               initials: user?.initials ?? '?',
               onNotifications: () => context.go('/notifications'),
@@ -189,7 +188,70 @@ class _WelcomeHero extends ConsumerWidget {
                       visualDensity: VisualDensity.compact,
                       icon: const Icon(Icons.menu_rounded, color: Colors.white),
                     ),
-                    const Spacer(),
+                    Expanded(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 230),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 19,
+                                backgroundColor: AppColors.champagneGold,
+                                backgroundImage: resolvedAvatar == null
+                                    ? null
+                                    : NetworkImage(resolvedAvatar),
+                                child: resolvedAvatar == null
+                                    ? Text(
+                                        initials,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 12,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      greeting,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            color: Colors.white.withValues(
+                                              alpha: .9,
+                                            ),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            height: 1.1,
+                                          ),
+                                    ),
+                                    Text(
+                                      name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                            height: 1.15,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     IconButton(
                       onPressed: onNotifications,
                       tooltip: 'Notifications',
@@ -198,38 +260,6 @@ class _WelcomeHero extends ConsumerWidget {
                         Icons.notifications_none_rounded,
                         color: Colors.white,
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 112),
-                      child: Text(
-                        '$greeting\n$name',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          height: 1.1,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: AppColors.champagneGold,
-                      backgroundImage: resolvedAvatar == null
-                          ? null
-                          : NetworkImage(resolvedAvatar),
-                      child: resolvedAvatar == null
-                          ? Text(
-                              initials,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            )
-                          : null,
                     ),
                   ],
                 ),
