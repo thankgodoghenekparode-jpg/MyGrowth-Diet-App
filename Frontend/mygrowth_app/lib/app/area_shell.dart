@@ -294,7 +294,7 @@ class _SidebarNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 244,
-      color: AppColors.surface,
+      color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -571,6 +571,8 @@ class _AreaDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      backgroundColor: AppColors.background,
+      surfaceTintColor: Colors.transparent,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
