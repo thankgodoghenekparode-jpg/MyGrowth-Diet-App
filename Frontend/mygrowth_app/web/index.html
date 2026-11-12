@@ -36,8 +36,48 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <div id="static-intro" style="font-family:Arial,sans-serif;text-align:center;padding:40px 16px;color:#09162A;"><h1>MyGrowth Diet App</h1><p>The member app of Healings Erhuvwuigho Azuike Ministry. Daily devotions, Bible reading, a growth plan and prayer partners for ministry members.</p></div>
-  <script>window.addEventListener("flutter-first-frame", function(){ var e=document.getElementById("static-intro"); if(e) e.remove(); });</script>
+  <div id="static-intro" role="status" aria-live="polite" style="box-sizing:border-box;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#09162A;color:#F7F9FC;font-family:Arial,sans-serif;text-align:center;">
+    <div style="max-width:420px;">
+      <h1 style="margin:0 0 12px;font-size:28px;">MyGrowth Diet App</h1>
+      <p id="startup-message" style="margin:0;color:#C5D0E0;line-height:1.5;">Starting the app…</p>
+      <div id="startup-recovery" hidden style="margin-top:20px;">
+        <p style="color:#C5D0E0;line-height:1.5;">The app is taking longer than expected. Check your connection, then reload it.</p>
+        <button id="startup-retry" type="button" style="padding:12px 20px;border:0;border-radius:8px;background:#D5A648;color:#09162A;font-size:16px;font-weight:700;">Reload app</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var timer = window.setTimeout(showRecovery, 20000);
+      function showRecovery() {
+        var recovery = document.getElementById('startup-recovery');
+        if (recovery) recovery.hidden = false;
+      }
+      window.addEventListener('flutter-first-frame', function () {
+        window.clearTimeout(timer);
+        var intro = document.getElementById('static-intro');
+        if (intro) intro.remove();
+      }, { once: true });
+      document.getElementById('startup-retry').addEventListener('click', async function () {
+        var button = this;
+        button.disabled = true;
+        button.textContent = 'Reloading…';
+        try {
+          if ('serviceWorker' in navigator) {
+            var registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(function (registration) { return registration.unregister(); }));
+          }
+          if ('caches' in window) {
+            var names = await caches.keys();
+            await Promise.all(names.filter(function (name) { return name.indexOf('mygrowth-shell-') === 0; }).map(function (name) { return caches.delete(name); }));
+          }
+        } catch (_) {
+          // Reload even when browser cache cleanup is unavailable.
+        }
+        window.location.reload();
+      });
+    })();
+  </script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', async () => {
@@ -59,6 +99,6 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js" async onerror="document.getElementById('startup-message').textContent='The app files could not be loaded. Check your connection and reload.'; document.getElementById('startup-recovery').hidden=false;"></script>
 </body>
 </html>
