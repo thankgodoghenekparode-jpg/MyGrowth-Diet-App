@@ -17,10 +17,10 @@ const memberBottomDestinations = [
       'Today\'s Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
   NavDestination('Bible', Icons.menu_book_outlined,
       Icons.menu_book_rounded, '/bible'),
+  NavDestination('Diet Plan', Icons.event_note_outlined,
+      Icons.event_note_rounded, '/plan'),
   NavDestination('AI Assistance', Icons.auto_awesome_outlined,
       Icons.auto_awesome_rounded, '/assistant'),
-  NavDestination(
-      'Profile', Icons.person_outline_rounded, Icons.person_rounded, '/profile'),
 ];
 
 /// Destinations available in the admin bottom navigation (compact devices).

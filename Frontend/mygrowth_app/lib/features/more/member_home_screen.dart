@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/models/activity_models.dart';
 import '../../core/theme/app_colors.dart';
@@ -14,6 +17,29 @@ DateTime _memberHomeToday() {
   final date = appDateNow();
   return DateTime(date.year, date.month, date.day);
 }
+
+const _homeScriptures = [
+  (
+    text: 'For I know the plans I have for you, declares the LORD, plans to '
+        'prosper you and not to harm you, plans to give you hope and a future.',
+    reference: 'Jeremiah 29:11',
+  ),
+  (text: 'The LORD is my shepherd; I shall not want.', reference: 'Psalm 23:1'),
+  (
+    text: 'Trust in the LORD with all thine heart; and lean not unto thine '
+        'own understanding.',
+    reference: 'Proverbs 3:5',
+  ),
+  (
+    text: 'I can do all things through Christ which strengtheneth me.',
+    reference: 'Philippians 4:13',
+  ),
+  (
+    text: 'Be strong and of a good courage; be not afraid, neither be thou '
+        'dismayed.',
+    reference: 'Joshua 1:9',
+  ),
+];
 
 /// Member landing page following the supplied Growth Diet home reference.
 class MemberHomeScreen extends ConsumerWidget {
@@ -51,9 +77,11 @@ class MemberHomeScreen extends ConsumerWidget {
               name: firstName.isEmpty ? 'there' : '$firstName!',
               avatarUrl: user?.avatarUrl,
               initials: user?.initials ?? '?',
+              date: now,
               onNotifications: () => context.go('/notifications'),
               onMenu: () => Scaffold.of(shellContext).openDrawer(),
               onReadMore: () => context.go('/devotion'),
+              onSubscribe: () => context.go('/subscription'),
             ),
           ),
           const SizedBox(height: 16),
@@ -102,18 +130,22 @@ class _WelcomeHero extends ConsumerWidget {
     required this.name,
     required this.avatarUrl,
     required this.initials,
+    required this.date,
     required this.onNotifications,
     required this.onMenu,
     required this.onReadMore,
+    required this.onSubscribe,
   });
 
   final String greeting;
   final String name;
   final String? avatarUrl;
   final String initials;
+  final DateTime date;
   final VoidCallback onNotifications;
   final VoidCallback onMenu;
   final VoidCallback onReadMore;
+  final VoidCallback onSubscribe;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -191,6 +223,7 @@ class _WelcomeHero extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    _SubscribeButton(onPressed: onSubscribe),
                     IconButton(
                       onPressed: onMenu,
                       tooltip: 'Open navigation menu',
@@ -209,6 +242,8 @@ class _WelcomeHero extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                _HomeDateChip(date: date),
                 const Spacer(),
                 Container(
                   width: 42,
@@ -228,19 +263,14 @@ class _WelcomeHero extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  '“For I know the plans I have for you, plans to give you hope and a future.”',
-                  style: theme.textTheme.titleMedium?.copyWith(
+                _ScriptureCarousel(
+                  textStyle: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontStyle: FontStyle.italic,
                     height: 1.2,
                   ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Jeremiah 29:11',
-                  style: theme.textTheme.labelSmall?.copyWith(
+                  referenceStyle: theme.textTheme.labelSmall?.copyWith(
                     color: Colors.white.withValues(alpha: .84),
                   ),
                 ),
@@ -251,7 +281,7 @@ class _WelcomeHero extends ConsumerWidget {
                     onPressed: onReadMore,
                     iconAlignment: IconAlignment.end,
                     icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                    label: const Text('Read more'),
+                    label: const Text('Devotion'),
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.champagneGold,
                       foregroundColor: AppColors.navy900,
@@ -265,6 +295,138 @@ class _WelcomeHero extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SubscribeButton extends StatelessWidget {
+  const _SubscribeButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    onPressed: onPressed,
+    icon: const Icon(Icons.workspace_premium_outlined, size: 13),
+    label: const Text('Subscribe'),
+    style: OutlinedButton.styleFrom(
+      foregroundColor: AppColors.champagneGold,
+      side: const BorderSide(color: AppColors.champagneGold),
+      padding: const EdgeInsets.symmetric(horizontal: 7),
+      minimumSize: const Size(0, 30),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+    ),
+  );
+}
+
+class _HomeDateChip extends StatelessWidget {
+  const _HomeDateChip({required this.date});
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .92),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.navy900),
+        const SizedBox(width: 5),
+        Text(
+          DateFormat('EEE, MMM d, yyyy').format(date),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppColors.navy900,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ScriptureCarousel extends StatefulWidget {
+  const _ScriptureCarousel({
+    required this.textStyle,
+    required this.referenceStyle,
+  });
+
+  final TextStyle? textStyle;
+  final TextStyle? referenceStyle;
+
+  @override
+  State<_ScriptureCarousel> createState() => _ScriptureCarouselState();
+}
+
+class _ScriptureCarouselState extends State<_ScriptureCarousel> {
+  late Timer _timer;
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 7), (_) => _showNext());
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _showNext({bool previous = false}) {
+    setState(() {
+      _index = (_index + (previous ? _homeScriptures.length - 1 : 1)) %
+          _homeScriptures.length;
+    });
+    _timer.cancel();
+    // Restart the automatic rotation after a manual swipe.
+    _timer = Timer.periodic(const Duration(seconds: 7), (_) => _showNext());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scripture = _homeScriptures[_index];
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        final velocity = details.primaryVelocity ?? 0;
+        if (velocity.abs() > 80) _showNext(previous: velocity > 0);
+      },
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 450),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(.12, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: Column(
+          key: ValueKey(scripture.reference),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '\u201c${scripture.text}\u201d',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: widget.textStyle,
+            ),
+            const SizedBox(height: 5),
+            Text(scripture.reference, style: widget.referenceStyle),
+          ],
         ),
       ),
     );
