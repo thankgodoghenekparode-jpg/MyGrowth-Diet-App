@@ -957,12 +957,10 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
         );
       }
     }
-    return ListView.separated(
+    return ListView.builder(
       controller: _verseScrollController,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
       itemCount: visibleVerses.length,
-      separatorBuilder: (context, index) =>
-          Divider(height: 1, color: AppColors.border.withValues(alpha: 0.55)),
       itemBuilder: (context, index) {
         final hit = visibleVerses[index];
         final isBookmarked = session.bookmarks.contains(hit.key);
@@ -991,8 +989,9 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                           text: hit.text,
                           style: TextStyle(
                             color: AppColors.ink,
-                            height: 1.7,
-                            fontSize: 17,
+                            height: 1.75,
+                            fontSize: 18,
+                            letterSpacing: 0.1,
                           ),
                         ),
                       ],
@@ -1000,34 +999,38 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                   ),
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: 'Copy verse',
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => _copyVerse(session, hit),
-                    icon: Icon(
-                      Icons.copy_outlined,
-                      size: 18,
-                      color: AppColors.inkMuted,
+              PopupMenuButton<String>(
+                tooltip: 'Verse actions',
+                onSelected: (action) {
+                  if (action == 'copy') {
+                    _copyVerse(session, hit);
+                  } else {
+                    _toggleBookmark(session, hit);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'copy',
+                    child: ListTile(
+                      dense: true,
+                      leading: Icon(Icons.copy_outlined),
+                      title: Text('Copy verse'),
                     ),
                   ),
-                  IconButton(
-                    tooltip: isBookmarked
-                        ? 'Remove bookmark'
-                        : 'Bookmark verse',
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => _toggleBookmark(session, hit),
-                    icon: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      size: 19,
-                      color: isBookmarked
-                          ? AppColors.gold600
-                          : AppColors.inkMuted,
+                  PopupMenuItem(
+                    value: 'bookmark',
+                    child: ListTile(
+                      dense: true,
+                      leading: Icon(
+                        isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      ),
+                      title: Text(
+                        isBookmarked ? 'Remove bookmark' : 'Bookmark verse',
+                      ),
                     ),
                   ),
                 ],
+                icon: Icon(Icons.more_vert, color: AppColors.inkMuted),
               ),
             ],
           ),
@@ -1043,16 +1046,15 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
     required String emptyMessage,
   }) {
     if (hits.isEmpty) return Center(child: Text(emptyMessage));
-    return ListView.separated(
+    return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       itemCount: hits.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final hit = hits[index];
         return ListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 4,
-            vertical: 4,
+            vertical: 8,
           ),
           title: Text(
             hit.reference(session.books),
