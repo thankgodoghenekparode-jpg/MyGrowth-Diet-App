@@ -177,6 +177,38 @@ class _WelcomeHero extends ConsumerWidget {
               children: [
                 Row(
                   children: [
+                    IconButton(
+                      onPressed: onMenu,
+                      tooltip: 'Open navigation menu',
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.menu_rounded, color: Colors.white),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: onNotifications,
+                      tooltip: 'Notifications',
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(
+                        Icons.notifications_none_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 112),
+                      child: Text(
+                        '$greeting\n$name',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
                     CircleAvatar(
                       radius: 22,
                       backgroundColor: AppColors.champagneGold,
@@ -192,39 +224,6 @@ class _WelcomeHero extends ConsumerWidget {
                               ),
                             )
                           : null,
-                    ),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$greeting\n$name',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: onMenu,
-                      tooltip: 'Open navigation menu',
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.menu_rounded, color: Colors.white),
-                    ),
-                    IconButton(
-                      onPressed: onNotifications,
-                      tooltip: 'Notifications',
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(
-                        Icons.notifications_none_rounded,
-                        color: Colors.white,
-                      ),
                     ),
                   ],
                 ),
