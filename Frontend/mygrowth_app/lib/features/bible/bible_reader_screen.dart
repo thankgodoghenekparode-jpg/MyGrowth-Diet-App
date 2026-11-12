@@ -702,7 +702,10 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
-            child: Text('Could not load the Bible: ${snapshot.error}'),
+            child: Text(
+              'Could not load the Bible: ${snapshot.error}',
+              style: TextStyle(color: AppColors.ink),
+            ),
           );
         }
         if (!snapshot.hasData) {
@@ -713,22 +716,25 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
           _bookIndex = session.bookIndex;
           _chapterIndex = session.chapterIndex;
         }
-        return Column(
-          children: [
-            _buildToolbar(context, session),
-            if (_view == _BibleView.reader)
-              _buildChapterHeading(context, session),
-            const Divider(height: 1),
-            Expanded(child: _buildContent(context, session)),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                session.translation.credit,
-                style: Theme.of(context).textTheme.labelSmall
-                    ?.copyWith(color: AppColors.inkMuted),
+        return ColoredBox(
+          color: AppColors.surface,
+          child: Column(
+            children: [
+              _buildToolbar(context, session),
+              if (_view == _BibleView.reader)
+                _buildChapterHeading(context, session),
+              const Divider(height: 1),
+              Expanded(child: _buildContent(context, session)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  session.translation.credit,
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: AppColors.inkSecondary),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -807,6 +813,9 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
             child: DropdownButton<String>(
               value: session.translation.id,
               isExpanded: true,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.ink,
+              ),
               items: [
                 for (final translation in _bibleTranslations)
                   DropdownMenuItem(
@@ -829,6 +838,9 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                   child: DropdownButton<int>(
                     value: _bookIndex,
                     isExpanded: true,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.ink,
+                    ),
                     items: [
                       for (var i = 0; i < session.books.length; i++)
                         DropdownMenuItem(
@@ -970,7 +982,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                         TextSpan(
                           text: '${hit.verseNumber}  ',
                           style: TextStyle(
-                            color: AppColors.gold600,
+                            color: AppColors.accentText,
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
                           ),
@@ -979,8 +991,8 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                           text: hit.text,
                           style: TextStyle(
                             color: AppColors.ink,
-                            height: 1.6,
-                            fontSize: 16,
+                            height: 1.7,
+                            fontSize: 17,
                           ),
                         ),
                       ],

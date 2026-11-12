@@ -45,12 +45,19 @@ class NavDestination {
 ///
 /// [image] is a bundled illustration shown on the "More" landing tiles.
 class MenuItem {
-  const MenuItem(this.icon, this.label, this.path, {this.image});
+  const MenuItem(
+    this.icon,
+    this.label,
+    this.path, {
+    this.image,
+    this.category = 'More',
+  });
 
   final IconData icon;
   final String label;
   final String path;
   final String? image;
+  final String category;
 }
 
 /// Responsive scaffold for area navigation.
@@ -579,23 +586,46 @@ class _AreaDrawer extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: _SidebarUserTile(user: user!),
                     ),
-                  ..._menuItems(context)
-                      .map(
-                        (item) => ListTile(
-                          leading: Icon(item.icon, size: 21),
-                          title: Text(item.label),
-                          trailing: const Icon(Icons.chevron_right_rounded,
-                              size: 18),
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            if (item.path == '/shape-space') {
-                              context.push(item.path);
-                            } else {
-                              context.go(item.path);
-                            }
-                          },
-                        ),
+                  for (final group in _menuGroups(context).entries)
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        dividerColor: Colors.transparent,
                       ),
+                      child: ExpansionTile(
+                        leading: Icon(
+                          _menuCategoryIcon(group.key),
+                          color: AppColors.iconAccent,
+                          size: 21,
+                        ),
+                        title: Text(
+                          group.key,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+                        childrenPadding: const EdgeInsets.only(left: 8),
+                        children: [
+                          for (final item in group.value)
+                            ListTile(
+                              dense: true,
+                              leading: Icon(item.icon, size: 20),
+                              title: Text(item.label),
+                              trailing: const Icon(
+                                Icons.chevron_right_rounded,
+                                size: 18,
+                              ),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                if (item.path == '/shape-space') {
+                                  context.push(item.path);
+                                } else {
+                                  context.go(item.path);
+                                }
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -609,93 +639,142 @@ class _AreaDrawer extends StatelessWidget {
     if (area == AppArea.admin) return adminMenuItems;
     return memberMenuItems;
   }
+
+  Map<String, List<MenuItem>> _menuGroups(BuildContext context) {
+    final groups = <String, List<MenuItem>>{};
+    for (final item in _menuItems(context)) {
+      groups.putIfAbsent(item.category, () => []).add(item);
+    }
+    final order = area == AppArea.admin
+        ? const [
+            'Overview',
+            'Programmes & Content',
+            'People & Partnerships',
+            'Admin Tools',
+          ]
+        : const [
+            'Growth',
+            'Bible & Study',
+            'Prayer & Community',
+            'Updates',
+            'Account',
+          ];
+    return {
+      for (final category in order)
+        if (groups.containsKey(category)) category: groups[category]!,
+    };
+  }
 }
+
+IconData _menuCategoryIcon(String category) => switch (category) {
+      'Growth' => Icons.trending_up_rounded,
+      'Bible & Study' => Icons.menu_book_rounded,
+      'Prayer & Community' || 'People & Partnerships' => Icons.groups_rounded,
+      'Updates' => Icons.notifications_active_outlined,
+      'Account' => Icons.manage_accounts_outlined,
+      'Overview' => Icons.dashboard_outlined,
+      'Programmes & Content' => Icons.calendar_month_outlined,
+      'Admin Tools' => Icons.admin_panel_settings_outlined,
+      _ => Icons.apps_rounded,
+    };
 
 /// Full member navigation list (used by drawer and the "More" screen).
 const memberMenuItems = <MenuItem>[
-  MenuItem(Icons.auto_stories_outlined, 'Daily Devotion', '/devotion'),
-  MenuItem(Icons.forum_outlined, 'Shape Space', '/shape-space'),
-  MenuItem(Icons.auto_awesome_outlined, 'AI Assistant', '/assistant'),
-  MenuItem(Icons.alarm_outlined, 'Daily Reminders', '/reminders'),
+  MenuItem(Icons.auto_stories_outlined, 'Daily Devotion', '/devotion',
+      category: 'Growth'),
+  MenuItem(Icons.forum_outlined, 'Shape Space', '/shape-space',
+      category: 'Prayer & Community'),
+  MenuItem(Icons.auto_awesome_outlined, 'AI Assistant', '/assistant',
+      category: 'Updates'),
+  MenuItem(Icons.alarm_outlined, 'Daily Reminders', '/reminders',
+      category: 'Updates'),
   MenuItem(Icons.dashboard_outlined, 'Dashboard', '/dashboard',
-      image: 'assets/images/dashboard.jpg'),
+      image: 'assets/images/dashboard.jpg', category: 'Growth'),
   MenuItem(Icons.workspace_premium_outlined, 'Subscription & Access',
-      '/subscription', image: 'assets/images/profile.jpg'),
+      '/subscription', image: 'assets/images/profile.jpg', category: 'Account'),
   MenuItem(Icons.today_outlined, 'Daily Diet', '/diet',
-      image: 'assets/images/diet.jpg'),
+      image: 'assets/images/diet.jpg', category: 'Growth'),
   MenuItem(Icons.menu_book_outlined, 'Bible', '/bible',
-      image: 'assets/images/bible.jpg'),
+      image: 'assets/images/bible.jpg', category: 'Bible & Study'),
   MenuItem(Icons.menu_book_outlined, 'My Growth Plan', '/plan',
-      image: 'assets/images/plan.jpg'),
+      image: 'assets/images/plan.jpg', category: 'Growth'),
   MenuItem(Icons.auto_stories_outlined, 'Bible Reading', '/bible-reading',
-      image: 'assets/images/bible.jpg'),
+      image: 'assets/images/bible.jpg', category: 'Bible & Study'),
   MenuItem(Icons.local_library_outlined, 'Study Materials', '/materials',
-      image: 'assets/images/materials.jpg'),
+      image: 'assets/images/materials.jpg', category: 'Bible & Study'),
   MenuItem(Icons.flag_outlined, 'My Goals', '/goals',
-      image: 'assets/images/goals.jpg'),
+      image: 'assets/images/goals.jpg', category: 'Growth'),
   MenuItem(Icons.wb_sunny_outlined, 'Fasting Tracker', '/fasting',
-      image: 'assets/images/fasting.jpg'),
+      image: 'assets/images/fasting.jpg', category: 'Growth'),
   MenuItem(Icons.self_improvement_outlined, 'Prayer Room', '/prayer',
-      image: 'assets/images/prayer.jpg'),
+      image: 'assets/images/prayer.jpg', category: 'Prayer & Community'),
   MenuItem(Icons.handshake_outlined, 'Prayer Partners', '/prayer/partners',
-      image: 'assets/images/partners.jpg'),
+      image: 'assets/images/partners.jpg', category: 'Prayer & Community'),
   MenuItem(Icons.fact_check_outlined, 'Accountability Reports', '/reports',
-      image: 'assets/images/reports.jpg'),
+      image: 'assets/images/reports.jpg', category: 'Growth'),
   MenuItem(Icons.edit_note_outlined, 'Reflections & Testimonies',
       '/reflections',
-      image: 'assets/images/reflections.jpg'),
+      image: 'assets/images/reflections.jpg', category: 'Growth'),
   MenuItem(Icons.insights_outlined, 'My Progress', '/progress',
-      image: 'assets/images/progress.jpg'),
+      image: 'assets/images/progress.jpg', category: 'Growth'),
   MenuItem(Icons.campaign_outlined, 'Announcements', '/announcements',
-      image: 'assets/images/announcements.jpg'),
+      image: 'assets/images/announcements.jpg', category: 'Updates'),
   MenuItem(Icons.link_outlined, 'Connect with me', '/connect',
-      image: 'assets/images/profile.jpg'),
+      image: 'assets/images/profile.jpg', category: 'Prayer & Community'),
   MenuItem(Icons.notifications_outlined, 'Notifications', '/notifications',
-      image: 'assets/images/notifications.jpg'),
+      image: 'assets/images/notifications.jpg', category: 'Updates'),
   MenuItem(Icons.person_outline_rounded, 'Profile & Settings', '/profile',
-      image: 'assets/images/profile.jpg'),
+      image: 'assets/images/profile.jpg', category: 'Account'),
 ];
 
 /// Full admin navigation list (used by drawer and the "More" screen).
 const adminMenuItems = <MenuItem>[
   MenuItem(Icons.dashboard_outlined, 'Admin Dashboard', '/admin/dashboard',
-      image: 'assets/images/admin_dashboard.jpg'),
+      image: 'assets/images/admin_dashboard.jpg', category: 'Overview'),
   MenuItem(Icons.admin_panel_settings_outlined, 'Admin Access Management',
       '/admin/access',
-      image: 'assets/images/admin_access.jpg'),
+      image: 'assets/images/admin_access.jpg',
+      category: 'People & Partnerships'),
   MenuItem(Icons.people_outlined, 'Members', '/admin/members',
-      image: 'assets/images/members.jpg'),
+      image: 'assets/images/members.jpg', category: 'People & Partnerships'),
   MenuItem(Icons.event_note_outlined, 'Annual Programmes', '/admin/programmes',
-      image: 'assets/images/programmes.jpg'),
+      image: 'assets/images/programmes.jpg', category: 'Programmes & Content'),
   MenuItem(Icons.calendar_month_outlined, 'Monthly Plans', '/admin/monthly-plans',
-      image: 'assets/images/monthly_plans.jpg'),
+      image: 'assets/images/monthly_plans.jpg',
+      category: 'Programmes & Content'),
   MenuItem(Icons.view_week_outlined, 'Weekly & Daily Plans',
       '/admin/weekly-plans',
-      image: 'assets/images/weekly_plans.jpg'),
+      image: 'assets/images/weekly_plans.jpg',
+      category: 'Programmes & Content'),
   MenuItem(Icons.today_outlined, 'Daily Diet', '/admin/daily-diet',
-      image: 'assets/images/diet.jpg'),
+      image: 'assets/images/diet.jpg', category: 'Programmes & Content'),
   MenuItem(Icons.forum_outlined, 'Shape Space Q&A', '/admin/shape-space',
-      image: 'assets/images/partners.jpg'),
+      image: 'assets/images/partners.jpg', category: 'People & Partnerships'),
   MenuItem(Icons.library_books_outlined, 'Materials Library',
       '/admin/materials',
-      image: 'assets/images/admin_materials.jpg'),
+      image: 'assets/images/admin_materials.jpg',
+      category: 'Programmes & Content'),
   MenuItem(Icons.checklist_outlined, 'Activity Management', '/admin/activities',
-      image: 'assets/images/activities.jpg'),
+      image: 'assets/images/activities.jpg',
+      category: 'Programmes & Content'),
   MenuItem(Icons.fact_check_outlined, 'Reports & Reviews', '/admin/reports',
-      image: 'assets/images/admin_reports.jpg'),
+      image: 'assets/images/admin_reports.jpg', category: 'Overview'),
   MenuItem(Icons.handshake_outlined, 'Prayer Partnerships',
       '/admin/prayer-partners',
-      image: 'assets/images/admin_partners.jpg'),
+      image: 'assets/images/admin_partners.jpg',
+      category: 'People & Partnerships'),
   MenuItem(Icons.campaign_outlined, 'Announcements', '/admin/announcements',
-      image: 'assets/images/admin_announcements.jpg'),
+      image: 'assets/images/admin_announcements.jpg',
+      category: 'Programmes & Content'),
   MenuItem(Icons.link_outlined, 'Connect with me links', '/admin/connect-links',
-      image: 'assets/images/admin_announcements.jpg'),
+      image: 'assets/images/admin_announcements.jpg',
+      category: 'People & Partnerships'),
   MenuItem(Icons.query_stats_outlined, 'Analytics', '/admin/analytics',
-      image: 'assets/images/analytics.jpg'),
+      image: 'assets/images/analytics.jpg', category: 'Overview'),
   MenuItem(Icons.policy_outlined, 'Audit Logs', '/admin/audit-logs',
-      image: 'assets/images/audit.jpg'),
+      image: 'assets/images/audit.jpg', category: 'Admin Tools'),
   MenuItem(Icons.settings_outlined, 'Settings', '/admin/settings',
-      image: 'assets/images/settings.jpg'),
+      image: 'assets/images/settings.jpg', category: 'Admin Tools'),
 ];
 
 /// Human label for a status that might come from the backend.
