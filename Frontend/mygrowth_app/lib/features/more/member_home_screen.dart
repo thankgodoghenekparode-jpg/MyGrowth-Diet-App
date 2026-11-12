@@ -78,7 +78,6 @@ class MemberHomeScreen extends ConsumerWidget {
               onNotifications: () => context.go('/notifications'),
               onMenu: () => Scaffold.of(shellContext).openDrawer(),
               onReadMore: () => context.go('/devotion'),
-              onSubscribe: () => context.go('/subscription'),
             ),
           ),
           const SizedBox(height: 16),
@@ -133,7 +132,6 @@ class _WelcomeHero extends ConsumerWidget {
     required this.onNotifications,
     required this.onMenu,
     required this.onReadMore,
-    required this.onSubscribe,
   });
 
   final String greeting;
@@ -143,7 +141,6 @@ class _WelcomeHero extends ConsumerWidget {
   final VoidCallback onNotifications;
   final VoidCallback onMenu;
   final VoidCallback onReadMore;
-  final VoidCallback onSubscribe;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -214,7 +211,6 @@ class _WelcomeHero extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    _SubscribeButton(onPressed: onSubscribe),
                     IconButton(
                       onPressed: onMenu,
                       tooltip: 'Open navigation menu',
@@ -287,28 +283,6 @@ class _WelcomeHero extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _SubscribeButton extends StatelessWidget {
-  const _SubscribeButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => OutlinedButton.icon(
-    onPressed: onPressed,
-    icon: const Icon(Icons.workspace_premium_outlined, size: 13),
-    label: const Text('Subscribe'),
-    style: OutlinedButton.styleFrom(
-      foregroundColor: AppColors.champagneGold,
-      side: BorderSide(color: AppColors.champagneGold),
-      padding: const EdgeInsets.symmetric(horizontal: 7),
-      minimumSize: const Size(0, 30),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
-      textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
-    ),
-  );
 }
 
 class _ScriptureCarousel extends StatefulWidget {
