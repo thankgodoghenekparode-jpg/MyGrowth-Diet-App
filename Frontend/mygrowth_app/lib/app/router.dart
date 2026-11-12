@@ -861,7 +861,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       curve: const Interval(.12, .58, curve: Curves.easeOut),
     );
     _nameSlide = Tween<Offset>(
-      begin: const Offset(.18, 0),
+      begin: const Offset(0, .18),
       end: Offset.zero,
     ).animate(_nameOpacity);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -889,43 +889,51 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             children: [
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ScaleTransition(
-                          scale: _logoScale,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ScaleTransition(
+                        scale: _logoScale,
+                        child: Container(
+                          width: 112,
+                          height: 112,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(2),
+                          child: const ClipOval(child: BrandLogo(size: 108)),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      FadeTransition(
+                        opacity: _nameOpacity,
+                        child: SlideTransition(
+                          position: _nameSlide,
+                          child: SizedBox(
+                            width: constraints.maxWidth,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'HEALINGS\nERHUVWUIGHO AZUIKE',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      color: AppColors.brandText,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: constraints.maxWidth < 360
+                                          ? 21
+                                          : 26,
+                                      height: 1.12,
+                                      letterSpacing: .7,
+                                    ),
+                              ),
                             ),
-                            padding: const EdgeInsets.all(2),
-                            child: const ClipOval(child: BrandLogo(size: 116)),
                           ),
                         ),
-                        const SizedBox(width: 20),
-                        FadeTransition(
-                          opacity: _nameOpacity,
-                          child: SlideTransition(
-                            position: _nameSlide,
-                            child: Text(
-                              'HEALINGS\nE. AZUIKE',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    color: AppColors.brandText,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.08,
-                                    letterSpacing: 1.2,
-                                  ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
+                    ],
                     ),
                   ),
                 ),
