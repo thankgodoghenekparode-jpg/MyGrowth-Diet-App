@@ -14,13 +14,13 @@ import '../core/widgets/app_back_button.dart';
 const memberBottomDestinations = [
   NavDestination('Home', Icons.home_outlined, Icons.home_rounded, '/home'),
   NavDestination(
-      'Daily Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
-  NavDestination('Bible', Icons.menu_book_outlined, Icons.menu_book_rounded,
-      '/bible'),
-  NavDestination('Plan', Icons.event_note_outlined, Icons.event_note_rounded,
-      '/plan'),
+      'Growth Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
+  NavDestination('Bible Plan', Icons.menu_book_outlined,
+      Icons.menu_book_rounded, '/bible-reading'),
   NavDestination(
       'Progress', Icons.insights_outlined, Icons.insights_rounded, '/progress'),
+  NavDestination(
+      'Profile', Icons.person_outline_rounded, Icons.person_rounded, '/profile'),
 ];
 
 /// Destinations available in the admin bottom navigation (compact devices).
@@ -104,30 +104,32 @@ class AreaShell extends ConsumerWidget {
             ],
           )
         : Scaffold(
-            appBar: AppBar(
-              title: Text(title),
-              leading: isHomeLocation
-                  ? Builder(
-                      builder: (context) => IconButton(
-                        tooltip: 'Open navigation menu',
-                        icon: const Icon(Icons.menu_rounded),
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                      ),
-                    )
-                  : const AppBackButton(),
-              leadingWidth: 56,
-              actions: [
-                ...?actions,
-                if (!isHomeLocation)
-                  Builder(
-                    builder: (context) => IconButton(
-                      tooltip: 'Open navigation menu',
-                      icon: const Icon(Icons.menu_rounded),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
+            appBar: isHomeLocation && area == AppArea.member
+                ? null
+                : AppBar(
+                    title: Text(title),
+                    leading: isHomeLocation
+                        ? Builder(
+                            builder: (context) => IconButton(
+                              tooltip: 'Open navigation menu',
+                              icon: const Icon(Icons.menu_rounded),
+                              onPressed: () => Scaffold.of(context).openDrawer(),
+                            ),
+                          )
+                        : const AppBackButton(),
+                    leadingWidth: 56,
+                    actions: [
+                      ...?actions,
+                      if (!isHomeLocation)
+                        Builder(
+                          builder: (context) => IconButton(
+                            tooltip: 'Open navigation menu',
+                            icon: const Icon(Icons.menu_rounded),
+                            onPressed: () => Scaffold.of(context).openDrawer(),
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
             drawer: _AreaDrawer(area: area, user: user),
             body: Column(
               children: [
