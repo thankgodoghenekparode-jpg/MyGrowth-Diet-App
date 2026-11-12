@@ -14,11 +14,11 @@ import '../core/widgets/app_back_button.dart';
 const memberBottomDestinations = [
   NavDestination('Home', Icons.home_outlined, Icons.home_rounded, '/home'),
   NavDestination(
-      'Growth Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
+      'Today\'s Diet', Icons.today_outlined, Icons.today_rounded, '/diet'),
   NavDestination('Bible Plan', Icons.menu_book_outlined,
       Icons.menu_book_rounded, '/bible-reading'),
   NavDestination(
-      'Progress', Icons.insights_outlined, Icons.insights_rounded, '/progress'),
+      'Plan', Icons.event_note_outlined, Icons.event_note_rounded, '/plan'),
   NavDestination(
       'Profile', Icons.person_outline_rounded, Icons.person_rounded, '/profile'),
 ];
