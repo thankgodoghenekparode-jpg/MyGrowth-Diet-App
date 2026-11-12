@@ -85,7 +85,10 @@ class MemberHomeScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _GrowthProgressCard(progress: progress),
+          _GrowthProgressCard(
+            progress: progress,
+            onTap: () => context.go('/progress'),
+          ),
           const SizedBox(height: 22),
           Text(
             "Today's Activities",
@@ -434,94 +437,105 @@ class _ScriptureCarouselState extends State<_ScriptureCarousel> {
 }
 
 class _GrowthProgressCard extends StatelessWidget {
-  const _GrowthProgressCard({required this.progress});
+  const _GrowthProgressCard({required this.progress, required this.onTap});
 
   final AsyncValue<ProgressSummary> progress;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        mouseCursor: SystemMouseCursors.click,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.navy900.withValues(alpha: .07),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: progress.when(
-        loading: () => const SizedBox(
-          height: 70,
-          child: Center(child: CircularProgressIndicator()),
-        ),
-        error: (_, _) => const _ProgressUnavailable(),
-        data: (summary) {
-          final percent = (summary.completionRate * 100).round().clamp(0, 100);
-          return Row(
-            children: [
-              SizedBox(
-                width: 70,
-                height: 70,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CircularProgressIndicator(
-                      value: percent / 100,
-                      strokeWidth: 7,
-                      backgroundColor: AppColors.navy100,
-                      color: AppColors.champagneGold,
-                      strokeCap: StrokeCap.round,
-                    ),
-                    Center(
-                      child: Text(
-                        '$percent%',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your Growth Progress',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${summary.completedActivities} of ${summary.totalActivities} activities recorded',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.inkSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: percent / 100,
-                        minHeight: 7,
-                        backgroundColor: AppColors.navy100,
-                        color: AppColors.navy800,
-                      ),
-                    ),
-                  ],
-                ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.navy900.withValues(alpha: .07),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
               ),
             ],
-          );
-        },
+          ),
+          child: progress.when(
+            loading: () => const SizedBox(
+              height: 70,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => const _ProgressUnavailable(),
+            data: (summary) {
+              final percent = (summary.completionRate * 100)
+                  .round()
+                  .clamp(0, 100);
+              return Row(
+                children: [
+                  SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CircularProgressIndicator(
+                          value: percent / 100,
+                          strokeWidth: 7,
+                          backgroundColor: AppColors.navy100,
+                          color: AppColors.champagneGold,
+                          strokeCap: StrokeCap.round,
+                        ),
+                        Center(
+                          child: Text(
+                            '$percent%',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your Growth Progress',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${summary.completedActivities} of ${summary.totalActivities} activities recorded',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.inkSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: percent / 100,
+                            minHeight: 7,
+                            backgroundColor: AppColors.navy100,
+                            color: AppColors.navy800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }

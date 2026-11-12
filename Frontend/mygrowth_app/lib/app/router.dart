@@ -59,6 +59,7 @@ import '../features/profile/profile_screen.dart';
 import '../features/subscription/subscription_screen.dart';
 import '../features/programme/bible_reading_screen.dart';
 import '../features/programme/growth_plan_screen.dart';
+import '../features/progress/progress_screen.dart';
 import '../features/reflections/reflections_screen.dart';
 import '../features/reports/report_detail_screen.dart';
 import '../features/reports/report_form_screen.dart';
@@ -284,6 +285,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: GrowthPlanScreen())),
+      ),
+      GoRoute(
+        path: '/progress',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: _MemberPage(
+              title: 'My Progress',
+              child: ProgressScreen(),
+            ),
+          ),
+        ),
       ),
       GoRoute(
         path: '/devotion',
