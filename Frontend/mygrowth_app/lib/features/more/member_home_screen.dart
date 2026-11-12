@@ -8,6 +8,7 @@ import '../../core/models/activity_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/appearance_section.dart';
 import '../../core/utils/app_date.dart';
 import '../programme/programme_providers.dart';
 import '../progress/progress_providers.dart';
@@ -29,8 +30,8 @@ class MemberHomeScreen extends ConsumerWidget {
     final greeting = now.hour < 12
         ? 'Good morning,'
         : now.hour < 17
-            ? 'Good afternoon,'
-            : 'Good evening,';
+        ? 'Good afternoon,'
+        : 'Good evening,';
     final checklist = ref.watch(dailyChecklistProvider(_memberHomeToday()));
     final progress = ref.watch(progressSummaryProvider);
 
@@ -56,10 +57,9 @@ class MemberHomeScreen extends ConsumerWidget {
               date: now,
               onNotifications: () => context.go('/notifications'),
               onMenu: () => Scaffold.of(shellContext).openDrawer(),
+              onReadMore: () => context.go('/devotion'),
             ),
           ),
-          const SizedBox(height: 16),
-          _ScriptureCard(onReadMore: () => context.go('/devotion')),
           const SizedBox(height: 16),
           _GrowthProgressCard(progress: progress),
           const SizedBox(height: 22),
@@ -68,9 +68,8 @@ class MemberHomeScreen extends ConsumerWidget {
               Expanded(
                 child: Text(
                   "Today's Activities",
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
               TextButton(
@@ -81,9 +80,7 @@ class MemberHomeScreen extends ConsumerWidget {
           ),
           Text(
             DateFormat('EEEE, d MMMM').format(now),
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
+            style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: AppColors.inkSecondary),
           ),
           const SizedBox(height: 8),
@@ -92,9 +89,8 @@ class MemberHomeScreen extends ConsumerWidget {
             error: (error, _) => _ActivityMessage(
               icon: Icons.cloud_off_outlined,
               message: 'Activities could not load. Tap to try again.',
-              onTap: () => ref.invalidate(
-                dailyChecklistProvider(_memberHomeToday()),
-              ),
+              onTap: () =>
+                  ref.invalidate(dailyChecklistProvider(_memberHomeToday())),
             ),
             data: (items) => items.isEmpty
                 ? _ActivityMessage(
@@ -139,6 +135,7 @@ class _WelcomeHero extends ConsumerWidget {
     required this.date,
     required this.onNotifications,
     required this.onMenu,
+    required this.onReadMore,
   });
 
   final String greeting;
@@ -148,15 +145,19 @@ class _WelcomeHero extends ConsumerWidget {
   final DateTime date;
   final VoidCallback onNotifications;
   final VoidCallback onMenu;
+  final VoidCallback onReadMore;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final resolvedAvatar = _avatarUri(avatarUrl, ref.read(apiClientProvider).baseUrl);
+    final resolvedAvatar = _avatarUri(
+      avatarUrl,
+      ref.read(apiClientProvider).baseUrl,
+    );
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        height: 174,
+        height: 350,
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/prayer.jpg'),
@@ -169,23 +170,24 @@ class _WelcomeHero extends ConsumerWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.navy900.withValues(alpha: .48),
-                AppColors.navy900.withValues(alpha: .78),
+                AppColors.navy900.withValues(alpha: .22),
+                AppColors.navy900.withValues(alpha: .94),
               ],
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     CircleAvatar(
-                      radius: 25,
+                      radius: 22,
                       backgroundColor: AppColors.champagneGold,
-                      backgroundImage:
-                          resolvedAvatar == null ? null : NetworkImage(resolvedAvatar),
+                      backgroundImage: resolvedAvatar == null
+                          ? null
+                          : NetworkImage(resolvedAvatar),
                       child: resolvedAvatar == null
                           ? Text(
                               initials,
@@ -224,11 +226,14 @@ class _WelcomeHero extends ConsumerWidget {
                     IconButton(
                       onPressed: onMenu,
                       tooltip: 'Open navigation menu',
+                      visualDensity: VisualDensity.compact,
                       icon: const Icon(Icons.menu_rounded, color: Colors.white),
                     ),
+                    const AppearanceToggleButton(onDarkBackground: true),
                     IconButton(
                       onPressed: onNotifications,
                       tooltip: 'Notifications',
+                      visualDensity: VisualDensity.compact,
                       icon: const Icon(
                         Icons.notifications_none_rounded,
                         color: Colors.white,
@@ -236,7 +241,6 @@ class _WelcomeHero extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -254,49 +258,16 @@ class _WelcomeHero extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ScriptureCard extends StatelessWidget {
-  const _ScriptureCard({required this.onReadMore});
-
-  final VoidCallback onReadMore;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 174),
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/bible.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                AppColors.navy900.withValues(alpha: .93),
-                AppColors.navy900.withValues(alpha: .4),
-              ],
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                const Spacer(),
+                Container(
+                  width: 42,
+                  height: 3,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.champagneGold,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
                 Text(
                   "TODAY'S SCRIPTURE",
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -305,14 +276,14 @@ class _ScriptureCard extends StatelessWidget {
                     letterSpacing: 1,
                   ),
                 ),
-                const SizedBox(height: 9),
+                const SizedBox(height: 8),
                 Text(
                   '“For I know the plans I have for you, plans to give you hope and a future.”',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontStyle: FontStyle.italic,
-                    height: 1.25,
+                    height: 1.2,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -322,7 +293,7 @@ class _ScriptureCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: .84),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
@@ -448,14 +419,14 @@ class _ProgressUnavailable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Icon(Icons.insights_outlined, color: AppColors.goldText, size: 40),
-          const SizedBox(width: AppSpacing.md),
-          const Expanded(
-            child: Text('Your Growth Diet progress will appear here.'),
-          ),
-        ],
-      );
+    children: [
+      Icon(Icons.insights_outlined, color: AppColors.goldText, size: 40),
+      const SizedBox(width: AppSpacing.md),
+      const Expanded(
+        child: Text('Your Growth Diet progress will appear here.'),
+      ),
+    ],
+  );
 }
 
 class _ActivityCard extends StatelessWidget {
@@ -469,10 +440,12 @@ class _ActivityCard extends StatelessWidget {
     final theme = Theme.of(context);
     final complete = activity.isCompleted;
     final icon = switch (activity.categoryKey) {
-      'scripture_reading' || 'bible_study' || 'proverbs_reading' =>
-        Icons.menu_book_rounded,
-      'prayer' || 'fasting_and_prayer' || 'prayer_and_affirmations' =>
-        Icons.self_improvement_rounded,
+      'scripture_reading' ||
+      'bible_study' ||
+      'proverbs_reading' => Icons.menu_book_rounded,
+      'prayer' ||
+      'fasting_and_prayer' ||
+      'prayer_and_affirmations' => Icons.self_improvement_rounded,
       _ => Icons.auto_stories_rounded,
     };
     return Padding(
@@ -540,11 +513,11 @@ class _ActivityLoadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Card(
-        child: Padding(
-          padding: EdgeInsets.all(22),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
+    child: Padding(
+      padding: EdgeInsets.all(22),
+      child: Center(child: CircularProgressIndicator()),
+    ),
+  );
 }
 
 class _ActivityMessage extends StatelessWidget {
@@ -560,23 +533,23 @@ class _ActivityMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(icon, color: AppColors.goldText),
-                const SizedBox(width: 12),
-                Expanded(child: Text(message)),
-              ],
-            ),
-          ),
+    color: AppColors.surface,
+    borderRadius: BorderRadius.circular(16),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.goldText),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }
 
 String? _avatarUri(String? avatarUrl, String apiBaseUrl) {
@@ -585,6 +558,12 @@ String? _avatarUri(String? avatarUrl, String apiBaseUrl) {
   if (parsed != null && parsed.hasScheme) return avatarUrl;
   final api = Uri.tryParse(apiBaseUrl);
   if (api == null) return null;
-  final origin = Uri(scheme: api.scheme, host: api.host, port: api.hasPort ? api.port : null);
-  return origin.resolve(avatarUrl.startsWith('/') ? avatarUrl : '/$avatarUrl').toString();
+  final origin = Uri(
+    scheme: api.scheme,
+    host: api.host,
+    port: api.hasPort ? api.port : null,
+  );
+  return origin
+      .resolve(avatarUrl.startsWith('/') ? avatarUrl : '/$avatarUrl')
+      .toString();
 }
