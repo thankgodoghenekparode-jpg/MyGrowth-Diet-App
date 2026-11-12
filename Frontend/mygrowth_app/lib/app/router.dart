@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
 
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
@@ -836,16 +835,14 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  VideoPlayerController? _videoController;
-  Timer? _fallbackTimer;
+  Timer? _splashTimer;
   bool _sessionStarted = false;
   bool _splashFinished = false;
 
   @override
   void initState() {
     super.initState();
-    _fallbackTimer = Timer(const Duration(seconds: 6), _finishSplash);
-    _initializeVideo();
+    _splashTimer = Timer(const Duration(milliseconds: 2400), _finishSplash);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _sessionStarted) return;
       _sessionStarted = true;
@@ -854,58 +851,35 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     });
   }
 
-  Future<void> _initializeVideo() async {
-    final controller = VideoPlayerController.asset('assets/videos/splash.mp4');
-    _videoController = controller;
-    try {
-      await controller.initialize();
-      if (!mounted) return;
-      await controller.setLooping(false);
-      await controller.setVolume(0);
-      controller.addListener(_handleVideoUpdate);
-      await controller.play();
-      if (controller.value.isCompleted) _finishSplash();
-      setState(() {});
-    } catch (_) {
-      _finishSplash();
-    }
-  }
-
-  void _handleVideoUpdate() {
-    final controller = _videoController;
-    if (controller != null && controller.value.isCompleted) _finishSplash();
-  }
-
   void _finishSplash() {
     if (_splashFinished) return;
     _splashFinished = true;
-    _fallbackTimer?.cancel();
+    _splashTimer?.cancel();
     if (mounted) ref.read(splashAnimationProvider.notifier).complete();
   }
 
   @override
   void dispose() {
-    _fallbackTimer?.cancel();
-    final controller = _videoController;
-    if (controller != null) {
-      controller.removeListener(_handleVideoUpdate);
-      unawaited(controller.dispose());
-    }
+    _splashTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = _videoController;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
-        child: controller != null && controller.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: controller.value.aspectRatio,
-                child: VideoPlayer(controller),
-              )
-            : CircularProgressIndicator(color: AppColors.accent),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Image.asset(
+              'assets/images/splash_logo.png',
+              fit: BoxFit.contain,
+              semanticLabel: 'Healings E. Azuike',
+            ),
+          ),
+        ),
       ),
     );
   }
