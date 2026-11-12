@@ -4,17 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/auth/auth_controller.dart';
-import '../../core/models/activity_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/app_date.dart';
-import '../programme/programme_providers.dart';
+import '../../core/widgets/brand_logo.dart';
 import '../progress/progress_providers.dart';
-
-DateTime _memberHomeToday() {
-  final date = appDateNow();
-  return DateTime(date.year, date.month, date.day);
-}
 
 const _homeScriptures = [
   (
@@ -53,12 +47,10 @@ class MemberHomeScreen extends ConsumerWidget {
         : now.hour < 17
         ? 'Good afternoon,'
         : 'Good evening,';
-    final checklist = ref.watch(dailyChecklistProvider(_memberHomeToday()));
     final progress = ref.watch(progressSummaryProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(dailyChecklistProvider(_memberHomeToday()));
         ref.invalidate(progressSummaryProvider);
         try {
           await ref.read(authControllerProvider.notifier).refreshUser();
@@ -69,6 +61,8 @@ class MemberHomeScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
+          const _HomeBrandHeader(),
+          const SizedBox(height: 12),
           Builder(
             builder: (shellContext) => _WelcomeHero(
               greeting: greeting,
@@ -92,32 +86,188 @@ class MemberHomeScreen extends ConsumerWidget {
                 ?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
-          checklist.when(
-            loading: () => const _ActivityLoadingCard(),
-            error: (error, _) => _ActivityMessage(
-              icon: Icons.cloud_off_outlined,
-              message: 'Activities could not load. Tap to try again.',
-              onTap: () =>
-                  ref.invalidate(dailyChecklistProvider(_memberHomeToday())),
-            ),
-            data: (items) => items.isEmpty
-                ? _ActivityMessage(
-                    icon: Icons.event_available_outlined,
-                    message: 'No activities are scheduled for today.',
-                    onTap: () => context.go('/diet'),
-                  )
-                : Column(
-                    children: [
-                      for (final activity in items.take(3))
-                        _ActivityCard(
-                          activity: activity,
-                          onTap: () => context.go('/diet'),
-                        ),
-                    ],
-                  ),
+          Column(
+            children: [
+              _HomeActionCard(
+                icon: Icons.menu_book_rounded,
+                title: 'Bible Reading',
+                subtitle: 'Read and reflect on God’s Word',
+                onTap: () => context.go('/bible'),
+              ),
+              _HomeActionCard(
+                icon: Icons.auto_stories_rounded,
+                title: "Today's Proverb",
+                subtitle: 'Wisdom for today · Proverbs ${now.day}',
+                onTap: () => context.go(
+                  '/bible?book=Proverbs&chapter=${now.day}',
+                ),
+              ),
+              _HomeActionCard(
+                icon: Icons.record_voice_over_rounded,
+                title: 'Daily Declarations',
+                subtitle: 'Speak today’s declarations of faith',
+                onTap: () => context.go('/diet?section=declarations'),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+}
+
+class _HomeBrandHeader extends StatelessWidget {
+  const _HomeBrandHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.surface, AppColors.surfaceMuted],
+          ),
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 560) {
+              return Row(
+                children: [
+                  const BrandLogo(size: 46),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'MyGrowth',
+                              style: textTheme.titleMedium?.copyWith(
+                                color: AppColors.brandText,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Text(
+                              'GROWTH DIET',
+                              style: textTheme.labelSmall?.copyWith(
+                                color: AppColors.accentText,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Grow, Learn, and Become.',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.titleSmall?.copyWith(
+                            color: AppColors.brandText,
+                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          'Your personal journey of faith and growth',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.labelSmall?.copyWith(
+                            color: AppColors.inkSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                const BrandLogo(size: 58),
+                const SizedBox(width: 12),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MyGrowth',
+                      style: textTheme.headlineSmall?.copyWith(
+                        color: AppColors.brandText,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      'GROWTH DIET',
+                      style: textTheme.labelMedium?.copyWith(
+                        color: AppColors.accentText,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 20),
+                Container(width: 1, height: 62, color: AppColors.borderStrong),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Grow, Learn, and Become.',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: AppColors.brandText,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Your personal journey of faith and growth',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.inkSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 18),
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 160),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.highlight,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    'Consistent in God. Intentional in life.',
+                    textAlign: TextAlign.center,
+                    style: textTheme.labelSmall?.copyWith(
+                      color: AppColors.brandText,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -152,7 +302,7 @@ class _WelcomeHero extends ConsumerWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        height: 350,
+        height: 280,
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/prayer.jpg'),
@@ -485,25 +635,22 @@ class _ProgressUnavailable extends StatelessWidget {
   );
 }
 
-class _ActivityCard extends StatelessWidget {
-  const _ActivityCard({required this.activity, required this.onTap});
+class _HomeActionCard extends StatelessWidget {
+  const _HomeActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 
-  final PlannedActivity activity;
+  final IconData icon;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final complete = activity.isCompleted;
-    final icon = switch (activity.categoryKey) {
-      'scripture_reading' ||
-      'bible_study' ||
-      'proverbs_reading' => Icons.menu_book_rounded,
-      'prayer' ||
-      'fasting_and_prayer' ||
-      'prayer_and_affirmations' => Icons.self_improvement_rounded,
-      _ => Icons.auto_stories_rounded,
-    };
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Material(
@@ -536,29 +683,26 @@ class _ActivityCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          activity.title,
+                          title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if ((activity.description ?? activity.categoryLabel ?? '')
-                            .isNotEmpty)
-                          Text(
-                            activity.description ?? activity.categoryLabel!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.inkSecondary,
-                            ),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.inkSecondary,
                           ),
                       ],
                     ),
                   ),
                   Icon(
-                    complete ? Icons.check_circle_rounded : Icons.chevron_right,
-                    color: complete ? AppColors.success : AppColors.inkMuted,
+                    Icons.chevron_right,
+                    color: AppColors.inkMuted,
                     size: 21,
                   ),
                 ],
@@ -569,50 +713,6 @@ class _ActivityCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ActivityLoadingCard extends StatelessWidget {
-  const _ActivityLoadingCard();
-
-  @override
-  Widget build(BuildContext context) => const Card(
-    child: Padding(
-      padding: EdgeInsets.all(22),
-      child: Center(child: CircularProgressIndicator()),
-    ),
-  );
-}
-
-class _ActivityMessage extends StatelessWidget {
-  const _ActivityMessage({
-    required this.icon,
-    required this.message,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String message;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: AppColors.surface,
-    borderRadius: BorderRadius.circular(16),
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.goldText),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-      ),
-    ),
-  );
 }
 
 String? _avatarUri(String? avatarUrl, String apiBaseUrl) {
