@@ -313,7 +313,7 @@ class _SubscribeButton extends StatelessWidget {
     label: const Text('Subscribe'),
     style: OutlinedButton.styleFrom(
       foregroundColor: AppColors.champagneGold,
-      side: const BorderSide(color: AppColors.champagneGold),
+      side: BorderSide(color: AppColors.champagneGold),
       padding: const EdgeInsets.symmetric(horizontal: 7),
       minimumSize: const Size(0, 30),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -338,7 +338,7 @@ class _HomeDateChip extends StatelessWidget {
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.navy900),
+        Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.navy900),
         const SizedBox(width: 5),
         Text(
           DateFormat('EEE, MMM d, yyyy').format(date),
