@@ -51,8 +51,7 @@ class MemberHomeScreen extends ConsumerWidget {
 
     return Stack(
       children: [
-        const Positioned.fill(
-          child: ColoredBox(color: AppColors.background),
+        Positioned.fill(child: ColoredBox(color: AppColors.background),
         ),
         if (Theme.of(context).brightness == Brightness.light)
           Positioned.fill(
@@ -675,6 +674,7 @@ String? _avatarUri(String? avatarUrl, String apiBaseUrl) {
       .resolve(avatarUrl.startsWith('/') ? avatarUrl : '/$avatarUrl')
       .toString();
 }
+
 
 
 
