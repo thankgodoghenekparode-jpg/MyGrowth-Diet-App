@@ -1,9 +1,11 @@
 import 'package:mygrowth_app/core/models/activity_models.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../core/auth/auth_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -12,13 +14,15 @@ import '../progress/progress_providers.dart';
 
 const _homeScriptures = [
   (
-    text: 'For I know the plans I have for you, declares the LORD, plans to '
+    text:
+        'For I know the plans I have for you, declares the LORD, plans to '
         'prosper you and not to harm you, plans to give you hope and a future.',
     reference: 'Jeremiah 29:11',
   ),
   (text: 'The LORD is my shepherd; I shall not want.', reference: 'Psalm 23:1'),
   (
-    text: 'Trust in the LORD with all thine heart; and lean not unto thine '
+    text:
+        'Trust in the LORD with all thine heart; and lean not unto thine '
         'own understanding.',
     reference: 'Proverbs 3:5',
   ),
@@ -27,7 +31,8 @@ const _homeScriptures = [
     reference: 'Philippians 4:13',
   ),
   (
-    text: 'Be strong and of a good courage; be not afraid, neither be thou '
+    text:
+        'Be strong and of a good courage; be not afraid, neither be thou '
         'dismayed.',
     reference: 'Joshua 1:9',
   ),
@@ -49,93 +54,89 @@ class MemberHomeScreen extends ConsumerWidget {
         : 'Good evening';
     final progress = ref.watch(progressSummaryProvider);
 
-    return Stack(
-      children: [
-        Positioned.fill(child: ColoredBox(color: AppColors.background),
-        ),
-        if (Theme.of(context).brightness == Brightness.light)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 0.24,
-                child: Image.asset(
-                  'assets/images/app_background.jpg',
-                  fit: BoxFit.cover,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        image: Theme.of(context).brightness == Brightness.light
+            ? DecorationImage(
+                image: const AssetImage('assets/images/app_background.jpg'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  AppColors.background.withValues(alpha: 0.76),
+                  BlendMode.srcATop,
                 ),
-              ),
-            ),
-          ),
-        Positioned.fill(
-          child: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(progressSummaryProvider);
-          try {
-            await ref.read(authControllerProvider.notifier).refreshUser();
-          } catch (_) {
-            // The current profile remains visible when refreshing offline.
-          }
-        },
-        child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-        children: [
-          const _HomeBrandHeader(),
-          const SizedBox(height: 12),
-          Builder(
-            builder: (shellContext) => _WelcomeHero(
-              greeting: greeting,
-              name: displayName.isEmpty ? 'there' : displayName,
-              avatarUrl: user?.avatarUrl,
-              initials: user?.initials ?? '?',
-              onNotifications: () => context.go('/notifications'),
-              onMenu: () => Scaffold.of(shellContext).openDrawer(),
-              onReadMore: () => context.go('/devotion'),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _GrowthProgressCard(
-            progress: progress,
-            onTap: () => context.go('/progress'),
-          ),
-          const SizedBox(height: 28),
-          Text(
-            "Today's Activities",
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Column(
+              )
+            : null,
+      ),
+      child: SizedBox.expand(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(progressSummaryProvider);
+            try {
+              await ref.read(authControllerProvider.notifier).refreshUser();
+            } catch (_) {
+              // The current profile remains visible when refreshing offline.
+            }
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
-              _HomeActionCard(
-                icon: Icons.menu_book_rounded,
-                title: 'Bible Reading',
-                subtitle: 'Read and reflect on God’s Word',
-                onTap: () => context.go('/bible'),
-              ),
+              const _HomeBrandHeader(),
               const SizedBox(height: 12),
-              _HomeActionCard(
-                icon: Icons.auto_stories_rounded,
-                title: "Today's Proverb",
-                subtitle: 'Wisdom for today · Proverbs ${now.day}',
-                onTap: () => context.go(
-                  '/bible?book=Proverbs&chapter=${now.day}',
+              Builder(
+                builder: (shellContext) => _WelcomeHero(
+                  greeting: greeting,
+                  name: displayName.isEmpty ? 'there' : displayName,
+                  avatarUrl: user?.avatarUrl,
+                  initials: user?.initials ?? '?',
+                  onNotifications: () => context.go('/notifications'),
+                  onMenu: () => Scaffold.of(shellContext).openDrawer(),
+                  onReadMore: () => context.go('/devotion'),
                 ),
               ),
-              const SizedBox(height: 12),
-              _HomeActionCard(
-                icon: Icons.record_voice_over_rounded,
-                title: 'Daily Declarations',
-                subtitle: 'Speak today’s declarations of faith',
-                onTap: () => context.go('/diet?section=declarations'),
+              const SizedBox(height: 16),
+              _GrowthProgressCard(
+                progress: progress,
+                onTap: () => context.go('/progress'),
               ),
+              const SizedBox(height: 28),
+              Text(
+                "Today's Activities",
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              Column(
+                children: [
+                  _HomeActionCard(
+                    icon: Icons.menu_book_rounded,
+                    title: 'Bible Reading',
+                    subtitle: 'Read and reflect on Godâ€™s Word',
+                    onTap: () => context.go('/bible'),
+                  ),
+                  const SizedBox(height: 12),
+                  _HomeActionCard(
+                    icon: Icons.auto_stories_rounded,
+                    title: "Today's Proverb",
+                    subtitle: 'Wisdom for today Â· Proverbs ${now.day}',
+                    onTap: () =>
+                        context.go('/bible?book=Proverbs&chapter=${now.day}'),
+                  ),
+                  const SizedBox(height: 12),
+                  _HomeActionCard(
+                    icon: Icons.record_voice_over_rounded,
+                    title: 'Daily Declarations',
+                    subtitle: 'Speak todayâ€™s declarations of faith',
+                    onTap: () => context.go('/diet?section=declarations'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
             ],
           ),
-          const SizedBox(height: 20),
-        ],
-          ),
         ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -408,7 +409,8 @@ class _ScriptureCarouselState extends State<_ScriptureCarousel> {
 
   void _showNext({bool previous = false}) {
     setState(() {
-      _index = (_index + (previous ? _homeScriptures.length - 1 : 1)) %
+      _index =
+          (_index + (previous ? _homeScriptures.length - 1 : 1)) %
           _homeScriptures.length;
     });
     _timer.cancel();
@@ -493,9 +495,10 @@ class _GrowthProgressCard extends StatelessWidget {
             ),
             error: (_, _) => const _ProgressUnavailable(),
             data: (summary) {
-              final percent = (summary.completionRate * 100)
-                  .round()
-                  .clamp(0, 100);
+              final percent = (summary.completionRate * 100).round().clamp(
+                0,
+                100,
+              );
               return Row(
                 children: [
                   SizedBox(
@@ -602,7 +605,9 @@ class _HomeActionCard extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.inkMuted.withValues(alpha: .22)),
+            border: Border.all(
+              color: AppColors.inkMuted.withValues(alpha: .22),
+            ),
           ),
           child: InkWell(
             onTap: onTap,
@@ -674,7 +679,3 @@ String? _avatarUri(String? avatarUrl, String apiBaseUrl) {
       .resolve(avatarUrl.startsWith('/') ? avatarUrl : '/$avatarUrl')
       .toString();
 }
-
-
-
-
