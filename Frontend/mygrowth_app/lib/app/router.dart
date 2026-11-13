@@ -882,8 +882,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Image.asset(
-              'assets/images/splash_logo.png',
+              'assets/images/splash_logo_animated.gif',
               fit: BoxFit.contain,
+              gaplessPlayback: true,
               semanticLabel: 'Healings E. Azuike',
             ),
           ),
