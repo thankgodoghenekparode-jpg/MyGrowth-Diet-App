@@ -112,14 +112,14 @@ class MemberHomeScreen extends ConsumerWidget {
                   _HomeActionCard(
                     icon: Icons.menu_book_rounded,
                     title: 'Bible Reading',
-                    subtitle: 'Read and reflect on Godâ€™s Word',
+                    subtitle: "Read and reflect on God's Word",
                     onTap: () => context.go('/bible'),
                   ),
                   const SizedBox(height: 12),
                   _HomeActionCard(
                     icon: Icons.auto_stories_rounded,
                     title: "Today's Proverb",
-                    subtitle: 'Wisdom for today Â· Proverbs ${now.day}',
+                    subtitle: 'Wisdom for today - Proverbs ${now.day}',
                     onTap: () =>
                         context.go('/bible?book=Proverbs&chapter=${now.day}'),
                   ),
@@ -127,7 +127,7 @@ class MemberHomeScreen extends ConsumerWidget {
                   _HomeActionCard(
                     icon: Icons.record_voice_over_rounded,
                     title: 'Daily Declarations',
-                    subtitle: 'Speak todayâ€™s declarations of faith',
+                    subtitle: "Speak today's declarations of faith",
                     onTap: () => context.go('/diet?section=declarations'),
                   ),
                 ],
