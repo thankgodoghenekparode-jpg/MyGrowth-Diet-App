@@ -49,17 +49,23 @@ class MemberHomeScreen extends ConsumerWidget {
         : 'Good evening';
     final progress = ref.watch(progressSummaryProvider);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        image: Theme.of(context).brightness == Brightness.light
-            ? const DecorationImage(
-                image: AssetImage('assets/images/app_background.jpg'),
-                fit: BoxFit.cover,
-              )
-            : null,
-      ),
-      child: RefreshIndicator(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ColoredBox(color: AppColors.background),
+        if (Theme.of(context).brightness == Brightness.light)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.24,
+                child: Image.asset(
+                  'assets/images/app_background.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(progressSummaryProvider);
           try {
@@ -125,7 +131,8 @@ class MemberHomeScreen extends ConsumerWidget {
           const SizedBox(height: 20),
         ],
         ),
-      ),
+        ),
+      ],
     );
   }
 }
