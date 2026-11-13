@@ -1,3 +1,4 @@
+import 'package:mygrowth_app/core/models/activity_models.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -663,5 +664,6 @@ String? _avatarUri(String? avatarUrl, String apiBaseUrl) {
       .resolve(avatarUrl.startsWith('/') ? avatarUrl : '/$avatarUrl')
       .toString();
 }
+
 
 
