@@ -50,9 +50,10 @@ class MemberHomeScreen extends ConsumerWidget {
     final progress = ref.watch(progressSummaryProvider);
 
     return Stack(
-      fit: StackFit.expand,
       children: [
-        ColoredBox(color: AppColors.background),
+        const Positioned.fill(
+          child: ColoredBox(color: AppColors.background),
+        ),
         if (Theme.of(context).brightness == Brightness.light)
           Positioned.fill(
             child: IgnorePointer(
@@ -65,7 +66,8 @@ class MemberHomeScreen extends ConsumerWidget {
               ),
             ),
           ),
-        RefreshIndicator(
+        Positioned.fill(
+          child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(progressSummaryProvider);
           try {
@@ -75,6 +77,7 @@ class MemberHomeScreen extends ConsumerWidget {
           }
         },
         child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
           const _HomeBrandHeader(),
@@ -130,6 +133,7 @@ class MemberHomeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
         ],
+          ),
         ),
         ),
       ],
