@@ -48,16 +48,26 @@ class MemberHomeScreen extends ConsumerWidget {
         : 'Good evening';
     final progress = ref.watch(progressSummaryProvider);
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(progressSummaryProvider);
-        try {
-          await ref.read(authControllerProvider.notifier).refreshUser();
-        } catch (_) {
-          // The current profile remains visible when refreshing offline.
-        }
-      },
-      child: ListView(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        image: Theme.of(context).brightness == Brightness.light
+            ? const DecorationImage(
+                image: AssetImage('assets/images/app_background.jpg'),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(progressSummaryProvider);
+          try {
+            await ref.read(authControllerProvider.notifier).refreshUser();
+          } catch (_) {
+            // The current profile remains visible when refreshing offline.
+          }
+        },
+        child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
           const _HomeBrandHeader(),
@@ -78,7 +88,7 @@ class MemberHomeScreen extends ConsumerWidget {
             progress: progress,
             onTap: () => context.go('/progress'),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 28),
           Text(
             "Today's Activities",
             style: Theme.of(context).textTheme.titleLarge
@@ -93,6 +103,7 @@ class MemberHomeScreen extends ConsumerWidget {
                 subtitle: 'Read and reflect on God’s Word',
                 onTap: () => context.go('/bible'),
               ),
+              const SizedBox(height: 12),
               _HomeActionCard(
                 icon: Icons.auto_stories_rounded,
                 title: "Today's Proverb",
@@ -101,6 +112,7 @@ class MemberHomeScreen extends ConsumerWidget {
                   '/bible?book=Proverbs&chapter=${now.day}',
                 ),
               ),
+              const SizedBox(height: 12),
               _HomeActionCard(
                 icon: Icons.record_voice_over_rounded,
                 title: 'Daily Declarations',
@@ -111,6 +123,7 @@ class MemberHomeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
         ],
+        ),
       ),
     );
   }
@@ -120,12 +133,45 @@ class _HomeBrandHeader extends StatelessWidget {
   const _HomeBrandHeader();
 
   @override
-  Widget build(BuildContext context) => Image.asset(
-        'assets/images/home_brand_banner.png',
-        width: double.infinity,
-        fit: BoxFit.fitWidth,
-        semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final bannerWidth = constraints.maxWidth + 32;
+      return OverflowBox(
+        alignment: Alignment.center,
+        minWidth: bannerWidth,
+        maxWidth: bannerWidth,
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (bounds) => const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.transparent, Colors.white, Colors.white],
+            stops: [0, .08, 1],
+          ).createShader(bounds),
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (bounds) => const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Colors.transparent,
+                Colors.white,
+                Colors.white,
+                Colors.transparent,
+              ],
+              stops: [0, .06, .94, 1],
+            ).createShader(bounds),
+            child: Image.asset(
+              'assets/images/home_brand_banner.png',
+              width: bannerWidth,
+              fit: BoxFit.fitWidth,
+              semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
+            ),
+          ),
+        ),
       );
+    },
+  );
 }
 
 class _WelcomeHero extends ConsumerWidget {

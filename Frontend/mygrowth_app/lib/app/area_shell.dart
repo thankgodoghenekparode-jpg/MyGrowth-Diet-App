@@ -294,7 +294,15 @@ class _SidebarNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 244,
-      color: AppColors.background,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        image: Theme.of(context).brightness == Brightness.light
+            ? const DecorationImage(
+                image: AssetImage('assets/images/app_background.jpg'),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -571,9 +579,19 @@ class _AreaDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      child: SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          image: Theme.of(context).brightness == Brightness.light
+              ? const DecorationImage(
+                  image: AssetImage('assets/images/app_background.jpg'),
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+        child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -632,6 +650,7 @@ class _AreaDrawer extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
