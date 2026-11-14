@@ -179,8 +179,14 @@ class ApiClient {
   }) async {
     onProgress?.call(0);
     final uri = _resolve(path, null);
+    // Do not reuse `_headers()` here: it sets `Content-Type: application/json`,
+    // which would clash with the multipart boundary and can make the server
+    // reject the upload. `MultipartRequest.finalize()` sets the correct type.
     final multipart = http.MultipartRequest('POST', uri)
-      ..headers.addAll(_headers())
+      ..headers.addAll({
+        'Accept': 'application/json',
+        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+      })
       ..files.add(
         http.MultipartFile.fromBytes(
           fieldName,
