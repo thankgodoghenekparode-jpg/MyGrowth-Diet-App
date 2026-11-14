@@ -169,32 +169,42 @@ router.get(
       pendingSet.add(otherId);
     }
 
+    // Everyone who is active and has not explicitly opted out is discoverable.
+    // Members who never touched their availability still show up (with
+    // flexible days/times) so a partnership request can actually be sent;
+    // setting UNAVAILABLE or turning off requests hides a member again.
     const where = {
-      availability: 'AVAILABLE',
-      acceptsNewRequests: true,
-      user: { id: { notIn: [...exclude] }, role: 'MEMBER', status: 'ACTIVE' },
+      id: { notIn: [...exclude] },
+      role: 'MEMBER',
+      status: 'ACTIVE',
+      OR: [
+        { availability: { is: null } },
+        { availability: { is: { availability: 'AVAILABLE', acceptsNewRequests: true } } },
+      ],
     };
 
-    const candidates = await prisma.prayerAvailability.findMany({
+    const candidates = await prisma.user.findMany({
       where,
-      include: { user: { select: { id: true, firstName: true, lastName: true, timezone: true } } },
+      include: { availability: true },
       take: 200,
     });
 
     const filtered = candidates.filter((c) => {
-      const days = Array.isArray(c.availableDays) ? c.availableDays : [];
-      const ranges = Array.isArray(c.preferredTimeRanges) ? c.preferredTimeRanges : [];
+      const av = c.availability;
+      const days = Array.isArray(av?.availableDays) ? av.availableDays : [];
+      const ranges = Array.isArray(av?.preferredTimeRanges) ? av.preferredTimeRanges : [];
       const myDays = Array.isArray(myAv?.availableDays) ? myAv.availableDays : [];
       const myRanges = Array.isArray(myAv?.preferredTimeRanges) ? myAv.preferredTimeRanges : [];
 
-      // Day/time overlap against my own availability (server-side).
+      // Day/time overlap against my own availability (server-side). Members
+      // without a schedule stay visible so they can still be contacted.
       if (myAv && (myDays.length || myRanges.length)) {
         const dayMatch =
-          day != null ? days.includes(day) : myDays.length ? myDays.some((d) => days.includes(d)) : true;
+          day != null ? days.includes(day) : myDays.length ? (days.length === 0 || myDays.some((d) => days.includes(d))) : true;
         const rangeMatch = myRanges.length && ranges.length ? overlaps(myRanges, ranges) : true;
         if (!dayMatch || !rangeMatch) return false;
       }
-      if (day != null && !days.includes(day)) return false;
+      if (day != null && days.length > 0 && !days.includes(day)) return false;
       if (time && ranges.length && !ranges.some((r) => isValidTimeRange(r) && r.start <= time && time < r.end)) {
         return false;
       }
@@ -206,27 +216,32 @@ router.get(
     const slice = filtered.slice(startIdx, startIdx + pageSize);
 
     res.json({
-      data: slice.map((c) => ({
-        userId: c.user.id,
-        // Flutter alias: full display name.
-        name: [c.user.firstName, c.user.lastName].filter(Boolean).join(' ').trim(),
-        firstName: c.user.firstName,
-        // Only initials of the last name: enough to recognise, minimal exposure.
-        lastInitial: `${c.user.lastName?.[0] || ''}.`,
-        timezone: c.timezone,
-        timeZone: c.timezone,
-        preferredDurationMinutes: c.preferredDurationMinutes,
-        preferredLanguage: c.preferredLanguage,
-        language: c.preferredLanguage,
-        hasPendingRequest: pendingSet.has(c.user.id),
-        availableDays: c.availableDays ?? [],
-        // Coarse signal instead of exposing the exact schedule:
-        overlapsYourSchedule: myAv
-          ? (Array.isArray(myAv.availableDays) && myAv.availableDays.some((d) => (c.availableDays ?? []).includes(d))) ||
-            overlaps(myAv.preferredTimeRanges ?? [], c.preferredTimeRanges ?? [])
-          : false,
-        acceptsNewRequests: c.acceptsNewRequests,
-      })),
+      data: slice.map((c) => {
+        const av = c.availability;
+        return {
+          userId: c.id,
+          // Flutter alias: full display name.
+          name: [c.firstName, c.lastName].filter(Boolean).join(' ').trim(),
+          firstName: c.firstName,
+          avatarUrl: c.avatarFileId ? `/api/v1/avatars/${c.id}` : null,
+          // Only initials of the last name: enough to recognise, minimal exposure.
+          lastInitial: `${c.lastName?.[0] || ''}.`,
+          timezone: av?.timezone ?? c.timezone,
+          timeZone: av?.timezone ?? c.timezone,
+          preferredDurationMinutes: av?.preferredDurationMinutes ?? 30,
+          preferredLanguage: av?.preferredLanguage ?? 'English',
+          language: av?.preferredLanguage ?? 'English',
+          hasPendingRequest: pendingSet.has(c.id),
+          availableDays: av?.availableDays ?? [],
+          // Coarse signal instead of exposing the exact schedule:
+          overlapsYourSchedule: myAv
+            ? (Array.isArray(myAv.availableDays) && myAv.availableDays.some((d) => (av?.availableDays ?? []).includes(d))) ||
+              overlaps(myAv.preferredTimeRanges ?? [], av?.preferredTimeRanges ?? [])
+            : false,
+          acceptsNewRequests: av ? av.acceptsNewRequests : true,
+          isOptedIn: Boolean(av),
+        };
+      }),
       meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
     });
   })
@@ -321,7 +336,12 @@ router.post(
     });
     if (myBlocked) throw errors.forbidden('This member cannot be contacted', 'BLOCKED');
 
-    if (!recipient.availability?.acceptsNewRequests || recipient.availability.availability !== 'AVAILABLE') {
+    // Only an explicit opt-out blocks a request. Members who never set their
+    // availability remain open to requests (the default is accepting).
+    if (
+      recipient.availability &&
+      (!recipient.availability.acceptsNewRequests || recipient.availability.availability !== 'AVAILABLE')
+    ) {
       throw errors.conflict('This member is not accepting new partner requests right now', 'NOT_ACCEPTING_REQUESTS');
     }
 

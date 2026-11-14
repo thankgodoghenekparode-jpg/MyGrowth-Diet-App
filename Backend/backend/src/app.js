@@ -27,6 +27,7 @@ import { devotionsRouter } from './modules/devotions/devotions.routes.js';
 import materialsRoutes from './modules/materials/materials.routes.js';
 import announcementsRoutes from './modules/announcements/announcements.routes.js';
 import filesRoutes from './modules/files/files.routes.js';
+import { avatarHandler } from './modules/files/avatar.routes.js';
 import adminRoutes from './modules/admin/index.js';
 import cronRoutes, { healthHandler } from './modules/cron/cron.routes.js';
 import { partnershipsRouter } from './modules/partnerships/partnerships.routes.js';
@@ -107,6 +108,9 @@ export function createApp() {
   // Health (public)
   app.get('/api/v1/health', healthHandler);
   app.get('/health', healthHandler);
+
+  // Public profile photos (see modules/files/avatar.routes.js)
+  app.get('/api/v1/avatars/:userId', avatarHandler);
 
   // Auth (stricter rate limits)
   app.use('/api/v1/auth', authRoutes);

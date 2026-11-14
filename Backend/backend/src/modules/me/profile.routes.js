@@ -21,7 +21,7 @@ router.get(
       ...publicUser(req.user),
       notificationPreference: pref,
       prayerAvailability: availability,
-      avatarUrl: req.user.avatarFileId ? `/api/v1/files/${req.user.avatarFileId}` : null,
+      avatarUrl: req.user.avatarFileId ? `/api/v1/avatars/${req.user.id}` : null,
     });
   })
 );
@@ -73,6 +73,9 @@ router.patch(
     if (body.avatarFileId) {
       const file = await prisma.file.findUnique({ where: { id: body.avatarFileId } });
       if (!file) throw errors.badRequest('avatarFileId does not exist', 'VALIDATION_ERROR');
+      if (file.uploadedById !== req.user.id) {
+        throw errors.forbidden('You can only use a photo you uploaded', 'FILE_ACCESS_DENIED');
+      }
     }
 
     // Build an explicit payload: never spread raw input into Prisma.
@@ -93,7 +96,7 @@ router.patch(
     data.profileCompletedAt = req.user.profileCompletedAt ?? new Date();
 
     const user = await prisma.user.update({ where: { id: req.user.id }, data });
-    res.json({ ...publicUser(user), avatarUrl: user.avatarFileId ? `/api/v1/files/${user.avatarFileId}` : null, bio: null });
+    res.json({ ...publicUser(user), avatarUrl: user.avatarFileId ? `/api/v1/avatars/${user.id}` : null, bio: null });
   })
 );
 

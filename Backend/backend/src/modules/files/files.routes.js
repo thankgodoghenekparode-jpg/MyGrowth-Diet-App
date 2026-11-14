@@ -133,8 +133,11 @@ router.get(
         throw errors.forbidden('Subscribe for ₦1,000 to access this month’s content.', 'MONTHLY_ACCESS_REQUIRED');
       }
     }
+    // Avatar files are readable by any signed-in member (profile photos are
+    // meant to be seen); the public `/api/v1/avatars/:userId` route serves
+    // them to image tags that cannot send an Authorization header.
     const isAvatar = await prisma.user.findFirst({
-      where: { id: user.id, avatarFileId: file.id },
+      where: { avatarFileId: file.id },
       select: { id: true },
     });
 

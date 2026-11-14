@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_controller.dart';
@@ -35,13 +36,123 @@ class _PartnersView extends ConsumerStatefulWidget {
 
 class _PartnersViewState extends ConsumerState<_PartnersView>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabController =
-      TabController(length: 3, vsync: this);
+  late final TabController _tabController = TabController(
+    length: 3,
+    vsync: this,
+  );
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// A single, always-visible place to start a partnership request.
+  Future<void> _openSendRequestSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.75,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        builder: (ctx, scrollController) => Consumer(
+          builder: (ctx, ref, _) {
+            final async = ref.watch(prayerPartnerSuggestionsProvider);
+            return async.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => ListView(
+                controller: scrollController,
+                padding: AppSpacing.pagePaddingMobile,
+                children: [
+                  ErrorState(
+                    error: e,
+                    onRetry: () =>
+                        ref.invalidate(prayerPartnerSuggestionsProvider),
+                  ),
+                ],
+              ),
+              data: (suggestions) {
+                if (suggestions.isEmpty) {
+                  return ListView(
+                    controller: scrollController,
+                    padding: AppSpacing.pagePaddingMobile,
+                    children: [
+                      const EmptyState(
+                        icon: Icons.person_search_outlined,
+                        title: 'No members to request yet',
+                        message:
+                            'Every active member appears here. If the list is '
+                            'empty, check back shortly or invite a member to '
+                            'join the programme.',
+                      ),
+                      AppButton(
+                        label: 'Open Prayer Room',
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/prayer');
+                        },
+                      ),
+                    ],
+                  );
+                }
+                return ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: suggestions.length + 1,
+                  itemBuilder: (c, i) {
+                    if (i == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          'Choose a member to send a partnership request.',
+                          style: Theme.of(ctx).textTheme.bodySmall,
+                        ),
+                      );
+                    }
+                    final s = suggestions[i - 1];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.navy100,
+                        child: Text(
+                          _privacyName(s.name).substring(0, 1).toUpperCase(),
+                          style: TextStyle(
+                            color: AppColors.navy800,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      title: Text(_privacyName(s.name)),
+                      subtitle: Text(
+                        '${_daysSummary(s.availableDays)} - ${s.timeZone}',
+                      ),
+                      trailing: s.hasPendingRequest
+                          ? const StatusBadge(
+                              label: 'Pending',
+                              tone: AppBadgeTone.warning,
+                              small: true,
+                            )
+                          : FilledButton(
+                              onPressed: () => _sendPartnerRequest(
+                                ctx,
+                                ref,
+                                recipientId: s.userId,
+                                recipientName: _privacyName(s.name),
+                              ),
+                              child: const Text('Send'),
+                            ),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -65,6 +176,11 @@ class _PartnersViewState extends ConsumerState<_PartnersView>
           _PartnershipTab(onFindPartner: () => _tabController.animateTo(0)),
           const _RequestsTab(),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openSendRequestSheet,
+        icon: const Icon(Icons.person_add_alt_1),
+        label: const Text('Send request'),
       ),
     );
   }
@@ -91,6 +207,79 @@ String _daysSummary(List<int> days) {
       .where((d) => d >= 1 && d <= 7)
       .map((d) => _dayAbbrev[d - 1])
       .join(', ');
+}
+
+/// Ask for a short introduction, then create a partnership request.
+///
+/// Shared by the suggestion cards and the "Send request" picker so the two
+/// entry points behave identically.
+Future<bool> _sendPartnerRequest(
+  BuildContext context,
+  WidgetRef ref, {
+  required String recipientId,
+  required String recipientName,
+}) async {
+  final messageController = TextEditingController();
+  final message = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Send partnership request'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Introduce yourself to $recipientName. '
+            'A short, kind message goes a long way.',
+            style: Theme.of(ctx).textTheme.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: 'Message (optional)',
+            controller: messageController,
+            maxLines: 3,
+            hint:
+                'Hi, I would love to partner with you in prayerÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦',
+          ),
+        ],
+      ),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(messageController.text),
+          child: const Text('Send request'),
+        ),
+      ],
+    ),
+  );
+  if (message == null || !context.mounted) return false;
+
+  final client = ref.read(apiClientProvider);
+  try {
+    await client.post(
+      '/prayer-partners/requests',
+      body: {
+        'recipientId': recipientId,
+        if (message.trim().isNotEmpty) 'message': message.trim(),
+      },
+    );
+    ref.invalidate(prayerPartnerSuggestionsProvider);
+    ref.invalidate(prayerRequestsProvider('outgoing'));
+    if (context.mounted) {
+      Toast.success(context, 'Request sent. $recipientName will be notified.');
+    }
+    return true;
+  } on ApiException catch (e) {
+    if (context.mounted) Toast.error(context, e.fieldError ?? e.message);
+  } catch (_) {
+    if (context.mounted) {
+      Toast.error(context, 'Unable to send the request just now.');
+    }
+  }
+  return false;
 }
 
 // ------------------------------------------------------------- discover
@@ -124,15 +313,24 @@ class _DiscoverTab extends ConsumerWidget {
           if (suggestions.isEmpty) {
             return ListView(
               padding: AppSpacing.pagePaddingMobile,
-              children: const [
+              children: [
                 EmptyState(
                   icon: Icons.person_search_outlined,
                   title: 'No partners to suggest right now',
                   message:
-                      'The directory only shows members who opted in to the '
-                      'prayer-partner programme. More suggestions will appear '
-                      'as members join — you can also update your own '
+                      'The directory shows active members who are open to '
+                      'prayer partnerships. More suggestions will appear as '
+                      'members join - you can also update your own '
                       'availability in the Prayer Room.',
+                  actionLabel: 'Open Prayer Room',
+                  onAction: () => context.go('/prayer'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: 'Refresh directory',
+                  icon: Icons.refresh,
+                  onPressed: () =>
+                      ref.invalidate(prayerPartnerSuggestionsProvider),
                 ),
               ],
             );
@@ -186,75 +384,21 @@ class _SuggestionCardState extends ConsumerState<_SuggestionCard> {
   PartnerSuggestion get suggestion => widget.suggestion;
 
   Future<void> _sendRequest() async {
-    final messageController = TextEditingController();
-    final message = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Send prayer request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Introduce yourself to ${_privacyName(suggestion.name)}. '
-              'A short, kind message goes a long way.',
-              style: Theme.of(ctx).textTheme.bodySmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            AppTextField(
-              label: 'Message (optional)',
-              controller: messageController,
-              maxLines: 3,
-              hint: 'Hi, I’d love to partner with you in prayer…',
-            ),
-          ],
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(messageController.text),
-            child: const Text('Send request'),
-          ),
-        ],
-      ),
-    );
-    if (message == null || !mounted) return;
-
     setState(() => _busy = true);
-    final client = ref.read(apiClientProvider);
-    try {
-      await client.post(
-        '/prayer-partners/requests',
-        body: {
-          'recipientId': suggestion.userId,
-          if (message.trim().isNotEmpty) 'message': message.trim(),
-        },
-      );
-      ref.invalidate(prayerPartnerSuggestionsProvider);
-      ref.invalidate(prayerRequestsProvider('outgoing'));
-      if (mounted) {
-        Toast.success(
-          context,
-          'Request sent. ${_privacyName(suggestion.name)} will be notified.',
-        );
-      }
-    } on ApiException catch (e) {
-      if (mounted) Toast.error(context, e.fieldError ?? e.message);
-    } catch (_) {
-      if (mounted) Toast.error(context, 'Unable to send the request just now.');
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+    await _sendPartnerRequest(
+      context,
+      ref,
+      recipientId: suggestion.userId,
+      recipientName: _privacyName(suggestion.name),
+    );
+    if (mounted) setState(() => _busy = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final timeRange = (suggestion.timeStart != null &&
-            suggestion.timeEnd != null)
-        ? '${suggestion.timeStart}–${suggestion.timeEnd}'
+    final timeRange =
+        (suggestion.timeStart != null && suggestion.timeEnd != null)
+        ? '${suggestion.timeStart}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“${suggestion.timeEnd}'
         : 'Times flexible';
     return AppCard(
       child: Column(
@@ -282,9 +426,7 @@ class _SuggestionCardState extends ConsumerState<_SuggestionCard> {
               Expanded(
                 child: Text(
                   _privacyName(suggestion.name),
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -303,18 +445,13 @@ class _SuggestionCardState extends ConsumerState<_SuggestionCard> {
           ),
           _InfoRow(
             icon: Icons.schedule_rounded,
-            text: '$timeRange · ${suggestion.preferredDurationMinutes} min',
+            text:
+                '$timeRange Ãƒâ€šÃ‚Â· ${suggestion.preferredDurationMinutes} min',
           ),
-          _InfoRow(
-            icon: Icons.public_rounded,
-            text: suggestion.timeZone,
-          ),
+          _InfoRow(icon: Icons.public_rounded, text: suggestion.timeZone),
           if (suggestion.language != null &&
               suggestion.language!.trim().isNotEmpty)
-            _InfoRow(
-              icon: Icons.translate_rounded,
-              text: suggestion.language!,
-            ),
+            _InfoRow(icon: Icons.translate_rounded, text: suggestion.language!),
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
             width: double.infinity,
@@ -324,8 +461,7 @@ class _SuggestionCardState extends ConsumerState<_SuggestionCard> {
                   : 'Send request',
               icon: Icons.handshake_outlined,
               busy: _busy,
-              onPressed:
-                  suggestion.hasPendingRequest ? null : _sendRequest,
+              onPressed: suggestion.hasPendingRequest ? null : _sendRequest,
             ),
           ),
         ],
@@ -396,8 +532,8 @@ class _PartnershipTab extends ConsumerWidget {
                     icon: Icons.handshake_outlined,
                     title: 'No active prayer partnership',
                     message:
-                        'You’re not currently partnered with anyone — and '
-                        'that’s perfectly okay. When you connect with a '
+                        'YouÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢re not currently partnered with anyone ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â and '
+                        'thatÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s perfectly okay. When you connect with a '
                         'partner, your partnership will appear here.',
                     actionLabel: 'Find a partner',
                     onAction: onFindPartner,
@@ -465,7 +601,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
       title: 'End partnership?',
       message:
           'You and ${partnership.partnerName} will no longer be paired as '
-          'prayer partners. You can always find a new partner afterwards — '
+          'prayer partners. You can always find a new partner afterwards ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â '
           'no hard feelings.',
       confirmLabel: 'End partnership',
       destructive: true,
@@ -494,7 +630,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
               required: true,
               controller: reasonController,
               maxLines: 4,
-              hint: 'Describe the concern…',
+              hint: 'Describe the concernÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦',
             ),
           ],
         ),
@@ -531,7 +667,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
         Toast.show(
           context,
           message:
-              'Report received. Ministry administrators will review it — '
+              'Report received. Ministry administrators will review it ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â '
               'thank you for trusting us with this.',
           tone: ToastTone.info,
           duration: const Duration(seconds: 5),
@@ -567,9 +703,9 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
                   partnership.partnerName.isEmpty
                       ? '?'
                       : partnership.partnerName
-                          .trim()
-                          .substring(0, 1)
-                          .toUpperCase(),
+                            .trim()
+                            .substring(0, 1)
+                            .toUpperCase(),
                   style: TextStyle(
                     color: AppColors.navy800,
                     fontWeight: FontWeight.w800,
@@ -583,9 +719,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
                   children: [
                     Text(
                       partnership.partnerName,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
+                      style: Theme.of(context).textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     if (partnership.startedAt != null)
@@ -614,17 +748,20 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
                   icon: Icons.pause_rounded,
                   variant: AppButtonVariant.outlined,
                   busy: _busy,
-                  onPressed: () => _setStatus('PAUSED',
-                      successMessage:
-                          'Partnership paused. Resume anytime — no pressure.'),
+                  onPressed: () => _setStatus(
+                    'PAUSED',
+                    successMessage: 'Partnership paused. Resume anytime ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no pressure.',
+                  ),
                 ),
               if (partnership.status == 'PAUSED')
                 AppButton(
                   label: 'Resume',
                   icon: Icons.play_arrow_rounded,
                   busy: _busy,
-                  onPressed: () => _setStatus('ACTIVE',
-                      successMessage: 'Partnership resumed. Welcome back!'),
+                  onPressed: () => _setStatus(
+                    'ACTIVE',
+                    successMessage: 'Partnership resumed. Welcome back!',
+                  ),
                 ),
               if (partnership.status != 'ENDED')
                 AppButton(
@@ -686,16 +823,14 @@ class _RequestsTab extends ConsumerWidget {
             error: (e, _) => ErrorState(
               error: e,
               compact: true,
-              onRetry: () =>
-                  ref.invalidate(prayerRequestsProvider('incoming')),
+              onRetry: () => ref.invalidate(prayerRequestsProvider('incoming')),
             ),
             data: (requests) => requests.isEmpty
                 ? const AppCard(
                     child: EmptyState(
                       icon: Icons.inbox_outlined,
                       title: 'No requests received',
-                      message:
-                          'Requests from other members will appear here.',
+                      message: 'Requests from other members will appear here.',
                     ),
                   )
                 : Column(
@@ -718,8 +853,7 @@ class _RequestsTab extends ConsumerWidget {
             error: (e, _) => ErrorState(
               error: e,
               compact: true,
-              onRetry: () =>
-                  ref.invalidate(prayerRequestsProvider('outgoing')),
+              onRetry: () => ref.invalidate(prayerRequestsProvider('outgoing')),
             ),
             data: (requests) => requests.isEmpty
                 ? const AppCard(
@@ -727,7 +861,7 @@ class _RequestsTab extends ConsumerWidget {
                       icon: Icons.send_outlined,
                       title: 'No requests sent yet',
                       message:
-                          'Find a partner and send a request — it will show '
+                          'Find a partner and send a request ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â it will show '
                           'up here while you wait.',
                     ),
                   )
@@ -779,7 +913,8 @@ class _RequestListCardState extends ConsumerState<_RequestListCard> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted) Toast.error(context, 'Unable to update the request just now.');
+      if (mounted)
+        Toast.error(context, 'Unable to update the request just now.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -811,9 +946,7 @@ class _RequestListCardState extends ConsumerState<_RequestListCard> {
               Expanded(
                 child: Text(
                   _privacyName(otherName),
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -824,9 +957,13 @@ class _RequestListCardState extends ConsumerState<_RequestListCard> {
               ),
             ],
           ),
-          if (request.message != null && request.message!.trim().isNotEmpty) ...[
+          if (request.message != null &&
+              request.message!.trim().isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xxs),
-            Text(request.message!, style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              request.message!,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
           if (request.createdAt != null) ...[
             const SizedBox(height: AppSpacing.xxs),
