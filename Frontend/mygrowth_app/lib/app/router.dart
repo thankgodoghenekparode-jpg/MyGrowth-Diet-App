@@ -904,7 +904,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   child: SizedBox(
                     width: _splashVideo.value.size.width,
                     height: _splashVideo.value.size.height,
-                    child: VideoPlayer(_splashVideo),
+                    child: ColorFiltered(
+                      colorFilter: const ColorFilter.matrix([
+                        1, 0, 0, 0, 0,
+                        0, 1, 0, 0, 0,
+                        0, 0, 1, 0, 0,
+                        -0.333, -0.333, -0.333, 0, 255,
+                      ]),
+                      child: VideoPlayer(_splashVideo),
+                    ),
                   ),
                 ),
               )
