@@ -114,7 +114,7 @@ class AreaShell extends ConsumerWidget {
         ref.watch(authControllerProvider).offlineMode && area == AppArea.member;
     final location = GoRouterState.of(context).uri.path;
     final isHomeLocation = location == '/home' || location == '/admin';
-    final isMemberHome = location == '/home' && area == AppArea.member;
+    final isMemberHome = area == AppArea.member && title == 'Home';
     final areaContent = isMemberHome ? const MemberHomeScreen() : child;
     final expanded = Breakpoints.isExpanded(context);
     final medium = Breakpoints.isMedium(context);
