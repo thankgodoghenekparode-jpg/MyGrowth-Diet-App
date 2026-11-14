@@ -9,7 +9,6 @@ import '../core/theme/app_spacing.dart';
 import '../core/widgets/app_badge.dart';
 import '../core/widgets/brand_logo.dart';
 import '../core/widgets/app_back_button.dart';
-import '../features/more/member_home_screen.dart';
 
 /// Destinations available in the member bottom navigation (compact devices).
 const memberBottomDestinations = [
@@ -114,8 +113,6 @@ class AreaShell extends ConsumerWidget {
         ref.watch(authControllerProvider).offlineMode && area == AppArea.member;
     final location = GoRouterState.of(context).uri.path;
     final isHomeLocation = location == '/home' || location == '/admin';
-    final isMemberHome = area == AppArea.member && title == 'Home';
-    final areaContent = isMemberHome ? const MemberHomeScreen() : child;
     final expanded = Breakpoints.isExpanded(context);
     final medium = Breakpoints.isMedium(context);
     final selectedIndex = _indexOf(location);
@@ -134,7 +131,7 @@ class AreaShell extends ConsumerWidget {
             children: [
               navigation!,
               const VerticalDivider(width: 1, thickness: 1),
-              Expanded(child: areaContent),
+              Expanded(child: child),
             ],
           )
         : Scaffold(
@@ -169,7 +166,7 @@ class AreaShell extends ConsumerWidget {
             body: Column(
               children: [
                 if (offlineMode) const _OfflineAccessBanner(),
-                Expanded(child: areaContent),
+                Expanded(child: child),
               ],
             ),
             floatingActionButton: floatingActionButton,
@@ -195,7 +192,7 @@ class AreaShell extends ConsumerWidget {
                     showBackButton: !isHomeLocation,
                   ),
                   if (offlineMode) const _OfflineAccessBanner(),
-                  Expanded(child: areaContent),
+                  Expanded(child: child),
                 ],
               ),
             ),
