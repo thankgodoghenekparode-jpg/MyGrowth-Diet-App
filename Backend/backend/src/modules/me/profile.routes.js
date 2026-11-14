@@ -21,7 +21,9 @@ router.get(
       ...publicUser(req.user),
       notificationPreference: pref,
       prayerAvailability: availability,
-      avatarUrl: req.user.avatarFileId ? `/api/v1/avatars/${req.user.id}` : null,
+      avatarUrl: req.user.avatarFileId
+        ? `/api/v1/avatars/${req.user.id}?v=${req.user.avatarFileId}`
+        : null,
     });
   })
 );
@@ -96,7 +98,13 @@ router.patch(
     data.profileCompletedAt = req.user.profileCompletedAt ?? new Date();
 
     const user = await prisma.user.update({ where: { id: req.user.id }, data });
-    res.json({ ...publicUser(user), avatarUrl: user.avatarFileId ? `/api/v1/avatars/${user.id}` : null, bio: null });
+    res.json({
+      ...publicUser(user),
+      avatarUrl: user.avatarFileId
+        ? `/api/v1/avatars/${user.id}?v=${user.avatarFileId}`
+        : null,
+      bio: null,
+    });
   })
 );
 

@@ -34,7 +34,8 @@ export const avatarHandler = asyncHandler(async (req, res) => {
 
   res.setHeader('Content-Type', file.mimeType);
   res.setHeader('Content-Length', String(file.sizeBytes));
-  res.setHeader('Cache-Control', 'public, max-age=3600');
+  // The URL carries `?v=<fileId>`, so a new photo gets a new URL.
+  res.setHeader('Cache-Control', 'public, max-age=86400');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader(
     'Content-Disposition',

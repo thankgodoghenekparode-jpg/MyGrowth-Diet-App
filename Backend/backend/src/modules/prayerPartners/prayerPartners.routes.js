@@ -223,7 +223,9 @@ router.get(
           // Flutter alias: full display name.
           name: [c.firstName, c.lastName].filter(Boolean).join(' ').trim(),
           firstName: c.firstName,
-          avatarUrl: c.avatarFileId ? `/api/v1/avatars/${c.id}` : null,
+          avatarUrl: c.avatarFileId
+            ? `/api/v1/avatars/${c.id}?v=${c.avatarFileId}`
+            : null,
           // Only initials of the last name: enough to recognise, minimal exposure.
           lastInitial: `${c.lastName?.[0] || ''}.`,
           timezone: av?.timezone ?? c.timezone,

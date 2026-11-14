@@ -36,7 +36,9 @@ export function publicUser(user) {
     timezone: user.timezone,
     locale: user.locale,
     avatarFileId: user.avatarFileId,
-    avatarUrl: user.avatarFileId ? `/api/v1/avatars/${user.id}` : null,
+    avatarUrl: user.avatarFileId
+      ? `/api/v1/avatars/${user.id}?v=${user.avatarFileId}`
+      : null,
     profileCompleted: Boolean(user.profileCompletedAt),
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,

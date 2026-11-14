@@ -52,6 +52,12 @@ class AppConfig {
       relative = relative.substring('/api/v1'.length);
     }
     final normalized = relative.startsWith('/') ? relative : '/$relative';
-    return base.replace(path: '$basePath$normalized').toString();
+    final relativeUri = Uri.parse(normalized);
+    return base
+        .replace(
+          path: '$basePath${relativeUri.path}',
+          query: relativeUri.hasQuery ? relativeUri.query : null,
+        )
+        .toString();
   }
 }
