@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
@@ -848,12 +849,25 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   Timer? _splashTimer;
+  late final VideoPlayerController _splashVideo;
   bool _sessionStarted = false;
   bool _splashFinished = false;
+  bool _videoReady = false;
 
   @override
   void initState() {
     super.initState();
+    _splashVideo = VideoPlayerController.asset('assets/videos/splash.mp4');
+    _splashVideo.initialize().then((_) async {
+      if (!mounted) return;
+      await _splashVideo.setLooping(false);
+      await _splashVideo.setVolume(0);
+      if (!mounted) return;
+      setState(() => _videoReady = true);
+      await _splashVideo.play();
+    }).catchError((Object _) {
+      // Keep startup usable if the browser cannot decode the splash video.
+    });
     _splashTimer = Timer(const Duration(seconds: 5), _finishSplash);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _sessionStarted) return;
@@ -873,6 +887,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void dispose() {
     _splashTimer?.cancel();
+    _splashVideo.dispose();
     super.dispose();
   }
 
@@ -881,18 +896,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Image.asset(
-              'assets/images/splash_logo_animated.gif',
-              fit: BoxFit.contain,
-              gaplessPlayback: true,
-              semanticLabel: 'Healings E. Azuike',
-            ),
-          ),
-        ),
+        child: _videoReady
+            ? Semantics(
+                label: 'Healings E. Azuike',
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: SizedBox(
+                    width: _splashVideo.value.size.width,
+                    height: _splashVideo.value.size.height,
+                    child: VideoPlayer(_splashVideo),
+                  ),
+                ),
+              )
+            : Image.asset(
+                'assets/images/splash_logo.png',
+                fit: BoxFit.contain,
+                semanticLabel: 'Healings E. Azuike',
+              ),
       ),
     );
   }
