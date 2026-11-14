@@ -125,7 +125,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // Session still restoring on cold start.
       if (auth.status == AuthStatus.initial ||
           auth.status == AuthStatus.loading) {
-        return path == '/splash' ? null : '/splash';
+        if (!ref.read(splashAnimationProvider)) {
+          return path == '/splash' ? null : '/splash';
+        }
+        // Do not keep the splash visible indefinitely if session restore is slow.
+        return path == '/splash' ? '/login' : null;
       }
 
       // Let the logo reveal finish before routing to the signed-in or auth area.
@@ -850,7 +854,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _splashTimer = Timer(const Duration(milliseconds: 2400), _finishSplash);
+    _splashTimer = Timer(const Duration(seconds: 5), _finishSplash);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _sessionStarted) return;
       _sessionStarted = true;
