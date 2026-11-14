@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -24,10 +25,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final api = ref.read(apiClientProvider);
     final avatarUrl = user?.avatarUrl;
-    final isAdminArea =
-        GoRouterState.of(context).uri.path.startsWith('/admin');
+    final isAdminArea = GoRouterState.of(context).uri.path.startsWith('/admin');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile & Settings')),
@@ -47,21 +46,21 @@ class ProfileScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: user == null ? null : () => _changeAvatar(context, ref),
+                    onTap: user == null
+                        ? null
+                        : () => _changeAvatar(context, ref),
                     child: Stack(
                       children: [
                         CircleAvatar(
                           radius: 30,
                           backgroundColor: AppColors.avatarBg,
-                          backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                              ? NetworkImage(
-                                  _resolveAvatarUrl(avatarUrl, api.baseUrl),
-                                  headers: api.accessToken == null
-                                      ? null
-                                      : {'Authorization': 'Bearer ${api.accessToken}'},
-                                )
+                          backgroundImage:
+                              (avatarUrl != null && avatarUrl.isNotEmpty)
+                              ? NetworkImage(AppConfig.resolveUrl(avatarUrl))
                               : null,
-                          child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
+                          child:
+                              (user?.avatarUrl == null ||
+                                  user!.avatarUrl!.isEmpty)
                               ? Text(
                                   user?.initials ?? '?',
                                   style: const TextStyle(
@@ -81,7 +80,11 @@ class ProfileScreen extends ConsumerWidget {
                               color: AppColors.navy700,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -94,9 +97,7 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         Text(
                           user?.name ?? 'Member',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         if (user != null)
@@ -107,7 +108,10 @@ class ProfileScreen extends ConsumerWidget {
                         if (user != null)
                           TextButton.icon(
                             onPressed: () => _changeAvatar(context, ref),
-                            icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                            icon: const Icon(
+                              Icons.photo_camera_outlined,
+                              size: 18,
+                            ),
                             label: const Text('Change profile photo'),
                             style: TextButton.styleFrom(
                               foregroundColor: AppColors.navy700,
@@ -158,8 +162,7 @@ class ProfileScreen extends ConsumerWidget {
             // ------------------------------------- admin/member switch
             if (user != null && user.canUseAdminArea)
               AppCard(
-                onTap: () =>
-                    context.go(isAdminArea ? '/home' : '/admin'),
+                onTap: () => context.go(isAdminArea ? '/home' : '/admin'),
                 child: Row(
                   children: [
                     Icon(
@@ -174,14 +177,15 @@ class ProfileScreen extends ConsumerWidget {
                         isAdminArea
                             ? 'Switch to member area'
                             : 'Switch to admin area',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
+                        style: Theme.of(context).textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 20, color: AppColors.inkMuted),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: AppColors.inkMuted,
+                    ),
                   ],
                 ),
               ),
@@ -218,14 +222,11 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   Text(
                     '“Small steps, faithful days, lasting growth.”',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(
-                          fontStyle: FontStyle.italic,
-                          color: AppColors.navy800,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.navy800,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
@@ -238,9 +239,7 @@ class ProfileScreen extends ConsumerWidget {
                     'accountability.\n'
                     '• Prayer partners only ever see general availability — '
                     'never your exact schedule.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
+                    style: Theme.of(context).textTheme.bodySmall
                         ?.copyWith(height: 1.6),
                   ),
                 ],
@@ -333,11 +332,12 @@ Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
     final fileId = uploadedFile is Map
         ? uploadedFile['id']
         : nestedData is Map
-            ? nestedData['id']
-            : data is Map
-                ? data['id']
-                : null;
-    if (fileId == null) throw ApiException(500, 'upload_failed', 'Invalid upload response');
+        ? nestedData['id']
+        : data is Map
+        ? data['id']
+        : null;
+    if (fileId == null)
+      throw ApiException(500, 'upload_failed', 'Invalid upload response');
     await api.patch('/me', body: {'avatarFileId': fileId});
     await ref.read(authControllerProvider.notifier).refreshUser();
     if (context.mounted) Toast.success(context, 'Profile photo updated');
@@ -346,25 +346,12 @@ Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
   } catch (error) {
     debugPrint('Profile photo update failed: $error');
     if (context.mounted) {
-      Toast.error(context, 'Could not upload that photo. Try a JPG or PNG image.');
+      Toast.error(
+        context,
+        'Could not upload that photo. Try a JPG or PNG image.',
+      );
     }
   }
-}
-
-String _resolveAvatarUrl(String avatarUrl, String apiBaseUrl) {
-  final parsed = Uri.tryParse(avatarUrl);
-  if (parsed != null && parsed.hasScheme) return avatarUrl;
-
-  final base = Uri.parse(apiBaseUrl);
-  final basePath = base.path.replaceFirst(RegExp(r'/+$'), '');
-  var path = avatarUrl;
-  if (basePath.isNotEmpty && path.startsWith('$basePath/')) {
-    path = path.substring(basePath.length);
-  } else if (path.startsWith('/api/v1/')) {
-    path = path.substring('/api/v1'.length);
-  }
-  final normalizedPath = path.startsWith('/') ? path : '/$path';
-  return base.replace(path: '$basePath$normalizedPath').toString();
 }
 
 class _ProfileForm extends ConsumerStatefulWidget {
@@ -384,12 +371,15 @@ class _ProfileForm extends ConsumerStatefulWidget {
 }
 
 class _ProfileFormState extends ConsumerState<_ProfileForm> {
-  late final TextEditingController _name =
-      TextEditingController(text: widget.initialName);
-  late final TextEditingController _phone =
-      TextEditingController(text: widget.initialPhone);
-  late final TextEditingController _timeZone =
-      TextEditingController(text: widget.initialTimeZone);
+  late final TextEditingController _name = TextEditingController(
+    text: widget.initialName,
+  );
+  late final TextEditingController _phone = TextEditingController(
+    text: widget.initialPhone,
+  );
+  late final TextEditingController _timeZone = TextEditingController(
+    text: widget.initialTimeZone,
+  );
   bool _busy = false;
 
   @override
@@ -418,7 +408,8 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted) Toast.error(context, 'Unable to save your profile just now.');
+      if (mounted)
+        Toast.error(context, 'Unable to save your profile just now.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

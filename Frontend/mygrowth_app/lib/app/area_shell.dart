@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/auth/auth_controller.dart';
+import '../core/config/app_config.dart';
 import '../core/models/app_user.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
@@ -280,6 +281,8 @@ class _AvatarBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = user.avatarUrl;
+    final hasPhoto = avatarUrl != null && avatarUrl.isNotEmpty;
     return Container(
       width: 38,
       height: 38,
@@ -287,15 +290,23 @@ class _AvatarBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.avatarBg,
         shape: BoxShape.circle,
+        image: hasPhoto
+            ? DecorationImage(
+                image: NetworkImage(AppConfig.resolveUrl(avatarUrl)),
+                fit: BoxFit.cover,
+              )
+            : null,
       ),
-      child: Text(
-        user.initials,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      child: hasPhoto
+          ? null
+          : Text(
+              user.initials,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
     );
   }
 }

@@ -36,4 +36,22 @@ class AppConfig {
     'ALLOW_OFFLINE_PREVIEW',
     defaultValue: false,
   );
+
+  /// Turn a backend-relative media path (e.g. `/api/v1/avatars/<id>`) into an
+  /// absolute URL the current platform can load.
+  static String resolveUrl(String path) {
+    final parsed = Uri.tryParse(path);
+    if (parsed != null && parsed.hasScheme) return path;
+
+    final base = Uri.parse(apiBaseUrl);
+    final basePath = base.path.replaceFirst(RegExp(r'/+$'), '');
+    var relative = path;
+    if (basePath.isNotEmpty && relative.startsWith('$basePath/')) {
+      relative = relative.substring(basePath.length);
+    } else if (relative.startsWith('/api/v1/')) {
+      relative = relative.substring('/api/v1'.length);
+    }
+    final normalized = relative.startsWith('/') ? relative : '/$relative';
+    return base.replace(path: '$basePath$normalized').toString();
+  }
 }
