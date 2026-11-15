@@ -54,87 +54,75 @@ class MemberHomeScreen extends ConsumerWidget {
         : 'Good evening';
     final progress = ref.watch(progressSummaryProvider);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        image: Theme.of(context).brightness == Brightness.light
-            ? DecorationImage(
-                image: const AssetImage('assets/images/app_background.jpg'),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  AppColors.background.withValues(alpha: 0.76),
-                  BlendMode.srcATop,
+    // The wallpaper is painted by the app chrome (and by the navigation
+    // shell), so the home page only owns its content.
+    return SizedBox.expand(
+      child: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(progressSummaryProvider);
+          try {
+            await ref.read(authControllerProvider.notifier).refreshUser();
+          } catch (_) {
+            // The current profile remains visible when refreshing offline.
+          }
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          children: [
+            const _HomeBrandHeader(),
+            const SizedBox(height: 12),
+            Builder(
+              builder: (shellContext) => _WelcomeHero(
+                greeting: greeting,
+                name: displayName.isEmpty ? 'there' : displayName,
+                avatarUrl: user?.avatarUrl,
+                initials: user?.initials ?? '?',
+                onNotifications: () => context.go('/notifications'),
+                onMenu: () => Scaffold.of(shellContext).openDrawer(),
+                onReadMore: () => context.go('/devotion'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _GrowthProgressCard(
+              progress: progress,
+              onTap: () => context.go('/progress'),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              "Today's Activities",
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Column(
+              children: [
+                _HomeActionCard(
+                  icon: Icons.menu_book_rounded,
+                  title: 'Bible Reading',
+                  subtitle: "Read and reflect on God's Word",
+                  onTap: () => context.go('/bible'),
                 ),
-              )
-            : null,
-      ),
-      child: SizedBox.expand(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(progressSummaryProvider);
-            try {
-              await ref.read(authControllerProvider.notifier).refreshUser();
-            } catch (_) {
-              // The current profile remains visible when refreshing offline.
-            }
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-            children: [
-              const _HomeBrandHeader(),
-              const SizedBox(height: 12),
-              Builder(
-                builder: (shellContext) => _WelcomeHero(
-                  greeting: greeting,
-                  name: displayName.isEmpty ? 'there' : displayName,
-                  avatarUrl: user?.avatarUrl,
-                  initials: user?.initials ?? '?',
-                  onNotifications: () => context.go('/notifications'),
-                  onMenu: () => Scaffold.of(shellContext).openDrawer(),
-                  onReadMore: () => context.go('/devotion'),
+                const SizedBox(height: 12),
+                _HomeActionCard(
+                  icon: Icons.auto_stories_rounded,
+                  title: "Today's Proverb",
+                  subtitle: 'Wisdom for today - Proverbs ${now.day}',
+                  onTap: () =>
+                      context.go('/bible?book=Proverbs&chapter=${now.day}'),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _GrowthProgressCard(
-                progress: progress,
-                onTap: () => context.go('/progress'),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                "Today's Activities",
-                style: Theme.of(context).textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              Column(
-                children: [
-                  _HomeActionCard(
-                    icon: Icons.menu_book_rounded,
-                    title: 'Bible Reading',
-                    subtitle: "Read and reflect on God's Word",
-                    onTap: () => context.go('/bible'),
-                  ),
-                  const SizedBox(height: 12),
-                  _HomeActionCard(
-                    icon: Icons.auto_stories_rounded,
-                    title: "Today's Proverb",
-                    subtitle: 'Wisdom for today - Proverbs ${now.day}',
-                    onTap: () =>
-                        context.go('/bible?book=Proverbs&chapter=${now.day}'),
-                  ),
-                  const SizedBox(height: 12),
-                  _HomeActionCard(
-                    icon: Icons.record_voice_over_rounded,
-                    title: 'Daily Declarations',
-                    subtitle: "Speak today's declarations of faith",
-                    onTap: () => context.go('/diet?section=declarations'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+                const SizedBox(height: 12),
+                _HomeActionCard(
+                  icon: Icons.record_voice_over_rounded,
+                  title: 'Daily Declarations',
+                  subtitle: "Speak today's declarations of faith",
+                  onTap: () => context.go('/diet?section=declarations'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
     );
@@ -192,12 +180,34 @@ class _HomeBrandHeader extends StatelessWidget {
                 ],
                 stops: [0, .06, .94, 1],
               ).createShader(bounds),
-              child: Image.asset(
-                'assets/images/home_brand_banner.png',
-                width: bannerWidth,
-                height: bannerHeight,
-                fit: BoxFit.contain,
-                semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
+              child: Stack(
+                children: [
+                  Image.asset(
+                    'assets/images/home_brand_banner.png',
+                    width: bannerWidth,
+                    height: bannerHeight,
+                    fit: BoxFit.contain,
+                    semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
+                  ),
+                  Positioned(
+                    right: bannerWidth * .013,
+                    top: bannerHeight * .34,
+                    width: bannerWidth * .17,
+                    height: bannerHeight * .43,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          bannerHeight * .1,
+                        ),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xffe3e0e1), Color(0xffd7d5d9)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

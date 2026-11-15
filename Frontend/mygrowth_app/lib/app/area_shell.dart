@@ -10,6 +10,7 @@ import '../core/theme/app_spacing.dart';
 import '../core/widgets/app_badge.dart';
 import '../core/widgets/brand_logo.dart';
 import '../core/widgets/app_back_button.dart';
+import '../core/widgets/app_wallpaper.dart';
 
 /// Destinations available in the member bottom navigation (compact devices).
 const memberBottomDestinations = [
@@ -118,6 +119,10 @@ class AreaShell extends ConsumerWidget {
     final medium = Breakpoints.isMedium(context);
     final selectedIndex = _indexOf(location);
 
+    // Every page inside the shell sits on the shared wallpaper, the same photo
+    // used by the member home page and the navigation rail.
+    final content = AppWallpaper(child: child);
+
     final navigation = expanded || medium
         ? _SidebarNavigation(
             destinations: destinations,
@@ -132,7 +137,7 @@ class AreaShell extends ConsumerWidget {
             children: [
               navigation!,
               const VerticalDivider(width: 1, thickness: 1),
-              Expanded(child: child),
+              Expanded(child: content),
             ],
           )
         : Scaffold(
@@ -167,7 +172,7 @@ class AreaShell extends ConsumerWidget {
             body: Column(
               children: [
                 if (offlineMode) const _OfflineAccessBanner(),
-                Expanded(child: child),
+                Expanded(child: content),
               ],
             ),
             floatingActionButton: floatingActionButton,
@@ -193,7 +198,7 @@ class AreaShell extends ConsumerWidget {
                     showBackButton: !isHomeLocation,
                   ),
                   if (offlineMode) const _OfflineAccessBanner(),
-                  Expanded(child: child),
+                  Expanded(child: content),
                 ],
               ),
             ),
@@ -330,12 +335,7 @@ class _SidebarNavigation extends StatelessWidget {
       width: 244,
       decoration: BoxDecoration(
         color: AppColors.background,
-        image: Theme.of(context).brightness == Brightness.light
-            ? const DecorationImage(
-                image: AssetImage('assets/images/app_background.jpg'),
-                fit: BoxFit.cover,
-              )
-            : null,
+        image: AppWallpaper.image(context, wash: null),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -606,12 +606,7 @@ class _AreaDrawer extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.background,
-          image: Theme.of(context).brightness == Brightness.light
-              ? const DecorationImage(
-                  image: AssetImage('assets/images/app_background.jpg'),
-                  fit: BoxFit.cover,
-                )
-              : null,
+          image: AppWallpaper.image(context, wash: null),
         ),
         child: SafeArea(
           child: Column(

@@ -716,25 +716,22 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
           _bookIndex = session.bookIndex;
           _chapterIndex = session.chapterIndex;
         }
-        return ColoredBox(
-          color: AppColors.surface,
-          child: Column(
-            children: [
-              _buildToolbar(context, session),
-              if (_view == _BibleView.reader)
-                _buildChapterHeading(context, session),
-              const Divider(height: 1),
-              Expanded(child: _buildContent(context, session)),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  session.translation.credit,
-                  style: Theme.of(context).textTheme.labelSmall
-                      ?.copyWith(color: AppColors.inkSecondary),
-                ),
+        return Column(
+          children: [
+            _buildToolbar(context, session),
+            if (_view == _BibleView.reader)
+              _buildChapterHeading(context, session),
+            const Divider(height: 1),
+            Expanded(child: _buildContent(context, session)),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                session.translation.credit,
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: AppColors.inkSecondary),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

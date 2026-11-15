@@ -10,6 +10,7 @@ import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_date.dart';
+import '../core/widgets/app_wallpaper.dart';
 import '../features/activities/fasting_screen.dart';
 import '../features/bible/bible_reader_screen.dart';
 import '../features/admin/admin_access_screen.dart';
@@ -772,7 +773,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 CustomTransitionPage<void> _fade(MaterialPage page) {
   return CustomTransitionPage<void>(
     key: page.key,
-    child: page.child,
+    // Each page paints its own copy of the shared wallpaper so the fade
+    // transition never lets the previous page show through.
+    child: AppWallpaper(child: page.child),
     transitionDuration: const Duration(milliseconds: 200),
     reverseTransitionDuration: const Duration(milliseconds: 160),
     transitionsBuilder: (_, animation, _, child) => FadeTransition(

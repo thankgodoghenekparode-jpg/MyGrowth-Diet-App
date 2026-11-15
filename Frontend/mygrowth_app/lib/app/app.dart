@@ -7,6 +7,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_palette.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/appearance_controller.dart';
+import '../core/widgets/app_wallpaper.dart';
 import 'router.dart';
 
 /// Root application widget: theme, localisation and routing live here.
@@ -75,10 +76,12 @@ class _MyGrowthAppState extends ConsumerState<MyGrowthApp>
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) => MediaQuery.withClampedTextScaling(
-        minScaleFactor: 0.9,
-        maxScaleFactor: 1.3,
-        child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => AppChrome(
+        child: MediaQuery.withClampedTextScaling(
+          minScaleFactor: 0.9,
+          maxScaleFactor: 1.3,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }
