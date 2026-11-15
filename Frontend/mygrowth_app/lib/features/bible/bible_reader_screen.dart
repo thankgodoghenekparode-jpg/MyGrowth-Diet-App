@@ -1053,7 +1053,41 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
     List<_VerseHit> hits, {
     required String emptyMessage,
   }) {
-    if (hits.isEmpty) return Center(child: Text(emptyMessage));
+    if (hits.isEmpty) {
+      final theme = Theme.of(context);
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _view == _BibleView.bookmarks
+                      ? Icons.bookmark_border_rounded
+                      : Icons.search_off_rounded,
+                  size: 36,
+                  color: AppColors.inkMuted,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  emptyMessage,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.inkSecondary,
+                    fontSize: 16,
+                    height: 1.4,
+                    fontWeight: FontWeight.w500,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       itemCount: hits.length,
