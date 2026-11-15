@@ -970,7 +970,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 2),
                   child: SelectableText.rich(
                     TextSpan(
                       children: [
@@ -987,9 +987,9 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                           text: hit.text,
                           style: TextStyle(
                             color: AppColors.ink,
-                            height: 1.45,
-                            fontSize: 18,
-                            letterSpacing: 0.1,
+                            height: 1.25,
+                            fontSize: 16,
+                            letterSpacing: 0,
                             decoration: TextDecoration.none,
                           ),
                         ),
@@ -1000,6 +1000,11 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
               ),
               PopupMenuButton<String>(
                 tooltip: 'Verse actions',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
                 onSelected: (action) {
                   if (action == 'copy') {
                     _copyVerse(session, hit);
@@ -1029,7 +1034,11 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                     ),
                   ),
                 ],
-                icon: Icon(Icons.more_vert, color: AppColors.inkMuted),
+                icon: Icon(
+                  Icons.more_vert,
+                  color: AppColors.inkMuted,
+                  size: 20,
+                ),
               ),
             ],
           ),

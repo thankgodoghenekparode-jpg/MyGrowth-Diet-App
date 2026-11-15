@@ -268,6 +268,7 @@ class _ProgramReviewSection extends ConsumerWidget {
                 final item = _programReviewItems[index];
                 return AppCard(
                   padding: const EdgeInsets.all(AppSpacing.sm),
+                  color: AppColors.brandSurface,
                   onTap: () {
                     if (item.affirmation) {
                       programme.when(
@@ -304,12 +305,12 @@ class _ProgramReviewSection extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(item.icon, size: 19, color: AppColors.navy700),
+                          Icon(item.icon, size: 19, color: AppColors.accent),
                           const Spacer(),
                           Icon(
                             Icons.chevron_right,
                             size: 20,
-                            color: AppColors.inkMuted,
+                            color: AppColors.inkOnDark.withValues(alpha: .72),
                           ),
                         ],
                       ),
@@ -318,14 +319,19 @@ class _ProgramReviewSection extends ConsumerWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                            ?.copyWith(
+                              color: AppColors.inkOnDark,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
                       Text(
                         item.subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(color: AppColors.inkMuted),
+                            ?.copyWith(
+                              color: AppColors.inkOnDark.withValues(alpha: .72),
+                            ),
                       ),
                     ],
                   ),

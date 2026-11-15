@@ -246,7 +246,7 @@ class _WelcomeHero extends ConsumerWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        height: 280,
+        height: 240,
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/prayer.jpg'),
@@ -265,7 +265,7 @@ class _WelcomeHero extends ConsumerWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
