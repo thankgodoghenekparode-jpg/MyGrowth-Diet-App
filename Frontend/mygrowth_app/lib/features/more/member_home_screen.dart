@@ -144,40 +144,56 @@ class MemberHomeScreen extends ConsumerWidget {
 class _HomeBrandHeader extends StatelessWidget {
   const _HomeBrandHeader();
 
+  /// Intrinsic size of `assets/images/home_brand_banner.png`. The banner is
+  /// laid out at the width of the page (plus a little bleed), so its height
+  /// must be derived from this ratio.
+  static const double _bannerAspectRatio = 1254 / 206;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final bannerWidth = constraints.maxWidth + 32;
-      return OverflowBox(
-        alignment: Alignment.center,
-        minWidth: bannerWidth,
-        maxWidth: bannerWidth,
-        child: ShaderMask(
-          blendMode: BlendMode.dstIn,
-          shaderCallback: (bounds) => const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.transparent, Colors.white, Colors.white],
-            stops: [0, .08, 1],
-          ).createShader(bounds),
+      final bannerHeight = bannerWidth / _bannerAspectRatio;
+      // The header lives inside a vertical ListView, where height is
+      // unbounded. Give it an explicit height: an OverflowBox with no height
+      // constraints would otherwise be laid out at infinity and push every
+      // other element off-screen (the page then shows only the wallpaper).
+      return SizedBox(
+        height: bannerHeight,
+        child: OverflowBox(
+          alignment: Alignment.center,
+          minWidth: bannerWidth,
+          maxWidth: bannerWidth,
+          minHeight: bannerHeight,
+          maxHeight: bannerHeight,
           child: ShaderMask(
             blendMode: BlendMode.dstIn,
             shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                Colors.transparent,
-                Colors.white,
-                Colors.white,
-                Colors.transparent,
-              ],
-              stops: [0, .06, .94, 1],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.white, Colors.white],
+              stops: [0, .08, 1],
             ).createShader(bounds),
-            child: Image.asset(
-              'assets/images/home_brand_banner.png',
-              width: bannerWidth,
-              fit: BoxFit.fitWidth,
-              semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: [0, .06, .94, 1],
+              ).createShader(bounds),
+              child: Image.asset(
+                'assets/images/home_brand_banner.png',
+                width: bannerWidth,
+                height: bannerHeight,
+                fit: BoxFit.contain,
+                semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
+              ),
             ),
           ),
         ),
