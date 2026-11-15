@@ -36,9 +36,6 @@ class PrayerRoomScreen extends ConsumerWidget {
             ? AppSpacing.pagePaddingMobile
             : const EdgeInsets.all(AppSpacing.xl),
         children: [
-          const _IntroCard(),
-          const SizedBox(height: AppSpacing.lg),
-
           SectionHeader(
             title: 'My Availability',
             subtitle: 'Let partners know when you can pray together',
@@ -73,52 +70,6 @@ class PrayerRoomScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
-    );
-  }
-}
-
-/// Short explainer about the opt-in model and privacy guarantees.
-class _IntroCard extends StatelessWidget {
-  const _IntroCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      color: AppColors.navy50,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.shield_outlined, color: AppColors.navy700, size: 22),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'About the prayer-partner programme',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'This programme is fully opt-in: only members who choose to '
-                  'take part appear in the partner directory. Your exact '
-                  'schedule is never shown to others — partners only see '
-                  'general availability like preferred days and time ranges. '
-                  'You stay in control: pause availability anytime or end a '
-                  'partnership with no pressure.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(height: 1.5),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -181,11 +132,20 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
   }
 
   Future<void> _save() async {
+    if (_busy) return;
     final start = _timeStart.text.trim();
     final end = _timeEnd.text.trim();
     if ((start.isNotEmpty && !_timePattern.hasMatch(start)) ||
         (end.isNotEmpty && !_timePattern.hasMatch(end))) {
       Toast.error(context, 'Times must use the HH:MM format, e.g. 18:00.');
+      return;
+    }
+    if (start.isEmpty != end.isEmpty) {
+      Toast.error(context, 'Enter both a start and end time, or leave both blank.');
+      return;
+    }
+    if (start.isNotEmpty && start.compareTo(end) >= 0) {
+      Toast.error(context, 'The end time must be later than the start time.');
       return;
     }
     setState(() => _busy = true);

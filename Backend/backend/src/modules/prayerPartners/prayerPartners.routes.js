@@ -30,19 +30,30 @@ const availabilitySchema = z
     availableDays: z.array(z.coerce.number().int().min(0).max(7)).max(7).optional(),
     preferredTimeRanges: z.array(timeRangeSchema).max(10).optional(),
     // Flutter sends a single start/end pair.
-    timeStart: timeSchema.optional(),
-    timeEnd: timeSchema.optional(),
+    timeStart: timeSchema.nullable().optional(),
+    timeEnd: timeSchema.nullable().optional(),
     timezone: z.string().trim().max(60).optional(),
     timeZone: z.string().trim().max(60).optional(),
     preferredDurationMinutes: z.coerce.number().int().min(10).max(180).optional(),
-    preferredLanguage: z.string().trim().max(40).optional(),
-    language: z.string().trim().max(40).optional(),
+    preferredLanguage: z.string().trim().max(40).nullable().optional(),
+    language: z.string().trim().max(40).nullable().optional(),
     acceptsNewRequests: z.boolean().optional(),
     acceptingRequests: z.boolean().optional(),
   })
   .refine((v) => v.availability || v.status, {
     message: 'availability or status is required',
     path: ['availability'],
+  })
+  .refine(
+    (v) =>
+      (v.timeStart == null && v.timeEnd == null) ||
+      (typeof v.timeStart === 'string' &&
+        typeof v.timeEnd === 'string' &&
+        v.timeStart < v.timeEnd),
+    {
+      message: 'Provide both times and ensure the end is after the start.',
+      path: ['timeEnd'],
+    },
   });
 
 /** Flat, Flutter-friendly projection of a PrayerAvailability row. */
@@ -89,7 +100,11 @@ router.put(
     const data = { availability: b.availability ?? b.status };
     if (b.availableDays !== undefined) data.availableDays = b.availableDays;
     if (b.preferredTimeRanges !== undefined) data.preferredTimeRanges = b.preferredTimeRanges;
-    else if (b.timeStart && b.timeEnd) data.preferredTimeRanges = [{ start: b.timeStart, end: b.timeEnd }];
+    else if (b.timeStart !== undefined || b.timeEnd !== undefined) {
+      data.preferredTimeRanges = b.timeStart && b.timeEnd
+        ? [{ start: b.timeStart, end: b.timeEnd }]
+        : [];
+    }
     const tz = b.timezone ?? b.timeZone;
     if (tz) data.timezone = tz;
     if (b.preferredDurationMinutes !== undefined) data.preferredDurationMinutes = b.preferredDurationMinutes;

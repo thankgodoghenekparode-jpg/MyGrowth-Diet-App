@@ -481,22 +481,6 @@ class _MonthlyPlanContent extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
 
-            // -------------------------------------------- prayer focus
-            if (_hasText(plan.prayerFocus)) ...[
-              VerseCard(
-                tone: VerseTone.navy,
-                label: 'Prayer Focus',
-                text: plan.prayerFocus!,
-                onTap: () => _showPlanContent(
-                  context,
-                  title: 'Prayer Focus',
-                  text: plan.prayerFocus!,
-                  icon: Icons.favorite_outline,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-
             // --------------------------------------- bible reading
             if (_hasText(plan.bibleReadingGuidance)) ...[
               TitledCard(

@@ -380,7 +380,9 @@ class _IntroCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(section.description!, style: theme.textTheme.bodySmall),
           ],
-          if (introBody != null && section.key != 'proverbs_reading') ...[
+          if (introBody != null &&
+              section.key != 'proverbs_reading' &&
+              section.key != 'audio_message') ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
               isDeclarations
@@ -739,22 +741,41 @@ class _MaterialBlock extends StatelessWidget {
               children: [
                 for (var i = 0; i < messages.length; i++) ...[
                   if (i > 0) const Divider(height: AppSpacing.md),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.play_circle_outline_rounded,
-                        size: 18,
-                        color: AppColors.iconAccent,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppSpacing.sm),
+                      onTap: () => context.push(
+                        '/reading/audio?title='
+                        '${Uri.encodeQueryComponent(messages[i])}',
                       ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Text(
-                          messages[i],
-                          style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.play_circle_outline_rounded,
+                              size: 18,
+                              color: AppColors.iconAccent,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                messages[i],
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  height: 1.45,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.inkMuted,
+                              size: 20,
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ],
@@ -809,36 +830,60 @@ class _MaterialBlock extends StatelessWidget {
               children: [
                 for (var i = 0; i < books.length; i++) ...[
                   if (i > 0) const Divider(height: AppSpacing.md),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.bookmark_border_rounded,
-                        size: 18,
-                        color: AppColors.iconAccent,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppSpacing.sm),
+                      onTap: () {
+                        final title = (books[i]['title'] ?? '').toString();
+                        final author = (books[i]['author'] ?? '').toString();
+                        context.push(
+                          '/reading/book?title=${Uri.encodeQueryComponent(title)}'
+                          '&author=${Uri.encodeQueryComponent(author)}',
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              (books[i]['title'] ?? '').toString(),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                            Icon(
+                              Icons.bookmark_border_rounded,
+                              size: 18,
+                              color: AppColors.iconAccent,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    (books[i]['title'] ?? '').toString(),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if ((books[i]['author'] ?? '')
+                                      .toString()
+                                      .isNotEmpty)
+                                    Text(
+                                      (books[i]['author'] ?? '').toString(),
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: AppColors.inkMuted,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
-                            if ((books[i]['author'] ?? '').toString().isNotEmpty)
-                              Text(
-                                (books[i]['author'] ?? '').toString(),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: AppColors.inkMuted,
-                                ),
-                              ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.inkMuted,
+                              size: 20,
+                            ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ],
