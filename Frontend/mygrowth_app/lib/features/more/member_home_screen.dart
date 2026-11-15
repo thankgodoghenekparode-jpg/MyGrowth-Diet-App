@@ -382,7 +382,7 @@ class _WelcomeHero extends ConsumerWidget {
                     onPressed: onReadMore,
                     iconAlignment: IconAlignment.end,
                     icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                    label: const Text('Devotion'),
+                    label: const Text('Daily Devotion'),
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.champagneGold,
                       foregroundColor: AppColors.navy900,
