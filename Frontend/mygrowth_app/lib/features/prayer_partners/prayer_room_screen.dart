@@ -8,6 +8,7 @@ import '../../core/models/prayer_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -24,53 +25,59 @@ class PrayerRoomScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(prayerAvailabilityProvider);
-        ref.invalidate(prayerSessionsProvider('upcoming'));
-        ref.invalidate(prayerRequestsProvider('incoming'));
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-      },
-      child: ListView(
-        padding: Breakpoints.isCompact(context)
-            ? AppSpacing.pagePaddingMobile
-            : const EdgeInsets.all(AppSpacing.xl),
-        children: [
-          SectionHeader(
-            title: 'My Availability',
-            subtitle: 'Let partners know when you can pray together',
-            icon: Icons.event_available_outlined,
-          ),
-          const _AvailabilityCard(),
-          const SizedBox(height: AppSpacing.lg),
-
-          SectionHeader(
-            title: 'Upcoming Prayer Sessions',
-            icon: Icons.groups_2_outlined,
-            actionLabel: 'Find a partner',
-            onAction: () => context.go('/prayer/partners'),
-          ),
-          const _UpcomingSessions(),
-          const SizedBox(height: AppSpacing.lg),
-
-          SectionHeader(
-            title: 'Pending Requests',
-            subtitle: 'Members who would like you as a prayer partner',
-            icon: Icons.mark_email_read_outlined,
-          ),
-          const _PendingRequests(),
-          const SizedBox(height: AppSpacing.lg),
-
-          Center(
-            child: AppButton(
-              label: 'Find a Prayer Partner',
-              icon: Icons.handshake_outlined,
-              variant: AppButtonVariant.outlined,
-              onPressed: () => context.go('/prayer/partners'),
+    return Scaffold(
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Prayer Room'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(prayerAvailabilityProvider);
+          ref.invalidate(prayerSessionsProvider('upcoming'));
+          ref.invalidate(prayerRequestsProvider('incoming'));
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+        },
+        child: ListView(
+          padding: Breakpoints.isCompact(context)
+              ? AppSpacing.pagePaddingMobile
+              : const EdgeInsets.all(AppSpacing.xl),
+          children: [
+            SectionHeader(
+              title: 'My Availability',
+              subtitle: 'Let partners know when you can pray together',
+              icon: Icons.event_available_outlined,
             ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
+            const _AvailabilityCard(),
+            const SizedBox(height: AppSpacing.lg),
+
+            SectionHeader(
+              title: 'Upcoming Prayer Sessions',
+              icon: Icons.groups_2_outlined,
+              actionLabel: 'Find a partner',
+              onAction: () => context.go('/prayer/partners'),
+            ),
+            const _UpcomingSessions(),
+            const SizedBox(height: AppSpacing.lg),
+
+            SectionHeader(
+              title: 'Pending Requests',
+              subtitle: 'Members who would like you as a prayer partner',
+              icon: Icons.mark_email_read_outlined,
+            ),
+            const _PendingRequests(),
+            const SizedBox(height: AppSpacing.lg),
+
+            Center(
+              child: AppButton(
+                label: 'Find a Prayer Partner',
+                icon: Icons.handshake_outlined,
+                variant: AppButtonVariant.outlined,
+                onPressed: () => context.go('/prayer/partners'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
       ),
     );
   }
@@ -141,7 +148,10 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
       return;
     }
     if (start.isEmpty != end.isEmpty) {
-      Toast.error(context, 'Enter both a start and end time, or leave both blank.');
+      Toast.error(
+        context,
+        'Enter both a start and end time, or leave both blank.',
+      );
       return;
     }
     if (start.isNotEmpty && start.compareTo(end) >= 0) {
@@ -173,7 +183,8 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted) Toast.error(context, 'Unable to save availability just now.');
+      if (mounted)
+        Toast.error(context, 'Unable to save availability just now.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -200,16 +211,15 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
                 value: _status,
                 items: [
                   for (final option in _statusOptions)
-                    DropdownMenuItem(
-                      value: option.$1,
-                      child: Text(option.$2),
-                    ),
+                    DropdownMenuItem(value: option.$1, child: Text(option.$2)),
                 ],
                 onChanged: (v) => setState(() => _status = v ?? 'UNAVAILABLE'),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Text('Available days',
-                  style: Theme.of(context).textTheme.labelLarge),
+              Text(
+                'Available days',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
               const SizedBox(height: 6),
               Wrap(
                 spacing: AppSpacing.xs,
@@ -259,8 +269,7 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
                   for (final d in _durationOptions)
                     DropdownMenuItem(value: d, child: Text('$d minutes')),
                 ],
-                onChanged: (v) =>
-                    setState(() => _duration = v ?? 30),
+                onChanged: (v) => setState(() => _duration = v ?? 30),
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(
@@ -356,7 +365,10 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
 
   PrayerSession get session => widget.session;
 
-  Future<void> _patch(Map<String, dynamic> body, {String? successMessage}) async {
+  Future<void> _patch(
+    Map<String, dynamic> body, {
+    String? successMessage,
+  }) async {
     if (_busy) return;
     setState(() => _busy = true);
     final client = ref.read(apiClientProvider);
@@ -369,7 +381,8 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted) Toast.error(context, 'Unable to update the session just now.');
+      if (mounted)
+        Toast.error(context, 'Unable to update the session just now.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -396,7 +409,8 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
     final proposedByMe =
         session.proposedById != null && session.proposedById == me?.id;
     final canRespond = session.status == 'PROPOSED' && !proposedByMe;
-    final canMarkAttendance = !session.myAttendanceRecorded &&
+    final canMarkAttendance =
+        !session.myAttendanceRecorded &&
         (session.status == 'ACCEPTED' || session.status == 'PROPOSED');
     final canCancel =
         session.status == 'PROPOSED' || session.status == 'ACCEPTED';
@@ -410,9 +424,7 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
               Expanded(
                 child: Text(
                   session.partnerName ?? 'Prayer partner',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
+                  style: Theme.of(context).textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -425,15 +437,14 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              Icon(Icons.schedule_rounded,
-                  size: 15, color: AppColors.inkMuted),
+              Icon(Icons.schedule_rounded, size: 15, color: AppColors.inkMuted),
               const SizedBox(width: 4),
               Text(
                 startsAt == null
                     ? 'Time to be confirmed'
                     : '${DateFormat('EEEE, d MMM yyyy').format(startsAt)} · '
-                        '${DateFormat('HH:mm').format(startsAt)} '
-                        '(${session.timeZone})',
+                          '${DateFormat('HH:mm').format(startsAt)} '
+                          '(${session.timeZone})',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -441,11 +452,16 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
           const SizedBox(height: AppSpacing.xxs),
           Row(
             children: [
-              Icon(Icons.timelapse_rounded,
-                  size: 15, color: AppColors.inkMuted),
+              Icon(
+                Icons.timelapse_rounded,
+                size: 15,
+                color: AppColors.inkMuted,
+              ),
               const SizedBox(width: 4),
-              Text('${session.durationMinutes} minutes',
-                  style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                '${session.durationMinutes} minutes',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
           if (session.prayerFocus != null &&
@@ -453,9 +469,7 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Focus: ${session.prayerFocus}',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
+              style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(fontStyle: FontStyle.italic),
             ),
           ],
@@ -478,15 +492,17 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
                   label: 'Accept',
                   icon: Icons.check_rounded,
                   busy: _busy,
-                  onPressed: () => _patch({'status': 'ACCEPTED'},
-                      successMessage: 'Session accepted. See you there!'),
+                  onPressed: () => _patch({
+                    'status': 'ACCEPTED',
+                  }, successMessage: 'Session accepted. See you there!'),
                 ),
                 AppButton(
                   label: 'Decline',
                   variant: AppButtonVariant.outlined,
                   busy: _busy,
-                  onPressed: () => _patch({'status': 'CANCELLED'},
-                      successMessage: 'Session declined.'),
+                  onPressed: () => _patch({
+                    'status': 'CANCELLED',
+                  }, successMessage: 'Session declined.'),
                 ),
               ],
               if (canMarkAttendance)
@@ -500,13 +516,9 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
                   onPressed: session.myAttendanceRecorded
                       ? null
                       : () => _patch(
-                            {
-                              'status': 'COMPLETED',
-                              'myAttendance': true,
-                            },
-                            successMessage:
-                                'Attendance recorded. Thanks for praying together!',
-                          ),
+                          {'status': 'COMPLETED', 'myAttendance': true},
+                          successMessage: 'Attendance recorded. Thanks for praying together!',
+                        ),
                 ),
               if (canCancel)
                 AppButton(
@@ -613,21 +625,23 @@ class _RequestRowState extends ConsumerState<_RequestRow> {
         children: [
           Row(
             children: [
-              Icon(Icons.person_add_alt_outlined,
-                  size: 18, color: AppColors.gold600),
+              Icon(
+                Icons.person_add_alt_outlined,
+                size: 18,
+                color: AppColors.gold600,
+              ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
                   widget.request.senderName ?? 'A member',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               if (widget.request.createdAt != null)
                 Text(
-                  DateFormat('d MMM').format(widget.request.createdAt!.toLocal()),
+                  DateFormat('d MMM')
+                      .format(widget.request.createdAt!.toLocal()),
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
             ],
@@ -635,8 +649,10 @@ class _RequestRowState extends ConsumerState<_RequestRow> {
           if (widget.request.message != null &&
               widget.request.message!.trim().isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xxs),
-            Text(widget.request.message!,
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              widget.request.message!,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
           const SizedBox(height: AppSpacing.sm),
           Row(

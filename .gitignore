@@ -27,6 +27,9 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Local browser automation profile
+.chrome-cdp-temp/
+
 # Flutter/Dart coverage
 coverage/
 

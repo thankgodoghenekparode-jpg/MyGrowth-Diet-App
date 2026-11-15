@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/models/report_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -22,6 +23,7 @@ class ReportsScreen extends ConsumerWidget {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
+          leading: const AppBackButton(),
           title: const Text('Accountability Reports'),
           bottom: const TabBar(
             isScrollable: true,
@@ -75,8 +77,9 @@ class _ReportsTab extends ConsumerWidget {
         ),
         data: (reports) {
           final wide = !Breakpoints.isCompact(context);
-          final padding =
-              wide ? const EdgeInsets.all(AppSpacing.xl) : AppSpacing.pagePaddingMobile;
+          final padding = wide
+              ? const EdgeInsets.all(AppSpacing.xl)
+              : AppSpacing.pagePaddingMobile;
           return ListView(
             padding: padding,
             children: [
@@ -138,9 +141,9 @@ class _ReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final submitted = report.submittedAt?.toLocal();
     return AppCard(
-      onTap: () => context.go(report.isDraft
-          ? '/reports/edit/${report.id}'
-          : '/reports/${report.id}'),
+      onTap: () => context.go(
+        report.isDraft ? '/reports/edit/${report.id}' : '/reports/${report.id}',
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -164,9 +167,7 @@ class _ReportCard extends StatelessWidget {
               children: [
                 Text(
                   humanizePeriodKey(report.periodKey),
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
@@ -210,8 +211,11 @@ class _ReportCard extends StatelessWidget {
                   onPressed: () => context.go('/reports/edit/${report.id}'),
                 )
               else
-                Icon(Icons.chevron_right_rounded,
-                    size: 20, color: AppColors.inkMuted),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.inkMuted,
+                ),
             ],
           ),
         ],

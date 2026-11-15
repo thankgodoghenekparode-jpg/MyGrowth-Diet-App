@@ -7,6 +7,7 @@ import '../../core/models/journal_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -26,6 +27,7 @@ class ReflectionsScreen extends ConsumerWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
+          leading: const AppBackButton(),
           title: const Text('Reflections & Testimonies'),
           bottom: const TabBar(
             tabs: [
@@ -36,11 +38,7 @@ class ReflectionsScreen extends ConsumerWidget {
           ),
         ),
         body: const TabBarView(
-          children: [
-            _ReflectionsTab(),
-            _TestimoniesTab(),
-            _AnnualLetterTab(),
-          ],
+          children: [_ReflectionsTab(), _TestimoniesTab(), _AnnualLetterTab()],
         ),
       ),
     );
@@ -52,8 +50,11 @@ class ReflectionsScreen extends ConsumerWidget {
 class _ReflectionsTab extends ConsumerWidget {
   const _ReflectionsTab();
 
-  Future<void> _openSheet(BuildContext context, WidgetRef ref,
-      {ReflectionEntry? entry}) async {
+  Future<void> _openSheet(
+    BuildContext context,
+    WidgetRef ref, {
+    ReflectionEntry? entry,
+  }) async {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -139,16 +140,14 @@ class _ReflectionsTab extends ConsumerWidget {
                 for (final group in _groupEntries(entries).entries) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.xs),
+                      vertical: AppSpacing.xs,
+                    ),
                     child: Text(
                       DateFormat('EEEE, d MMMM yyyy').format(group.key),
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelLarge
-                          ?.copyWith(
-                            color: AppColors.navy700,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: AppColors.navy700,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   for (final entry in group.value) ...[
@@ -169,7 +168,10 @@ class _ReflectionsTab extends ConsumerWidget {
   }
 
   Future<void> _delete(
-      BuildContext context, WidgetRef ref, ReflectionEntry entry) async {
+    BuildContext context,
+    WidgetRef ref,
+    ReflectionEntry entry,
+  ) async {
     final ok = await confirmDialog(
       context,
       title: 'Delete reflection?',
@@ -196,7 +198,8 @@ class _ReflectionsTab extends ConsumerWidget {
 }
 
 Map<DateTime, List<ReflectionEntry>> _groupEntries(
-    List<ReflectionEntry> entries) {
+  List<ReflectionEntry> entries,
+) {
   final map = <DateTime, List<ReflectionEntry>>{};
   for (final e in entries) {
     final d = e.entryDate ?? e.createdAt ?? DateTime.now();
@@ -225,8 +228,7 @@ class _ReflectionCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.edit_note_outlined,
-              size: 20, color: AppColors.gold600),
+          Icon(Icons.edit_note_outlined, size: 20, color: AppColors.gold600),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -234,9 +236,7 @@ class _ReflectionCard extends StatelessWidget {
               children: [
                 Text(
                   entry.title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
@@ -309,8 +309,7 @@ class _ReflectionSheetState extends ConsumerState<_ReflectionSheet> {
     final body = {
       'title': _title.text.trim(),
       'body': _body.text.trim(),
-      if (_date != null)
-        'entryDate': DateFormat('yyyy-MM-dd').format(_date!),
+      if (_date != null) 'entryDate': DateFormat('yyyy-MM-dd').format(_date!),
     };
     try {
       if (widget.entry == null) {
@@ -407,8 +406,11 @@ const _visibilityOptions = <(String, String)>[
 class _TestimoniesTab extends ConsumerWidget {
   const _TestimoniesTab();
 
-  Future<void> _openSheet(BuildContext context, WidgetRef ref,
-      {Testimony? testimony}) async {
+  Future<void> _openSheet(
+    BuildContext context,
+    WidgetRef ref, {
+    Testimony? testimony,
+  }) async {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -427,7 +429,10 @@ class _TestimoniesTab extends ConsumerWidget {
   }
 
   Future<void> _delete(
-      BuildContext context, WidgetRef ref, Testimony testimony) async {
+    BuildContext context,
+    WidgetRef ref,
+    Testimony testimony,
+  ) async {
     final ok = await confirmDialog(
       context,
       title: 'Delete testimony?',
@@ -520,7 +525,8 @@ class _TestimoniesTab extends ConsumerWidget {
                 for (final testimony in sortedTestimonies(testimonies)) ...[
                   _TestimonyCard(
                     testimony: testimony,
-                    onEdit: () => _openSheet(context, ref, testimony: testimony),
+                    onEdit: () =>
+                        _openSheet(context, ref, testimony: testimony),
                     onDelete: () => _delete(context, ref, testimony),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -570,9 +576,7 @@ class _TestimonyCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   testimony.title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -611,7 +615,11 @@ class _TestimonyCard extends StatelessWidget {
               runSpacing: AppSpacing.xxs,
               children: [
                 for (final tag in testimony.tags)
-                  StatusBadge(label: '#$tag', tone: AppBadgeTone.neutral, small: true),
+                  StatusBadge(
+                    label: '#$tag',
+                    tone: AppBadgeTone.neutral,
+                    small: true,
+                  ),
               ],
             ),
           ],
@@ -624,7 +632,8 @@ class _TestimonyCard extends StatelessWidget {
                 label: _visibilityOptions
                     .firstWhere(
                       (o) => o.$1 == testimony.visibility,
-                      orElse: () => (testimony.visibility, testimony.visibility),
+                      orElse: () =>
+                          (testimony.visibility, testimony.visibility),
                     )
                     .$2,
                 tone: testimony.visibility == 'PRIVATE'
@@ -634,7 +643,8 @@ class _TestimonyCard extends StatelessWidget {
               ),
               if (testimony.approvalStatus != null)
                 StatusBadge(
-                  label: 'Approval: ${humanizeStatus(testimony.approvalStatus!)}',
+                  label:
+                      'Approval: ${humanizeStatus(testimony.approvalStatus!)}',
                   tone: badgeToneFor(testimony.approvalStatus!),
                   small: true,
                 ),
@@ -676,8 +686,8 @@ class _TestimonySheetState extends ConsumerState<_TestimonySheet> {
     final visibility = widget.testimony?.visibility;
     _visibility =
         _visibilityOptions.any((o) => o.$1 == visibility) && visibility != null
-            ? visibility
-            : 'PRIVATE';
+        ? visibility
+        : 'PRIVATE';
     _consent = widget.testimony?.consentToShare ?? false;
   }
 
@@ -716,8 +726,7 @@ class _TestimonySheetState extends ConsumerState<_TestimonySheet> {
     final body = {
       'title': _title.text.trim(),
       'body': _body.text.trim(),
-      if (_date != null)
-        'entryDate': DateFormat('yyyy-MM-dd').format(_date!),
+      if (_date != null) 'entryDate': DateFormat('yyyy-MM-dd').format(_date!),
       'tags': _tags,
       'visibility': _visibility,
       'consentToShare': _consent,
@@ -726,8 +735,10 @@ class _TestimonySheetState extends ConsumerState<_TestimonySheet> {
       if (widget.testimony == null) {
         await client.post('/me/testimonies', body: body);
       } else {
-        await client.patch('/me/testimonies/${widget.testimony!.id}',
-            body: body);
+        await client.patch(
+          '/me/testimonies/${widget.testimony!.id}',
+          body: body,
+        );
       }
       if (!mounted) return;
       Toast.success(
@@ -800,10 +811,7 @@ class _TestimonySheetState extends ConsumerState<_TestimonySheet> {
               hint: 'e.g. healing — press Enter or Add',
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _addTag(),
-              suffix: TextButton(
-                onPressed: _addTag,
-                child: const Text('Add'),
-              ),
+              suffix: TextButton(onPressed: _addTag, child: const Text('Add')),
             ),
             if (_tags.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.xs),
@@ -827,8 +835,7 @@ class _TestimonySheetState extends ConsumerState<_TestimonySheet> {
                 for (final option in _visibilityOptions)
                   DropdownMenuItem(value: option.$1, child: Text(option.$2)),
               ],
-              onChanged: (v) =>
-                  setState(() => _visibility = v ?? 'PRIVATE'),
+              onChanged: (v) => setState(() => _visibility = v ?? 'PRIVATE'),
             ),
             if (sharing) ...[
               const SizedBox(height: AppSpacing.xs),
@@ -905,7 +912,8 @@ class _AnnualLetterTabState extends ConsumerState<_AnnualLetterTab> {
         if (mounted) {
           Toast.show(
             context,
-            message: 'Annual letters aren’t configured on the server yet — '
+            message:
+                'Annual letters aren’t configured on the server yet — '
                 'your draft is kept on this screen only for now.',
             tone: ToastTone.info,
             duration: const Duration(seconds: 5),
@@ -959,8 +967,11 @@ class _AnnualLetterTabState extends ConsumerState<_AnnualLetterTab> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline_rounded,
-                        size: 20, color: AppColors.warning),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 20,
+                      color: AppColors.warning,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -981,9 +992,7 @@ class _AnnualLetterTabState extends ConsumerState<_AnnualLetterTab> {
                 children: [
                   Text(
                     'Letter to myself',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
+                    style: Theme.of(context).textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -1043,17 +1052,13 @@ class _PrivacyBanner extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   message,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
+                  style: Theme.of(context).textTheme.bodySmall
                       ?.copyWith(height: 1.5),
                 ),
               ],

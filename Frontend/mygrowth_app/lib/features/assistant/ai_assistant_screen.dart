@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/network/api_client.dart';
+import '../../core/widgets/app_back_button.dart';
 
 class AiAssistantScreen extends ConsumerStatefulWidget {
   const AiAssistantScreen({super.key, this.showAppBar = true});
@@ -51,10 +52,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
   Future<void> _requestAnswer() async {
     try {
-      final data = await ref.read(apiClientProvider).post(
-        '/me/ai-assistant',
-        body: {'messages': _messages.takeLast(12).toList()},
-      );
+      final data = await ref
+          .read(apiClientProvider)
+          .post(
+            '/me/ai-assistant',
+            body: {'messages': _messages.takeLast(12).toList()},
+          );
       final answer = data is Map ? data['answer']?.toString() : null;
       if (answer == null || answer.isEmpty) throw StateError('Empty response');
       if (mounted) {
@@ -62,14 +65,17 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
       }
     } on ApiException catch (error) {
       if (mounted) {
-        setState(() => _error = error.code == 'AI_NOT_CONFIGURED'
-            ? 'The assistant is being set up. Please try again later.'
-            : 'I could not respond just now. Check your connection and try again.');
+        setState(
+          () => _error = error.code == 'AI_NOT_CONFIGURED'
+              ? 'The assistant is being set up. Please try again later.'
+              : 'I could not respond just now. Check your connection and try again.',
+        );
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error =
-            'I could not respond just now. Check your connection and try again.');
+        setState(
+          () => _error = 'I could not respond just now. Check your connection and try again.',
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -84,7 +90,10 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
     return Scaffold(
       appBar: widget.showAppBar
-          ? AppBar(title: const Text('AI Assistant'))
+          ? AppBar(
+              leading: const AppBackButton(),
+              title: const Text('AI Assistant'),
+            )
           : null,
       body: SafeArea(
         top: false,
@@ -112,16 +121,23 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                             spacing: 8,
                             runSpacing: 8,
                             alignment: WrapAlignment.center,
-                            children: [
-                              'How do I use the Daily Diet?',
-                              'Where can I read today\'s devotion?',
-                              'How do I ask a question in Shape Space?',
-                              'Guide me in a morning prayer',
-                              'Explain a Bible passage to me',
-                            ].map((question) => ActionChip(
-                              label: Text(question),
-                              onPressed: _sending ? null : () => _send(question),
-                            )).toList(),
+                            children:
+                                [
+                                      'How do I use the Daily Diet?',
+                                      'Where can I read today\'s devotion?',
+                                      'How do I ask a question in Shape Space?',
+                                      'Guide me in a morning prayer',
+                                      'Explain a Bible passage to me',
+                                    ]
+                                    .map(
+                                      (question) => ActionChip(
+                                        label: Text(question),
+                                        onPressed: _sending
+                                            ? null
+                                            : () => _send(question),
+                                      ),
+                                    )
+                                    .toList(),
                           ),
                           const SizedBox(height: 14),
                           const Text(
@@ -144,8 +160,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     final message = _messages[_messages.length - 1 - index];
                     final own = message['role'] == 'user';
                     return Align(
-                      alignment:
-                          own ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: own
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 5),
                         padding: const EdgeInsets.all(12),
@@ -165,7 +182,10 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             if (_sending) const LinearProgressIndicator(),
             if (_error != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,

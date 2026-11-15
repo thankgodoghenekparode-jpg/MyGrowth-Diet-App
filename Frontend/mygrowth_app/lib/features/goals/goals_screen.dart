@@ -7,6 +7,7 @@ import '../../core/models/goal_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -22,7 +23,13 @@ class GoalsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const _GoalsView();
+    return Scaffold(
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('My Goals'),
+      ),
+      body: const _GoalsView(),
+    );
   }
 }
 
@@ -64,8 +71,11 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.tips_and_updates_outlined,
-                    size: 18, color: AppColors.navy600),
+                Icon(
+                  Icons.tips_and_updates_outlined,
+                  size: 18,
+                  color: AppColors.navy600,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -73,10 +83,8 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
                     'Need inspiration? Example: complete the monthly Bible '
                     'reading plan — examples are simply ideas, never ministry '
                     'requirements.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.inkSecondary,
-                          height: 1.45,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: AppColors.inkSecondary, height: 1.45),
                   ),
                 ),
               ],
@@ -104,8 +112,9 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
               onRetry: () => ref.invalidate(goalsProvider(_period)),
             ),
             data: (list) {
-              final openGoals =
-                  list.where((g) => g.status != 'ABANDONED').toList();
+              final openGoals = list
+                  .where((g) => g.status != 'ABANDONED')
+                  .toList();
               if (list.isEmpty) {
                 return AppCard(
                   child: EmptyState(
@@ -130,9 +139,7 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
                       Expanded(
                         child: Text(
                           '${list.length} ${_period.toLowerCase()} goal${list.length == 1 ? '' : 's'}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -140,8 +147,10 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
                         label: 'New goal',
                         icon: Icons.add_rounded,
                         variant: AppButtonVariant.outlined,
-                        onPressed: () => _showCreateSheet(context,
-                            _period == 'MONTHLY' ? openGoals.length : 0),
+                        onPressed: () => _showCreateSheet(
+                          context,
+                          _period == 'MONTHLY' ? openGoals.length : 0,
+                        ),
                       ),
                     ],
                   ),
@@ -150,17 +159,18 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.favorite_outline,
-                            size: 16, color: AppColors.gold600),
+                        Icon(
+                          Icons.favorite_outline,
+                          size: 16,
+                          color: AppColors.gold600,
+                        ),
                         const SizedBox(width: AppSpacing.xs),
                         Expanded(
                           child: Text(
                             'You have three monthly goals open. That’s '
                             'wonderful — you’re welcome to add more, but '
                             'finishing one first keeps things peaceful.',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
+                            style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(height: 1.4),
                           ),
                         ),
@@ -180,9 +190,7 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
           Text(
             'Goals and progress are self-reported and private to you.',
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
+            style: Theme.of(context).textTheme.labelSmall
                 ?.copyWith(color: AppColors.inkMuted),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -191,7 +199,10 @@ class _GoalsViewState extends ConsumerState<_GoalsView> {
     );
   }
 
-  Future<void> _showCreateSheet(BuildContext context, int currentMonthlyCount) async {
+  Future<void> _showCreateSheet(
+    BuildContext context,
+    int currentMonthlyCount,
+  ) async {
     final created = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -308,7 +319,8 @@ class _GoalCardState extends ConsumerState<_GoalCard> {
         ? 'Flexible dates'
         : [
             if (_goal.startDate != null) dateFmt.format(_goal.startDate!),
-            if (_goal.targetDate != null) '→ ${dateFmt.format(_goal.targetDate!)}',
+            if (_goal.targetDate != null)
+              '→ ${dateFmt.format(_goal.targetDate!)}',
           ].join('  ');
     final canLog = _goal.status == 'ACTIVE' && !_busy;
 
@@ -322,8 +334,9 @@ class _GoalCardState extends ConsumerState<_GoalCard> {
               Expanded(
                 child: Text(
                   _goal.title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               StatusBadge(
@@ -342,7 +355,9 @@ class _GoalCardState extends ConsumerState<_GoalCard> {
                       _patchStatus('ACTIVE', 'Goal resumed. You’ve got this!');
                     case 'complete':
                       _patchStatus(
-                          'COMPLETED', 'Wonderful — goal marked complete!');
+                        'COMPLETED',
+                        'Wonderful — goal marked complete!',
+                      );
                     case 'delete':
                       _delete();
                   }
@@ -378,8 +393,14 @@ class _GoalCardState extends ConsumerState<_GoalCard> {
                   PopupMenuItem(
                     value: 'delete',
                     child: ListTile(
-                      leading: Icon(Icons.delete_outline, color: AppColors.danger),
-                      title: Text('Delete', style: TextStyle(color: AppColors.danger)),
+                      leading: Icon(
+                        Icons.delete_outline,
+                        color: AppColors.danger,
+                      ),
+                      title: Text(
+                        'Delete',
+                        style: TextStyle(color: AppColors.danger),
+                      ),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -392,21 +413,22 @@ class _GoalCardState extends ConsumerState<_GoalCard> {
             const SizedBox(height: 2),
             Text(
               _goal.description!,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: AppColors.inkSecondary),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.inkSecondary,
+              ),
             ),
           ],
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              Icon(Icons.calendar_today_outlined,
-                  size: 14, color: AppColors.inkMuted),
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: AppColors.inkMuted,
+              ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
-                child: Text(
-                  periodText,
-                  style: theme.textTheme.labelSmall,
-                ),
+                child: Text(periodText, style: theme.textTheme.labelSmall),
               ),
             ],
           ),
@@ -420,8 +442,9 @@ class _GoalCardState extends ConsumerState<_GoalCard> {
                   '${_fmtQuantity(_goal.currentProgress)}'
                   '${_goal.targetQuantity != null ? ' / ${_fmtQuantity(_goal.targetQuantity!)}' : ''}'
                   '${_goal.targetUnit != null ? ' ${_goal.targetUnit}' : ''}',
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               if (_goal.targetQuantity != null && _goal.targetQuantity! > 0)
@@ -442,9 +465,9 @@ class _GoalCardState extends ConsumerState<_GoalCard> {
                 tooltip: canLog
                     ? null
                     : _goal.status == 'COMPLETED'
-                        ? 'This goal is already complete — well done!'
-                        : 'Only active goals can log progress. Resume it '
-                            'from the actions menu.',
+                    ? 'This goal is already complete — well done!'
+                    : 'Only active goals can log progress. Resume it '
+                          'from the actions menu.',
               ),
               if (_busy) ...[
                 const SizedBox(width: AppSpacing.sm),
@@ -500,10 +523,13 @@ class _LogProgressSheetState extends ConsumerState<_LogProgressSheet> {
     });
     final client = ref.read(apiClientProvider);
     try {
-      await client.post('/me/goals/${widget.goal.id}/progress', body: {
-        'amount': amount,
-        if (_note.text.trim().isNotEmpty) 'note': _note.text.trim(),
-      });
+      await client.post(
+        '/me/goals/${widget.goal.id}/progress',
+        body: {
+          'amount': amount,
+          if (_note.text.trim().isNotEmpty) 'note': _note.text.trim(),
+        },
+      );
       if (!mounted) return;
       Navigator.of(context).pop(true);
       Toast.success(context, 'Progress logged. Keep going — line upon line!');
@@ -527,7 +553,9 @@ class _LogProgressSheetState extends ConsumerState<_LogProgressSheet> {
         const SizedBox(height: 2),
         Text(
           widget.goal.title,
-          style: theme.textTheme.bodySmall?.copyWith(color: AppColors.inkSecondary),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.inkSecondary,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
@@ -548,7 +576,12 @@ class _LogProgressSheetState extends ConsumerState<_LogProgressSheet> {
           hint: 'Anything you’d like to remember',
         ),
         const SizedBox(height: AppSpacing.md),
-        AppButton(label: 'Save progress', busy: _busy, expand: true, onPressed: _save),
+        AppButton(
+          label: 'Save progress',
+          busy: _busy,
+          expand: true,
+          onPressed: _save,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Progress is self-reported — small steps still count.',
@@ -639,8 +672,7 @@ class _CreateGoalSheetState extends ConsumerState<_CreateGoalSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final periodLabel =
-        widget.periodType == 'MONTHLY' ? 'monthly' : 'weekly';
+    final periodLabel = widget.periodType == 'MONTHLY' ? 'monthly' : 'weekly';
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -661,8 +693,7 @@ class _CreateGoalSheetState extends ConsumerState<_CreateGoalSheet> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline,
-                      size: 16, color: AppColors.info),
+                  Icon(Icons.info_outline, size: 16, color: AppColors.info),
                   const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: Text(
@@ -701,8 +732,9 @@ class _CreateGoalSheetState extends ConsumerState<_CreateGoalSheet> {
                   child: AppTextField(
                     label: 'Target quantity (optional)',
                     controller: _quantity,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     hint: 'e.g. 30',
                   ),
                 ),

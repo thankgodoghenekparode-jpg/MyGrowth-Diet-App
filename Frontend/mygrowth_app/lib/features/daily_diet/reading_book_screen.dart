@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_card.dart';
 
 /// Destination for a book in the Growth Diet reading list.
@@ -22,7 +23,7 @@ class ReadingBookScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Book')),
+      appBar: AppBar(leading: const AppBackButton(), title: const Text('Book')),
       body: ListView(
         padding: AppSpacing.pagePaddingMobile,
         children: [

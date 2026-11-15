@@ -7,6 +7,7 @@ import '../../core/models/programme_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/app_date.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/bible_reference_text.dart';
@@ -21,7 +22,13 @@ class GrowthPlanScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const _GrowthPlanView();
+    return Scaffold(
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Diet Plan'),
+      ),
+      body: const _GrowthPlanView(),
+    );
   }
 }
 
@@ -318,20 +325,18 @@ class _ProgramReviewSection extends ConsumerWidget {
                         item.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(
-                              color: AppColors.inkOnDark,
-                              fontWeight: FontWeight.w700,
-                            ),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppColors.inkOnDark,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       Text(
                         item.subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(
-                              color: AppColors.inkOnDark.withValues(alpha: .72),
-                            ),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.inkOnDark.withValues(alpha: .72),
+                        ),
                       ),
                     ],
                   ),

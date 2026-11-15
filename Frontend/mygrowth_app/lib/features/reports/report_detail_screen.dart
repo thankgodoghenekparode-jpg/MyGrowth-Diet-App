@@ -7,6 +7,7 @@ import '../../core/models/report_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -27,7 +28,10 @@ class ReportDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(reportDetailProvider(reportId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Report')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Report'),
+      ),
       body: async.when(
         loading: () => const Padding(
           padding: AppSpacing.pagePaddingMobile,
@@ -74,7 +78,10 @@ class _ReportDetailViewState extends ConsumerState<_ReportDetailView> {
     final answers = Map<String, dynamic>.from(report.answers)
       ..['followUpReply'] = message.trim();
     try {
-      await client.patch('/me/reports/${report.id}', body: {'answers': answers});
+      await client.patch(
+        '/me/reports/${report.id}',
+        body: {'answers': answers},
+      );
       ref.invalidate(reportDetailProvider(report.id));
       ref.invalidate(reportsListProvider(report.type));
       if (mounted) {
@@ -174,9 +181,7 @@ class _ReportDetailViewState extends ConsumerState<_ReportDetailView> {
                       child: Text(
                         '${humanizeStatus(report.type)} report — '
                         '${humanizePeriodKey(report.periodKey)}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
+                        style: Theme.of(context).textTheme.titleLarge
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -191,7 +196,7 @@ class _ReportDetailViewState extends ConsumerState<_ReportDetailView> {
                   submittedAt == null
                       ? 'Not yet submitted'
                       : 'Submitted ${DateFormat('d MMM yyyy, HH:mm').format(submittedAt)}'
-                          '${report.reviewedAt != null ? ' · reviewed ${DateFormat('d MMM yyyy').format(report.reviewedAt!.toLocal())}' : ''}',
+                            '${report.reviewedAt != null ? ' · reviewed ${DateFormat('d MMM yyyy').format(report.reviewedAt!.toLocal())}' : ''}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (report.revisionCount > 0)
@@ -213,15 +218,16 @@ class _ReportDetailViewState extends ConsumerState<_ReportDetailView> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline_rounded,
-                          color: AppColors.info, size: 20),
+                      Icon(
+                        Icons.info_outline_rounded,
+                        color: AppColors.info,
+                        size: 20,
+                      ),
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
                         child: Text(
                           'Follow-up requested',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
+                          style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -262,8 +268,7 @@ class _ReportDetailViewState extends ConsumerState<_ReportDetailView> {
                   : '',
             ),
           for (final entry in report.answers.entries)
-            if (!knownKeys.contains(entry.key) &&
-                entry.key != 'followUpReply')
+            if (!knownKeys.contains(entry.key) && entry.key != 'followUpReply')
               _AnswerCard(
                 title: reportAnswerLabel(entry.key),
                 body: report.answerFor(entry.key),
@@ -351,9 +356,7 @@ class _AnswerCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
+                    style: Theme.of(context).textTheme.titleSmall
                         ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -369,9 +372,7 @@ class _AnswerCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 body,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
+                style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(height: 1.6, color: AppColors.inkSecondary),
               ),
             ],
@@ -397,15 +398,16 @@ class _ReviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.person_outline_rounded,
-                  size: 16, color: AppColors.navy700),
+              Icon(
+                Icons.person_outline_rounded,
+                size: 16,
+                color: AppColors.navy700,
+              ),
               const SizedBox(width: AppSpacing.xxs),
               Expanded(
                 child: Text(
                   review.reviewerName ?? 'Ministry administrator',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -422,9 +424,7 @@ class _ReviewCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               review.comment!,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
+              style: Theme.of(context).textTheme.bodyMedium
                   ?.copyWith(height: 1.55),
             ),
           ],

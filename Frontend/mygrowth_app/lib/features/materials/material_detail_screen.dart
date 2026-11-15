@@ -9,6 +9,7 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -28,7 +29,10 @@ class MaterialDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(materialDetailProvider(materialId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Material')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Material'),
+      ),
       body: async.when(
         loading: () => const Padding(
           padding: AppSpacing.pagePaddingMobile,
@@ -103,85 +107,87 @@ class _MaterialDetailViewState extends ConsumerState<_MaterialDetailView> {
   /// renderer; if the service doesn't hand back a downloadable stream or
   /// link we say so.
   Future<void> _openFile() => _run(() async {
-        final client = ref.read(apiClientProvider);
-        final res = await client.get('/files/${material.fileId}');
-        if (!mounted) return;
-        if (res is Map<String, dynamic>) {
-          final url = res['url'] ??
-              res['downloadUrl'] ??
-              (res['data'] is Map ? res['data']['url'] : null);
-          if (url is String && url.isNotEmpty) {
-            _copyLink(url);
-            return;
-          }
+    final client = ref.read(apiClientProvider);
+    final res = await client.get('/files/${material.fileId}');
+    if (!mounted) return;
+    if (res is Map<String, dynamic>) {
+      final url =
+          res['url'] ??
+          res['downloadUrl'] ??
+          (res['data'] is Map ? res['data']['url'] : null);
+      if (url is String && url.isNotEmpty) {
+        _copyLink(url);
+        return;
+      }
+      Toast.show(
+        context,
+        message:
+            'The file service returned metadata only — in-app download '
+            'isn’t available yet.',
+        tone: ToastTone.info,
+      );
+      return;
+    }
+    // The client only decodes JSON; a binary stream comes back as null.
+    Toast.show(
+      context,
+      message:
+          'The file exists but this app can’t open files inline yet. '
+          'Ask your ministry admin for a shareable link in the meantime.',
+      tone: ToastTone.info,
+    );
+  });
+
+  Future<void> _toggleCompleted() => _run(() async {
+    final client = ref.read(apiClientProvider);
+    try {
+      await client.post('/materials/${material.id}/complete');
+    } on ApiException catch (e) {
+      if (e.statusCode == 404 || e.statusCode == 501) {
+        if (mounted) {
           Toast.show(
             context,
             message:
-                'The file service returned metadata only — in-app download '
-                'isn’t available yet.',
+                'Not available yet — completion tracking isn’t '
+                'enabled on the server.',
             tone: ToastTone.info,
           );
-          return;
         }
-        // The client only decodes JSON; a binary stream comes back as null.
-        Toast.show(
-          context,
-          message:
-              'The file exists but this app can’t open files inline yet. '
-              'Ask your ministry admin for a shareable link in the meantime.',
-          tone: ToastTone.info,
-        );
-      });
-
-  Future<void> _toggleCompleted() => _run(() async {
-        final client = ref.read(apiClientProvider);
-        try {
-          await client.post('/materials/${material.id}/complete');
-        } on ApiException catch (e) {
-          if (e.statusCode == 404 || e.statusCode == 501) {
-            if (mounted) {
-              Toast.show(
-                context,
-                message: 'Not available yet — completion tracking isn’t '
-                    'enabled on the server.',
-                tone: ToastTone.info,
-              );
-            }
-            return;
-          }
-          rethrow;
-        }
-        ref.invalidate(materialDetailProvider(material.id));
-        ref.invalidate(materialsListProvider(false));
-        ref.invalidate(materialsListProvider(true));
-        if (mounted) {
-          Toast.success(
-            context,
-            material.isCompleted
-                ? 'Marked as not completed.'
-                : 'Wonderful — marked as completed!',
-          );
-        }
-      });
+        return;
+      }
+      rethrow;
+    }
+    ref.invalidate(materialDetailProvider(material.id));
+    ref.invalidate(materialsListProvider(false));
+    ref.invalidate(materialsListProvider(true));
+    if (mounted) {
+      Toast.success(
+        context,
+        material.isCompleted
+            ? 'Marked as not completed.'
+            : 'Wonderful — marked as completed!',
+      );
+    }
+  });
 
   Future<void> _toggleSaved() => _run(() async {
-        final client = ref.read(apiClientProvider);
-        await client.post(
-          '/materials/${material.id}/save',
-          body: {'saved': !material.savedToReadingList},
-        );
-        ref.invalidate(materialDetailProvider(material.id));
-        ref.invalidate(materialsListProvider(false));
-        ref.invalidate(materialsListProvider(true));
-        if (mounted) {
-          Toast.success(
-            context,
-            material.savedToReadingList
-                ? 'Removed from your reading list.'
-                : 'Saved to your reading list.',
-          );
-        }
-      });
+    final client = ref.read(apiClientProvider);
+    await client.post(
+      '/materials/${material.id}/save',
+      body: {'saved': !material.savedToReadingList},
+    );
+    ref.invalidate(materialDetailProvider(material.id));
+    ref.invalidate(materialsListProvider(false));
+    ref.invalidate(materialsListProvider(true));
+    if (mounted) {
+      Toast.success(
+        context,
+        material.savedToReadingList
+            ? 'Removed from your reading list.'
+            : 'Saved to your reading list.',
+      );
+    }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -224,9 +230,7 @@ class _MaterialDetailViewState extends ConsumerState<_MaterialDetailView> {
                         children: [
                           Text(
                             material.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           if (material.author != null &&
@@ -339,9 +343,7 @@ class _MaterialDetailViewState extends ConsumerState<_MaterialDetailView> {
               children: [
                 Text(
                   'Description',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
+                  style: Theme.of(context).textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -350,10 +352,8 @@ class _MaterialDetailViewState extends ConsumerState<_MaterialDetailView> {
                           material.description!.trim().isEmpty)
                       ? 'No description was provided for this material.'
                       : material.description!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.6,
-                        color: AppColors.inkSecondary,
-                      ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(height: 1.6, color: AppColors.inkSecondary),
                 ),
               ],
             ),
@@ -368,15 +368,15 @@ class _MaterialDetailViewState extends ConsumerState<_MaterialDetailView> {
                 children: [
                   Text(
                     'File details',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
+                    style: Theme.of(context).textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   if (material.fileType != null)
-                    Text('Type: ${material.fileType}',
-                        style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      'Type: ${material.fileType}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   if (material.createdAt != null)
                     Text(
                       'Added ${DateFormat('d MMM yyyy').format(material.createdAt!.toLocal())}',
@@ -416,8 +416,11 @@ class _AudioPlayerPlaceholder extends StatelessWidget {
               color: AppColors.navy100,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.headphones_outlined,
-                color: AppColors.navy700, size: 24),
+            child: Icon(
+              Icons.headphones_outlined,
+              color: AppColors.navy700,
+              size: 24,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -426,9 +429,7 @@ class _AudioPlayerPlaceholder extends StatelessWidget {
               children: [
                 Text(
                   'Audio material',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),

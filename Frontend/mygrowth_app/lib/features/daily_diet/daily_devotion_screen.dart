@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/utils/app_date.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/bible_reference_text.dart';
 
 class DailyDevotionScreen extends ConsumerStatefulWidget {
@@ -54,7 +55,9 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
 
     try {
       final date = Uri.encodeQueryComponent(_formatDate(_currentDate));
-      final data = await ref.read(apiClientProvider).get('/devotions?date=$date');
+      final data = await ref
+          .read(apiClientProvider)
+          .get('/devotions?date=$date');
       if (!mounted) return;
 
       if (data is Map && data['devotion'] is Map) {
@@ -119,10 +122,11 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
     final isToday = DateUtils.isSameDay(_currentDate, appToday());
     final title = _devotion?['title']?.toString() ?? 'Daily Devotion';
     final anchor = _devotion?['anchorScripture']?.toString() ?? '';
-    final reading = (_devotion?['scriptureReading'] ??
-            _devotion?['bibleReading'] ??
-            _devotion?['oneYearBibleReading'])
-        ?.toString();
+    final reading =
+        (_devotion?['scriptureReading'] ??
+                _devotion?['bibleReading'] ??
+                _devotion?['oneYearBibleReading'])
+            ?.toString();
     final scriptureText = _devotion?['scriptureText']?.toString();
     final content = _devotion?['content']?.toString() ?? '';
     final declaration = _devotion?['confession']?.toString() ?? '';
@@ -138,7 +142,10 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
     return Scaffold(
       appBar: widget.embedded
           ? null
-          : AppBar(title: const Text('Daily Devotion')),
+          : AppBar(
+              leading: const AppBackButton(),
+              title: const Text('Daily Devotion'),
+            ),
       body: Column(
         children: [
           Padding(
@@ -155,14 +162,16 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
                     children: [
                       Text(
                         _formatDate(_currentDate),
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       if (isToday)
                         Text(
                           'Today',
-                          style: theme.textTheme.labelSmall
-                              ?.copyWith(color: colors.primary),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.primary,
+                          ),
                         ),
                     ],
                   ),
@@ -185,122 +194,122 @@ class _DailyDevotionScreenState extends ConsumerState<DailyDevotionScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(_error!),
-                            const SizedBox(height: 12),
-                            FilledButton(
-                              onPressed: _loadDevotion,
-                              child: const Text('Try again'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_error!),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: _loadDevotion,
+                          child: const Text('Try again'),
                         ),
-                      )
-                    : ListView(
-                        padding: const EdgeInsets.all(20),
-                        children: [
-                          Text(
-                            title,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              color: colors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (anchor.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            BibleReferenceText(
-                              text: anchor,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: colors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          if (reading != null &&
-                              reading.trim().isNotEmpty &&
-                              reading.trim().toLowerCase() !=
-                                  anchor.trim().toLowerCase()) ...[
-                            const SizedBox(height: 8),
-                            BibleReferenceText(
-                              text: reading,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: colors.primary,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ],
-                          if (scriptureText != null &&
-                              scriptureText.trim().isNotEmpty) ...[
-                            const SizedBox(height: 16),
-                            BibleReferenceText(
-                              text: scriptureText,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontStyle: FontStyle.italic,
-                                height: 1.55,
-                              ),
-                            ),
-                          ],
-                          if (content.isNotEmpty) ...[
-                            const SizedBox(height: 22),
-                            BibleReferenceText(
-                              text: content,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                height: 1.7,
-                              ),
-                            ),
-                          ],
-                          if (declaration.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            Text(
-                              'Declaration',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            BibleReferenceText(
-                              text: declaration,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                height: 1.6,
-                              ),
-                            ),
-                          ],
-                          if (growthPractice.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            Text(
-                              'Growth Practice',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            BibleReferenceText(
-                              text: growthPractice,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                height: 1.6,
-                              ),
-                            ),
-                          ],
-                          if (reflection.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            Text(
-                              'Reflection',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            BibleReferenceText(
-                              text: reflection,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                height: 1.6,
-                              ),
-                            ),
-                          ],
-                        ],
+                      ],
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: colors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      if (anchor.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        BibleReferenceText(
+                          text: anchor,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      if (reading != null &&
+                          reading.trim().isNotEmpty &&
+                          reading.trim().toLowerCase() !=
+                              anchor.trim().toLowerCase()) ...[
+                        const SizedBox(height: 8),
+                        BibleReferenceText(
+                          text: reading,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                      if (scriptureText != null &&
+                          scriptureText.trim().isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        BibleReferenceText(
+                          text: scriptureText,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontStyle: FontStyle.italic,
+                            height: 1.55,
+                          ),
+                        ),
+                      ],
+                      if (content.isNotEmpty) ...[
+                        const SizedBox(height: 22),
+                        BibleReferenceText(
+                          text: content,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            height: 1.7,
+                          ),
+                        ),
+                      ],
+                      if (declaration.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          'Declaration',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        BibleReferenceText(
+                          text: declaration,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
+                      if (growthPractice.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          'Growth Practice',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        BibleReferenceText(
+                          text: growthPractice,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
+                      if (reflection.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          'Reflection',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        BibleReferenceText(
+                          text: reflection,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
           ),
         ],
       ),

@@ -8,6 +8,7 @@ import '../../core/models/prayer_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -159,6 +160,7 @@ class _PartnersViewState extends ConsumerState<_PartnersView>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Prayer Partners'),
         bottom: TabBar(
           controller: _tabController,

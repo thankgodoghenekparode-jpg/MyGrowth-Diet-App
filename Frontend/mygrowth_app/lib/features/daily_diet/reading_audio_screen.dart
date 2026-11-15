@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_card.dart';
 
 /// Audio message destination shown from the Daily Diet reading list.
@@ -15,7 +16,10 @@ class ReadingAudioScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Audio message')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Audio message'),
+      ),
       body: ListView(
         padding: AppSpacing.pagePaddingMobile,
         children: [

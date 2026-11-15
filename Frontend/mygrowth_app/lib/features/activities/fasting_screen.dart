@@ -9,6 +9,7 @@ import '../../core/network/api_client.dart';
 import '../../core/utils/app_date.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -25,7 +26,13 @@ class FastingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const _FastingView();
+    return Scaffold(
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Fasting'),
+      ),
+      body: const _FastingView(),
+    );
   }
 }
 
@@ -60,8 +67,9 @@ class _FastingViewState extends ConsumerState<_FastingView> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(monthlyPlanProvider(
-            (year: _month.year, month: _month.month)));
+        ref.invalidate(
+          monthlyPlanProvider((year: _month.year, month: _month.month)),
+        );
         await Future<void>.delayed(const Duration(milliseconds: 300));
       },
       child: ListView(
@@ -81,9 +89,7 @@ class _FastingViewState extends ConsumerState<_FastingView> {
                 child: Text(
                   DateFormat('MMMM yyyy').format(_month),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
+                  style: Theme.of(context).textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -102,8 +108,9 @@ class _FastingViewState extends ConsumerState<_FastingView> {
             error: (e, _) => ErrorState(
               error: e,
               compact: true,
-              onRetry: () => ref.invalidate(monthlyPlanProvider(
-                  (year: _month.year, month: _month.month))),
+              onRetry: () => ref.invalidate(
+                monthlyPlanProvider((year: _month.year, month: _month.month)),
+              ),
             ),
             data: (plan) {
               final guidance = plan?.fastingGuidance?.trim();
@@ -113,15 +120,16 @@ class _FastingViewState extends ConsumerState<_FastingView> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.wb_sunny_outlined,
-                            size: 18, color: AppColors.gold600),
+                        Icon(
+                          Icons.wb_sunny_outlined,
+                          size: 18,
+                          color: AppColors.gold600,
+                        ),
                         const SizedBox(width: AppSpacing.xs),
                         Expanded(
                           child: Text(
                             'This month’s fasting guidance',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -131,13 +139,13 @@ class _FastingViewState extends ConsumerState<_FastingView> {
                     Text(
                       (guidance == null || guidance.isEmpty)
                           ? 'Published guidance will appear here. In the '
-                              'meantime, the general rhythm shown on each '
-                              'fasting day below still applies.'
+                                'meantime, the general rhythm shown on each '
+                                'fasting day below still applies.'
                           : guidance,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            height: 1.5,
-                            color: AppColors.inkSecondary,
-                          ),
+                        height: 1.5,
+                        color: AppColors.inkSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -149,7 +157,8 @@ class _FastingViewState extends ConsumerState<_FastingView> {
           // --------------------------------------------- fasting days
           SectionHeader(
             title: 'Fasting days',
-            subtitle: 'Wednesdays & Saturdays in ${DateFormat('MMMM').format(_month)}',
+            subtitle:
+                'Wednesdays & Saturdays in ${DateFormat('MMMM').format(_month)}',
             icon: Icons.calendar_month_outlined,
           ),
           if (fastingDays.isEmpty)
@@ -173,18 +182,19 @@ class _FastingViewState extends ConsumerState<_FastingView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.favorite_outline,
-                    size: 18, color: AppColors.navy600),
+                Icon(
+                  Icons.favorite_outline,
+                  size: 18,
+                  color: AppColors.navy600,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     'Fasting records are self-reported and personal — a gift '
                     'between you and God. Days without a record are completely '
                     'okay.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.inkSecondary,
-                          height: 1.45,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: AppColors.inkSecondary, height: 1.45),
                   ),
                 ),
               ],
@@ -242,15 +252,19 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
     try {
       final existing = activity.record;
       if (existing == null) {
-        await client.post('/me/activity-records', body: {
-          'activityId': activity.id,
-          'date': dateKey,
-          'status': 'COMPLETED',
-        });
+        await client.post(
+          '/me/activity-records',
+          body: {
+            'activityId': activity.id,
+            'date': dateKey,
+            'status': 'COMPLETED',
+          },
+        );
       } else {
-        await client.patch('/me/activity-records/${existing.id}', body: {
-          'status': 'COMPLETED',
-        });
+        await client.patch(
+          '/me/activity-records/${existing.id}',
+          body: {'status': 'COMPLETED'},
+        );
       }
       if (!mounted) return;
       ref.invalidate(dailyChecklistProvider(_date));
@@ -279,8 +293,7 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
           left: AppSpacing.lg,
           right: AppSpacing.lg,
           top: AppSpacing.lg,
-          bottom:
-              MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.lg,
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.lg,
         ),
         child: _ChallengeNoteSheet(
           activity: activity,
@@ -295,9 +308,7 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
   }
 
   PlannedActivity? _fastingActivity(WidgetRef ref) {
-    final items = ref
-        .read(dailyChecklistProvider(_date))
-        .value;
+    final items = ref.read(dailyChecklistProvider(_date)).value;
     if (items == null) return null;
     for (final item in items) {
       if (item.categoryKey == 'fasting_and_prayer') return item;
@@ -310,9 +321,13 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
     final theme = Theme.of(context);
     final checklist = ref.watch(dailyChecklistProvider(_date));
     final today = appDateNow();
-    final isFuture = DateTime(_date.year, _date.month, _date.day)
-        .isAfter(DateTime(today.year, today.month, today.day));
-    final isToday = _date.year == today.year &&
+    final isFuture = DateTime(
+      _date.year,
+      _date.month,
+      _date.day,
+    ).isAfter(DateTime(today.year, today.month, today.day));
+    final isToday =
+        _date.year == today.year &&
         _date.month == today.month &&
         _date.day == today.day;
 
@@ -326,8 +341,9 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
                 child: Text(
                   DateFormat('EEEE, d MMMM').format(_date) +
                       (isToday ? ' (today)' : ''),
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               if (isFuture)
@@ -362,8 +378,9 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
                 return Text(
                   'No fasting activity is published for this day, so there '
                   'is nothing to record.',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: AppColors.inkMuted),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.inkMuted,
+                  ),
                 );
               }
               final recorded = activity.record?.status == 'COMPLETED';
@@ -371,8 +388,9 @@ class _FastingDayCardState extends ConsumerState<_FastingDayCard> {
                 return Text(
                   'This day hasn’t arrived yet — you can record it when the '
                   'time comes.',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: AppColors.inkMuted),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.inkMuted,
+                  ),
                 );
               }
               return Row(
@@ -457,16 +475,20 @@ class _ChallengeNoteSheetState extends ConsumerState<_ChallengeNoteSheet> {
     try {
       final existing = widget.activity.record;
       if (existing == null) {
-        await client.post('/me/activity-records', body: {
-          'activityId': widget.activity.id,
-          'date': dateKey,
-          'status': 'IN_PROGRESS',
-          'note': note,
-        });
+        await client.post(
+          '/me/activity-records',
+          body: {
+            'activityId': widget.activity.id,
+            'date': dateKey,
+            'status': 'IN_PROGRESS',
+            'note': note,
+          },
+        );
       } else {
-        await client.patch('/me/activity-records/${existing.id}', body: {
-          'note': note,
-        });
+        await client.patch(
+          '/me/activity-records/${existing.id}',
+          body: {'note': note},
+        );
       }
       if (!mounted) return;
       ref.invalidate(dailyChecklistProvider(widget.date));
@@ -487,8 +509,10 @@ class _ChallengeNoteSheetState extends ConsumerState<_ChallengeNoteSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Record a challenge',
-            style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Record a challenge',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Fasting isn’t always easy. A short note helps you look back with '

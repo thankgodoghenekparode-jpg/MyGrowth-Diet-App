@@ -8,6 +8,7 @@ import '../../core/models/notification_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -85,6 +86,7 @@ class NotificationsScreen extends ConsumerWidget {
     final unread = ref.watch(unreadNotificationCountProvider);
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Notifications'),
         actions: [
           AppIconButton(
@@ -98,9 +100,7 @@ class NotificationsScreen extends ConsumerWidget {
             icon: Icons.done_all_rounded,
             tooltip: 'Mark all as read',
             filled: true,
-            onPressed: unread > 0
-                ? () => _markAllRead(context, ref)
-                : null,
+            onPressed: unread > 0 ? () => _markAllRead(context, ref) : null,
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
@@ -157,13 +157,14 @@ class NotificationsScreen extends ConsumerWidget {
                 for (final group in groups.entries) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.xs),
+                      vertical: AppSpacing.xs,
+                    ),
                     child: Text(
                       _dayLabel(group.key),
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: AppColors.navy700,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: AppColors.navy700,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   for (final notification in group.value) ...[
@@ -207,7 +208,8 @@ class NotificationsScreen extends ConsumerWidget {
 }
 
 Map<DateTime, List<AppNotification>> _groupByDay(
-    List<AppNotification> notifications) {
+  List<AppNotification> notifications,
+) {
   final sorted = [...notifications]
     ..sort((a, b) {
       final aDate = a.createdAt ?? DateTime.now();
@@ -271,10 +273,10 @@ class _NotificationTile extends StatelessWidget {
                 Text(
                   notification.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: notification.read
-                            ? FontWeight.w500
-                            : FontWeight.w700,
-                      ),
+                    fontWeight: notification.read
+                        ? FontWeight.w500
+                        : FontWeight.w700,
+                  ),
                 ),
                 if (notification.body != null &&
                     notification.body!.trim().isNotEmpty) ...[

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../core/widgets/app_back_button.dart';
 import 'notification_prefs_section.dart';
 
 class RemindersScreen extends StatelessWidget {
   const RemindersScreen({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Daily Reminders')),
+    appBar: AppBar(
+      leading: const AppBackButton(),
+      title: const Text('Daily Reminders'),
+    ),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: const [

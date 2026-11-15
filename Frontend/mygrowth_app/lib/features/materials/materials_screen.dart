@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../core/models/material_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -35,8 +36,10 @@ class _MaterialsView extends ConsumerStatefulWidget {
 
 class _MaterialsViewState extends ConsumerState<_MaterialsView>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabController =
-      TabController(length: 2, vsync: this);
+  late final TabController _tabController = TabController(
+    length: 2,
+    vsync: this,
+  );
 
   @override
   void dispose() {
@@ -48,6 +51,7 @@ class _MaterialsViewState extends ConsumerState<_MaterialsView>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Study Materials'),
         bottom: TabBar(
           controller: _tabController,
@@ -115,8 +119,18 @@ class _FilterBarState extends ConsumerState<_FilterBar> {
     final categoryList = categories.toList()..sort();
 
     const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
 
     return Padding(
@@ -149,7 +163,9 @@ class _FilterBarState extends ConsumerState<_FilterBar> {
                     underline: const SizedBox.shrink(),
                     items: [
                       const DropdownMenuItem(
-                          value: 'all', child: Text('All months')),
+                        value: 'all',
+                        child: Text('All months'),
+                      ),
                       for (var m = 1; m <= 12; m++)
                         DropdownMenuItem(
                           value: '$m',
@@ -158,9 +174,11 @@ class _FilterBarState extends ConsumerState<_FilterBar> {
                     ],
                     onChanged: (value) => ref
                         .read(materialsFiltersProvider.notifier)
-                        .setMonth(value == null || value == 'all'
-                            ? null
-                            : int.tryParse(value)),
+                        .setMonth(
+                          value == null || value == 'all'
+                              ? null
+                              : int.tryParse(value),
+                        ),
                   ),
                 ),
                 Padding(
@@ -171,9 +189,13 @@ class _FilterBarState extends ConsumerState<_FilterBar> {
                     underline: const SizedBox.shrink(),
                     items: const [
                       DropdownMenuItem(
-                          value: 'newest', child: Text('Newest first')),
+                        value: 'newest',
+                        child: Text('Newest first'),
+                      ),
                       DropdownMenuItem(
-                          value: 'title', child: Text('Title A–Z')),
+                        value: 'title',
+                        child: Text('Title A–Z'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -190,10 +212,9 @@ class _FilterBarState extends ConsumerState<_FilterBar> {
                     child: ChoiceChip(
                       label: Text(humanizeStatus(category)),
                       selected: filters.category == category,
-                      onSelected: (selected) =>
-                          ref.read(materialsFiltersProvider.notifier).setCategory(
-                                selected ? category : null,
-                              ),
+                      onSelected: (selected) => ref
+                          .read(materialsFiltersProvider.notifier)
+                          .setCategory(selected ? category : null),
                     ),
                   ),
               ],
@@ -228,7 +249,10 @@ class _MaterialsList extends ConsumerWidget {
         error: (e, _) => ListView(
           padding: AppSpacing.pagePaddingMobile,
           children: [
-            ErrorState(error: e, onRetry: () => ref.invalidate(materialsListProvider(saved))),
+            ErrorState(
+              error: e,
+              onRetry: () => ref.invalidate(materialsListProvider(saved)),
+            ),
           ],
         ),
         data: (result) {
@@ -245,9 +269,11 @@ class _MaterialsList extends ConsumerWidget {
                       : 'No materials found',
                   message: saved
                       ? 'Save materials from the library and they will show up here for quick access.'
-                      : (filters.search.isNotEmpty || filters.category != null || filters.month != null)
-                          ? 'Nothing matches the current filters. Try clearing them.'
-                          : 'Study materials published by your ministry will appear here soon.',
+                      : (filters.search.isNotEmpty ||
+                            filters.category != null ||
+                            filters.month != null)
+                      ? 'Nothing matches the current filters. Try clearing them.'
+                      : 'Study materials published by your ministry will appear here soon.',
                 ),
               ],
             );
@@ -326,7 +352,9 @@ IconData materialCategoryIcon(String category) {
 String materialPeriodLabel(MaterialItem item) {
   final parts = <String>[];
   if (item.month != null && item.month! >= 1 && item.month! <= 12) {
-    parts.add(DateFormat('MMMM').format(DateTime(item.year ?? 2000, item.month!)));
+    parts.add(
+      DateFormat('MMMM').format(DateTime(item.year ?? 2000, item.month!)),
+    );
   }
   if (item.year != null) parts.add('${item.year}');
   if (parts.isNotEmpty) return parts.join(' ');
@@ -372,9 +400,7 @@ class _MaterialCard extends StatelessWidget {
                   item.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 if (item.author != null && item.author!.isNotEmpty) ...[
@@ -395,7 +421,11 @@ class _MaterialCard extends StatelessWidget {
                       small: true,
                     ),
                     if (period.isNotEmpty)
-                      StatusBadge(label: period, tone: AppBadgeTone.gold, small: true),
+                      StatusBadge(
+                        label: period,
+                        tone: AppBadgeTone.gold,
+                        small: true,
+                      ),
                     if (item.isCompleted)
                       const StatusBadge(
                         label: 'Completed',
@@ -415,12 +445,13 @@ class _MaterialCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded,
-              size: 20, color: AppColors.inkMuted),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: AppColors.inkMuted,
+          ),
         ],
       ),
     );
   }
 }
-
-

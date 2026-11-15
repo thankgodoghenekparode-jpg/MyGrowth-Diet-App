@@ -10,6 +10,7 @@ import '../../core/bible/bible_translation_loader.dart';
 import '../../core/config/app_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 
 enum _BibleView { reader, search, bookmarks }
 
@@ -697,43 +698,49 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<_BibleSession>(
-      future: _session,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Could not load the Bible: ${snapshot.error}',
-              style: TextStyle(color: AppColors.ink),
-            ),
-          );
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final session = snapshot.data!;
-        if (_bookIndex < 0 || _chapterIndex < 0) {
-          _bookIndex = session.bookIndex;
-          _chapterIndex = session.chapterIndex;
-        }
-        return Column(
-          children: [
-            _buildToolbar(context, session),
-            if (_view == _BibleView.reader)
-              _buildChapterHeading(context, session),
-            const Divider(height: 1),
-            Expanded(child: _buildContent(context, session)),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+    return Scaffold(
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Bible'),
+      ),
+      body: FutureBuilder<_BibleSession>(
+        future: _session,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
               child: Text(
-                session.translation.credit,
-                style: Theme.of(context).textTheme.labelSmall
-                    ?.copyWith(color: AppColors.inkSecondary),
+                'Could not load the Bible: ${snapshot.error}',
+                style: TextStyle(color: AppColors.ink),
               ),
-            ),
-          ],
-        );
-      },
+            );
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final session = snapshot.data!;
+          if (_bookIndex < 0 || _chapterIndex < 0) {
+            _bookIndex = session.bookIndex;
+            _chapterIndex = session.chapterIndex;
+          }
+          return Column(
+            children: [
+              _buildToolbar(context, session),
+              if (_view == _BibleView.reader)
+                _buildChapterHeading(context, session),
+              const Divider(height: 1),
+              Expanded(child: _buildContent(context, session)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  session.translation.credit,
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: AppColors.inkSecondary),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -810,9 +817,8 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
             child: DropdownButton<String>(
               value: session.translation.id,
               isExpanded: true,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.ink,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: AppColors.ink),
               items: [
                 for (final translation in _bibleTranslations)
                   DropdownMenuItem(
@@ -835,9 +841,8 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                   child: DropdownButton<int>(
                     value: _bookIndex,
                     isExpanded: true,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.ink,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: AppColors.ink),
                     items: [
                       for (var i = 0; i < session.books.length; i++)
                         DropdownMenuItem(
@@ -1001,10 +1006,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
               PopupMenuButton<String>(
                 tooltip: 'Verse actions',
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 32,
-                  minHeight: 32,
-                ),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 onSelected: (action) {
                   if (action == 'copy') {
                     _copyVerse(session, hit);

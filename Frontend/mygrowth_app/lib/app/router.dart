@@ -10,6 +10,7 @@ import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_date.dart';
+import '../core/widgets/app_back_button.dart';
 import '../core/widgets/app_wallpaper.dart';
 import '../features/activities/fasting_screen.dart';
 import '../features/bible/bible_reader_screen.dart';
@@ -245,10 +246,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/assistant',
-                pageBuilder: (_, _) =>
-                    const NoTransitionPage(
-                      child: AiAssistantScreen(showAppBar: false),
-                    ),
+                pageBuilder: (_, _) => const NoTransitionPage(
+                  child: AiAssistantScreen(showAppBar: false),
+                ),
               ),
             ],
           ),
@@ -322,10 +322,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) => _fade(
           const MaterialPage(
-            child: _MemberPage(
-              title: 'My Progress',
-              child: ProgressScreen(),
-            ),
+            child: _MemberPage(title: 'My Progress', child: ProgressScreen()),
           ),
         ),
       ),
@@ -886,16 +883,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     _splashVideo = VideoPlayerController.asset('assets/videos/splash.mp4');
-    _splashVideo.initialize().then((_) async {
-      if (!mounted) return;
-      await _splashVideo.setLooping(false);
-      await _splashVideo.setVolume(0);
-      if (!mounted) return;
-      setState(() => _videoReady = true);
-      await _splashVideo.play();
-    }).catchError((Object _) {
-      // Keep startup usable if the browser cannot decode the splash video.
-    });
+    _splashVideo
+        .initialize()
+        .then((_) async {
+          if (!mounted) return;
+          await _splashVideo.setLooping(false);
+          await _splashVideo.setVolume(0);
+          if (!mounted) return;
+          setState(() => _videoReady = true);
+          await _splashVideo.play();
+        })
+        .catchError((Object _) {
+          // Keep startup usable if the browser cannot decode the splash video.
+        });
     _splashTimer = Timer(const Duration(seconds: 5), _finishSplash);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _sessionStarted) return;
@@ -934,10 +934,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     height: _splashVideo.value.size.height,
                     child: ColorFiltered(
                       colorFilter: const ColorFilter.matrix([
-                        1, 0, 0, 0, 0,
-                        0, 1, 0, 0, 0,
-                        0, 0, 1, 0, 0,
-                        -0.333, -0.333, -0.333, 0, 255,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        -0.333,
+                        -0.333,
+                        -0.333,
+                        0,
+                        255,
                       ]),
                       child: VideoPlayer(_splashVideo),
                     ),
@@ -962,7 +978,10 @@ class _NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Page not found')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Page not found'),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

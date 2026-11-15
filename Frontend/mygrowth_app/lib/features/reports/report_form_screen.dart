@@ -8,6 +8,7 @@ import '../../core/models/report_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -22,10 +23,10 @@ import 'reports_providers.dart';
 /// (for new reports) or [reportId] (for drafts) must be provided.
 class ReportFormScreen extends ConsumerWidget {
   const ReportFormScreen({super.key, this.type, this.reportId})
-      : assert(
-          type != null || reportId != null,
-          'Provide either a report type or an existing report id.',
-        );
+    : assert(
+        type != null || reportId != null,
+        'Provide either a report type or an existing report id.',
+      );
 
   /// Lowercase in the URL, e.g. 'weekly'.
   final String? type;
@@ -73,9 +74,9 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
   bool get _readOnly => _report != null && !_report!.canEdit;
 
   TextEditingController _controllerFor(String key) => _controllers.putIfAbsent(
-        key,
-        () => TextEditingController(text: _report?.answerFor(key) ?? ''),
-      );
+    key,
+    () => TextEditingController(text: _report?.answerFor(key) ?? ''),
+  );
 
   void _seedFromReport(Report report) {
     if (_initialized) return;
@@ -89,14 +90,16 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
         final key = '${spec.key}Rating';
         final raw = report.answers[key];
         final value = raw is String ? raw : null;
-        _dropdowns[key] =
-            ratingOptions.any((o) => o.$1 == value) ? value : null;
+        _dropdowns[key] = ratingOptions.any((o) => o.$1 == value)
+            ? value
+            : null;
       } else if (spec.kind == ReportFieldKind.goal) {
         final key = '${spec.key}Status';
         final raw = report.answers[key];
         final value = raw is String ? raw : null;
-        _dropdowns[key] =
-            goalStatusOptions.any((o) => o.$1 == value) ? value : null;
+        _dropdowns[key] = goalStatusOptions.any((o) => o.$1 == value)
+            ? value
+            : null;
       }
     }
     _initialized = true;
@@ -134,12 +137,15 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
     try {
       String? id = widget.reportId;
       if (id == null) {
-        final res = await client.post('/me/reports', body: {
-          'type': type,
-          'periodKey': periodKeyFor(type, DateTime.now()),
-          'answers': answers,
-          'programmeYear': _programmeYear,
-        });
+        final res = await client.post(
+          '/me/reports',
+          body: {
+            'type': type,
+            'periodKey': periodKeyFor(type, DateTime.now()),
+            'answers': answers,
+            'programmeYear': _programmeYear,
+          },
+        );
         if (res is Map<String, dynamic> && res['id'] != null) {
           id = res['id'].toString();
         }
@@ -215,22 +221,25 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
 
     if (detailAsync != null && detailAsync.isLoading && _report == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Report')),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+          title: const Text('Report'),
+        ),
         body: const Padding(
           padding: AppSpacing.pagePaddingMobile,
           child: CardListSkeleton(count: 6),
         ),
       );
     }
-    if (detailAsync != null &&
-        detailAsync.error != null &&
-        _report == null) {
+    if (detailAsync != null && detailAsync.error != null && _report == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Report')),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+          title: const Text('Report'),
+        ),
         body: ErrorState(
           error: detailAsync.error!,
-          onRetry: () =>
-              ref.invalidate(reportDetailProvider(widget.reportId!)),
+          onRetry: () => ref.invalidate(reportDetailProvider(widget.reportId!)),
         ),
       );
     }
@@ -245,11 +254,12 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: Text(
           _report == null
               ? 'New ${humanizeStatus(type).toLowerCase()} report'
               : '${humanizeStatus(type).toLowerCase()} report — '
-                  '${humanizePeriodKey(_report!.periodKey)}',
+                    '${humanizePeriodKey(_report!.periodKey)}',
         ),
       ),
       body: ListView(
@@ -262,8 +272,11 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
               color: AppColors.infoSurface,
               child: Row(
                 children: [
-                  Icon(Icons.lock_outline_rounded,
-                      color: AppColors.info, size: 20),
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    color: AppColors.info,
+                    size: 20,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -320,9 +333,12 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
               color: AppColors.gold100,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                  Icon(Icons.lock_outline_rounded,
-                      size: 20, color: AppColors.gold600),
+                children: [
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    size: 20,
+                    color: AppColors.gold600,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -389,10 +405,7 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
               hint: 'Select a rating',
               items: [
                 for (final option in ratingOptions)
-                  DropdownMenuItem(
-                    value: option.$1,
-                    child: Text(option.$2),
-                  ),
+                  DropdownMenuItem(value: option.$1, child: Text(option.$2)),
               ],
               onChanged: _readOnly
                   ? (_) {}
@@ -426,10 +439,7 @@ class _ReportFormBodyState extends ConsumerState<_ReportFormBody> {
               hint: 'Select a status',
               items: [
                 for (final option in goalStatusOptions)
-                  DropdownMenuItem(
-                    value: option.$1,
-                    child: Text(option.$2),
-                  ),
+                  DropdownMenuItem(value: option.$1, child: Text(option.$2)),
               ],
               onChanged: _readOnly
                   ? (_) {}
@@ -455,15 +465,17 @@ class _MonthlyReflectionSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final plan = ref.watch(monthlyPlanProvider(
-        (year: periodDate.year, month: periodDate.month)));
+    final plan = ref.watch(
+      monthlyPlanProvider((year: periodDate.year, month: periodDate.month)),
+    );
     return plan.when(
       loading: () => const SkeletonBox(height: 120, radius: 14),
       error: (e, _) => ErrorState(
         error: e,
         compact: true,
-        onRetry: () => ref.invalidate(monthlyPlanProvider(
-            (year: periodDate.year, month: periodDate.month))),
+        onRetry: () => ref.invalidate(
+          monthlyPlanProvider((year: periodDate.year, month: periodDate.month)),
+        ),
       ),
       data: (plan) {
         if (plan == null || plan.reflectionQuestions.isEmpty) {
@@ -504,8 +516,9 @@ class _QuarterlyConfessionSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final plan = ref.watch(monthlyPlanProvider(
-        (year: periodDate.year, month: periodDate.month)));
+    final plan = ref.watch(
+      monthlyPlanProvider((year: periodDate.year, month: periodDate.month)),
+    );
     final confession = plan.value?.confession;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
@@ -518,7 +531,7 @@ class _QuarterlyConfessionSection extends ConsumerWidget {
         text: confession ?? quarterlyConfessionFallback,
         caption: confession == null
             ? 'The API doesn’t expose a quarterly confession yet — this '
-                'fallback from the MyGrowth team is shown instead.'
+                  'fallback from the MyGrowth team is shown instead.'
             : null,
       ),
     );

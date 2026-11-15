@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/widgets/app_back_button.dart';
 
 class AdminShapeSpaceScreen extends ConsumerStatefulWidget {
   const AdminShapeSpaceScreen({super.key});
 
   @override
-  ConsumerState<AdminShapeSpaceScreen> createState() => _AdminShapeSpaceScreenState();
+  ConsumerState<AdminShapeSpaceScreen> createState() =>
+      _AdminShapeSpaceScreenState();
 }
 
 class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
@@ -30,7 +32,10 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
   void initState() {
     super.initState();
     _loadConversations();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) => _loadConversations(silent: true));
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _loadConversations(silent: true),
+    );
   }
 
   @override
@@ -44,11 +49,15 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
   Future<void> _loadConversations({bool silent = false}) async {
     if (!silent) setState(() => _loading = true);
     try {
-      final data = await ref.read(apiClientProvider).get('/admin/shape-space/conversations');
+      final data = await ref
+          .read(apiClientProvider)
+          .get('/admin/shape-space/conversations');
       if (!mounted) return;
       if (data is Map && data['conversations'] is List) {
         setState(() {
-          _conversations = List<Map<String, dynamic>>.from(data['conversations'] as List);
+          _conversations = List<Map<String, dynamic>>.from(
+            data['conversations'] as List,
+          );
           _loading = false;
           _error = null;
         });
@@ -71,12 +80,17 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
     });
 
     try {
-      final data = await ref.read(apiClientProvider).get('/admin/shape-space/conversations/${conv['id']}');
+      final data = await ref
+          .read(apiClientProvider)
+          .get('/admin/shape-space/conversations/${conv['id']}');
       if (!mounted) return;
       if (data is Map) {
         setState(() {
-          _selectedConversation = data['conversation'] as Map<String, dynamic>? ?? conv;
-          _threadMessages = List<Map<String, dynamic>>.from(data['messages'] as List? ?? []);
+          _selectedConversation =
+              data['conversation'] as Map<String, dynamic>? ?? conv;
+          _threadMessages = List<Map<String, dynamic>>.from(
+            data['messages'] as List? ?? [],
+          );
           _loadingThread = false;
         });
         _scrollToBottom();
@@ -98,10 +112,12 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
 
     setState(() => _sendingReply = true);
     try {
-      await ref.read(apiClientProvider).post(
-        '/admin/shape-space/conversations/${_selectedConversation!['id']}/reply',
-        body: {'body': text},
-      );
+      await ref
+          .read(apiClientProvider)
+          .post(
+            '/admin/shape-space/conversations/${_selectedConversation!['id']}/reply',
+            body: {'body': text},
+          );
       _replyController.clear();
       await _openConversation(_selectedConversation!);
     } catch (e) {
@@ -121,10 +137,12 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
     final newStatus = currentStatus == 'RESOLVED' ? 'OPEN' : 'RESOLVED';
 
     try {
-      await ref.read(apiClientProvider).patch(
-        '/admin/shape-space/conversations/${_selectedConversation!['id']}/status',
-        body: {'status': newStatus},
-      );
+      await ref
+          .read(apiClientProvider)
+          .patch(
+            '/admin/shape-space/conversations/${_selectedConversation!['id']}/status',
+            body: {'status': newStatus},
+          );
       setState(() {
         _selectedConversation!['status'] = newStatus;
       });
@@ -163,7 +181,8 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shape Space — Community Q&A'),
+        leading: const AppBackButton(),
+        title: const Text('Shape Space - Community Q&A'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -202,11 +221,17 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.forum_outlined, size: 48, color: colorScheme.outline),
+                              Icon(
+                                Icons.forum_outlined,
+                                size: 48,
+                                color: colorScheme.outline,
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 'Select a question to read and answer',
-                                style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
@@ -235,14 +260,20 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.mark_chat_unread_outlined, size: 48, color: colorScheme.outline),
+              Icon(
+                Icons.mark_chat_unread_outlined,
+                size: 48,
+                color: colorScheme.outline,
+              ),
               const SizedBox(height: 12),
               const Text('No community questions yet.'),
               const SizedBox(height: 6),
               Text(
                 'Questions posted in Shape Space will appear here.',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -262,9 +293,13 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
 
         return ListTile(
           selected: isSelected,
-          selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.25),
+          selectedTileColor: colorScheme.primaryContainer.withValues(
+            alpha: 0.25,
+          ),
           leading: CircleAvatar(
-            backgroundColor: isAnonymous ? Colors.blueGrey.shade700 : colorScheme.primary,
+            backgroundColor: isAnonymous
+                ? Colors.blueGrey.shade700
+                : colorScheme.primary,
             child: Icon(
               isAnonymous ? Icons.visibility_off : Icons.person,
               color: Colors.white,
@@ -284,14 +319,19 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
               ),
               if (isResolved)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.shade100,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     'Resolved',
-                    style: theme.textTheme.labelSmall?.copyWith(color: Colors.green.shade800),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.green.shade800,
+                    ),
                   ),
                 ),
             ],
@@ -301,7 +341,9 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: unread > 0 ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
+              color: unread > 0
+                  ? colorScheme.onSurface
+                  : colorScheme.onSurfaceVariant,
             ),
           ),
           trailing: unread > 0
@@ -313,7 +355,11 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
     );
   }
 
-  Widget _buildThreadView(ColorScheme colorScheme, ThemeData theme, {bool showBackButton = false}) {
+  Widget _buildThreadView(
+    ColorScheme colorScheme,
+    ThemeData theme, {
+    bool showBackButton = false,
+  }) {
     final conv = _selectedConversation!;
     final isAnonymous = conv['isAnonymous'] == true;
     final isResolved = conv['status'] == 'RESOLVED';
@@ -325,7 +371,9 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            border: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
+            border: Border(
+              bottom: BorderSide(color: colorScheme.outlineVariant),
+            ),
           ),
           child: Row(
             children: [
@@ -335,7 +383,9 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                   onPressed: () => setState(() => _selectedConversation = null),
                 ),
               CircleAvatar(
-                backgroundColor: isAnonymous ? Colors.blueGrey.shade700 : colorScheme.primary,
+                backgroundColor: isAnonymous
+                    ? Colors.blueGrey.shade700
+                    : colorScheme.primary,
                 child: Icon(
                   isAnonymous ? Icons.visibility_off : Icons.person,
                   color: Colors.white,
@@ -349,23 +399,32 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                   children: [
                     Text(
                       conv['memberName']?.toString() ?? 'Member',
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (!isAnonymous && conv['memberEmail'] != null)
                       Text(
                         conv['memberEmail'].toString(),
-                        style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       )
                     else if (isAnonymous)
                       Text(
                         'Identity protected by member request',
-                        style: theme.textTheme.bodySmall?.copyWith(color: Colors.amber.shade800),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.amber.shade800,
+                        ),
                       ),
                   ],
                 ),
               ),
               OutlinedButton.icon(
-                icon: Icon(isResolved ? Icons.replay : Icons.check_circle_outline, size: 16),
+                icon: Icon(
+                  isResolved ? Icons.replay : Icons.check_circle_outline,
+                  size: 16,
+                ),
                 label: Text(isResolved ? 'Reopen' : 'Mark Resolved'),
                 onPressed: _toggleStatus,
               ),
@@ -390,7 +449,9 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Align(
-                        alignment: isFromAdmin ? Alignment.centerRight : Alignment.centerLeft,
+                        alignment: isFromAdmin
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
                             maxWidth: MediaQuery.sizeOf(context).width * 0.75,
@@ -411,10 +472,12 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                                       Text(
                                         isFromAdmin
                                             ? 'You (Admin)'
-                                            : (msg['senderName']?.toString() ?? 'Member'),
-                                        style: theme.textTheme.labelMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                            : (msg['senderName']?.toString() ??
+                                                  'Member'),
+                                        style: theme.textTheme.labelMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -449,7 +512,10 @@ class _AdminShapeSpaceScreenState extends ConsumerState<AdminShapeSpaceScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(24)),
                       ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       counterText: '',
                     ),
                   ),
