@@ -177,7 +177,7 @@ class _HomeBrandHeader extends StatelessWidget {
                 Colors.white,
                 Colors.transparent,
               ],
-              stops: [0, .08, .92, 1],
+              stops: [0, .08, .78, 1],
             ).createShader(bounds),
             child: ShaderMask(
               blendMode: BlendMode.dstIn,
