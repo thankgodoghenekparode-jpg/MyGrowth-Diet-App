@@ -277,70 +277,6 @@ class _WelcomeHero extends ConsumerWidget {
                       visualDensity: VisualDensity.compact,
                       icon: const Icon(Icons.menu_rounded, color: Colors.white),
                     ),
-                    Expanded(
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 230),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                radius: 19,
-                                backgroundColor: AppColors.champagneGold,
-                                backgroundImage: resolvedAvatar == null
-                                    ? null
-                                    : NetworkImage(resolvedAvatar),
-                                child: resolvedAvatar == null
-                                    ? Text(
-                                        initials,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 12,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      greeting,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelMedium
-                                          ?.copyWith(
-                                            color: Colors.white.withValues(
-                                              alpha: .9,
-                                            ),
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            height: 1.1,
-                                          ),
-                                    ),
-                                    Text(
-                                      name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.titleSmall
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 14,
-                                            height: 1.15,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
                     IconButton(
                       onPressed: onNotifications,
                       tooltip: 'Notifications',
@@ -348,6 +284,63 @@ class _WelcomeHero extends ConsumerWidget {
                       icon: const Icon(
                         Icons.notifications_none_rounded,
                         color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 220),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 19,
+                            backgroundColor: AppColors.champagneGold,
+                            backgroundImage: resolvedAvatar == null
+                                ? null
+                                : NetworkImage(resolvedAvatar),
+                            child: resolvedAvatar == null
+                                ? Text(
+                                    initials,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  greeting,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: .9),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.1,
+                                  ),
+                                ),
+                                Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                    height: 1.15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
