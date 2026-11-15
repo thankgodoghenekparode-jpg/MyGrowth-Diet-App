@@ -4,11 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
 
 import '../core/auth/auth_controller.dart';
 import '../core/models/daily_diet_models.dart';
-import '../core/theme/app_colors.dart';
 import '../core/utils/app_date.dart';
 import '../core/widgets/app_back_button.dart';
 import '../core/widgets/app_wallpaper.dart';
@@ -874,28 +872,15 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   Timer? _splashTimer;
-  late final VideoPlayerController _splashVideo;
   bool _sessionStarted = false;
   bool _splashFinished = false;
-  bool _videoReady = false;
+
+  /// The animated splash logo is 438 x 388 (see `splash_anim.webp`).
+  static const Size _artworkSize = Size(438, 388);
 
   @override
   void initState() {
     super.initState();
-    _splashVideo = VideoPlayerController.asset('assets/videos/splash.mp4');
-    _splashVideo
-        .initialize()
-        .then((_) async {
-          if (!mounted) return;
-          await _splashVideo.setLooping(false);
-          await _splashVideo.setVolume(0);
-          if (!mounted) return;
-          setState(() => _videoReady = true);
-          await _splashVideo.play();
-        })
-        .catchError((Object _) {
-          // Keep startup usable if the browser cannot decode the splash video.
-        });
     _splashTimer = Timer(const Duration(seconds: 5), _finishSplash);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _sessionStarted) return;
@@ -915,56 +900,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void dispose() {
     _splashTimer?.cancel();
-    _splashVideo.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // No background of its own: the transparent animation sits directly on the
+    // app-wide wallpaper, the same backdrop every other page uses.
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: Center(
-        child: _videoReady
-            ? Semantics(
-                label: 'Healings E. Azuike',
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: SizedBox(
-                    width: _splashVideo.value.size.width,
-                    height: _splashVideo.value.size.height,
-                    child: ColorFiltered(
-                      colorFilter: const ColorFilter.matrix([
-                        1,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        1,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        1,
-                        0,
-                        0,
-                        -0.333,
-                        -0.333,
-                        -0.333,
-                        0,
-                        255,
-                      ]),
-                      child: VideoPlayer(_splashVideo),
-                    ),
-                  ),
-                ),
-              )
-            : Image.asset(
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: SizedBox.fromSize(
+            size: _artworkSize,
+            child: Image.asset(
+              'assets/images/splash_anim.webp',
+              fit: BoxFit.fill,
+              semanticLabel: 'Healings E. Azuike',
+              errorBuilder: (_, _, _) => Image.asset(
                 'assets/images/splash_logo.png',
                 fit: BoxFit.contain,
                 semanticLabel: 'Healings E. Azuike',
               ),
+            ),
+          ),
+        ),
       ),
     );
   }
