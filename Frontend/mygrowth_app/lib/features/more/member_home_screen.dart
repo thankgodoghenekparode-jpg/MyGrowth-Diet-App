@@ -171,8 +171,13 @@ class _HomeBrandHeader extends StatelessWidget {
             shaderCallback: (bounds) => const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.white, Colors.white],
-              stops: [0, .08, 1],
+              colors: [
+                Colors.transparent,
+                Colors.white,
+                Colors.white,
+                Colors.transparent,
+              ],
+              stops: [0, .08, .92, 1],
             ).createShader(bounds),
             child: ShaderMask(
               blendMode: BlendMode.dstIn,
