@@ -119,9 +119,9 @@ class AreaShell extends ConsumerWidget {
     final medium = Breakpoints.isMedium(context);
     final selectedIndex = _indexOf(location);
 
-    // Every page inside the shell sits on the shared wallpaper, the same photo
-    // used by the member home page and the navigation rail.
-    final content = AppWallpaper(child: child);
+    // Every page sits on the shared wallpaper painted once by [AppChrome], so
+    // the shell only supplies the navigation frame around its content.
+    final content = child;
 
     final navigation = expanded || medium
         ? _SidebarNavigation(

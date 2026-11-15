@@ -5,8 +5,7 @@ import '../theme/app_colors.dart';
 /// The shared MyGrowth wallpaper.
 ///
 /// The same photo sits behind the member home page and the navigation rail.
-/// [AppChrome] paints it behind every route, and [AreaShell] paints it behind
-/// the pages inside the navigation shell, so the whole app shares one
+/// [AppChrome] paints it once behind every route, so the whole app shares one
 /// backdrop. In the dark mood the photo is replaced by the flat page colour.
 class AppWallpaper extends StatelessWidget {
   const AppWallpaper({super.key, required this.child});
@@ -14,9 +13,9 @@ class AppWallpaper extends StatelessWidget {
   /// Bundled photo used by the home page, the navigation and every screen.
   static const String asset = 'assets/images/app_background.jpg';
 
-  /// How strongly the page colour is washed over the photo. This matches the
-  /// treatment used on the home page so body text stays easy to read.
-  static const double washOpacity = 0.76;
+  /// How strongly the page colour is washed over the photo. Keep this light so
+  /// the photo stays clear and obvious behind the content.
+  static const double washOpacity = 0.25;
 
   final Widget child;
 
@@ -67,9 +66,8 @@ class AppChrome extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppWallpaper(
       child: Theme(
-        data: Theme.of(
-          context,
-        ).copyWith(scaffoldBackgroundColor: Colors.transparent),
+        data: Theme.of(context)
+            .copyWith(scaffoldBackgroundColor: Colors.transparent),
         child: child,
       ),
     );
