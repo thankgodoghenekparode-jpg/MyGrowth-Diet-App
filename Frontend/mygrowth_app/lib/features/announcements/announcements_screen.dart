@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/models/notification_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
@@ -21,7 +22,10 @@ class AnnouncementsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(announcementsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Announcements')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Announcements'),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(announcementsProvider);
@@ -119,8 +123,11 @@ class _AnnouncementCardState extends State<_AnnouncementCard> {
                   color: AppColors.gold100,
                   borderRadius: BorderRadius.circular(11),
                 ),
-                child: Icon(Icons.campaign_outlined,
-                    size: 20, color: AppColors.gold600),
+                child: Icon(
+                  Icons.campaign_outlined,
+                  size: 20,
+                  color: AppColors.gold600,
+                ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -129,9 +136,7 @@ class _AnnouncementCardState extends State<_AnnouncementCard> {
                   children: [
                     Text(
                       announcement.title,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
+                      style: Theme.of(context).textTheme.titleSmall
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 2),
@@ -168,9 +173,7 @@ class _AnnouncementCardState extends State<_AnnouncementCard> {
             announcement.body,
             maxLines: _expanded ? null : 3,
             overflow: _expanded ? null : TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
+            style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(height: 1.55, color: AppColors.inkSecondary),
           ),
           if (isLong)

@@ -7,11 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/models/connect_link_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
 
-final connectLinksProvider = FutureProvider.autoDispose<List<ConnectLink>>((ref) async {
+final connectLinksProvider = FutureProvider.autoDispose<List<ConnectLink>>((
+  ref,
+) async {
   final api = ref.watch(apiClientProvider);
   final res = await api.get('/connect-links');
   final data = res.data as Map<String, dynamic>;
@@ -25,15 +28,19 @@ final connectLinksProvider = FutureProvider.autoDispose<List<ConnectLink>>((ref)
 class ConnectScreen extends ConsumerWidget {
   const ConnectScreen({super.key});
 
-  static final Uri _personalLink =
-      Uri.parse('https://linktr.ee/HealingsE.Azuike');
+  static final Uri _personalLink = Uri.parse(
+    'https://linktr.ee/HealingsE.Azuike',
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final links = ref.watch(connectLinksProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Connect with me')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Connect with me'),
+      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(connectLinksProvider),
         child: ListView(
@@ -52,18 +59,15 @@ class ConnectScreen extends ConsumerWidget {
                 children: [
                   Text(
                     'Connect with me',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
+                    style: Theme.of(context).textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w700),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     'Scan this QR code to find and connect with me online.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.inkSecondary,
-                        ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: AppColors.inkSecondary),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -87,9 +91,8 @@ class ConnectScreen extends ConsumerWidget {
                   SelectableText(
                     'https://linktr.ee/HealingsE.Azuike',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.inkSecondary,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: AppColors.inkSecondary),
                   ),
                 ],
               ),
@@ -142,7 +145,9 @@ class ConnectScreen extends ConsumerWidget {
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleSmall
-                                          ?.copyWith(fontWeight: FontWeight.w700),
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                     if (link.description != null &&
                                         link.description!.isNotEmpty)
@@ -281,4 +286,3 @@ class ConnectScreen extends ConsumerWidget {
     );
   }
 }
-
