@@ -71,6 +71,41 @@ async function sendResend(message) {
   }
 }
 
+async function sendBrevo(message) {
+  if (!config.email.brevoApiKey) {
+    logger.warn('[email:brevo] BREVO_API_KEY not configured, email skipped');
+    return { ok: false, error: 'BREVO_API_KEY not configured' };
+  }
+  try {
+    const match = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(config.email.from || '');
+    const sender = match
+      ? { name: match[1].trim() || 'MyGrowth Diet App', email: match[2].trim() }
+      : { name: 'MyGrowth Diet App', email: (config.email.from || '').trim() };
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': config.email.brevoApiKey,
+        'Content-Type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify({
+        sender,
+        to: [{ email: message.to }],
+        subject: message.subject,
+        textContent: message.text,
+        htmlContent: message.html,
+      }),
+    });
+    if (!res.ok) {
+      logger.error(`[email:brevo] failed status=${res.status}`);
+      return { ok: false, error: `Brevo returned ${res.status}` };
+    }
+    return { ok: true, provider: 'brevo' };
+  } catch (err) {
+    logger.error('[email:brevo] transport error', err?.message);
+    return { ok: false, error: err?.message || 'transport error' };
+  }
+}
 /**
  * Send an email through the configured provider.
  * @returns {{ok:boolean, provider?:string, error?:string}}
@@ -78,6 +113,7 @@ async function sendResend(message) {
 export async function sendEmail(message) {
   const provider = config.email.provider;
   if (provider === 'resend') return sendResend(message);
+  if (provider === 'brevo') return sendBrevo(message);
   return sendConsole(message);
 }
 

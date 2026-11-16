@@ -54,6 +54,7 @@ export const config = {
   email: {
     provider: process.env.EMAIL_PROVIDER || 'console',
     resendApiKey: process.env.RESEND_API_KEY || '',
+    brevoApiKey: process.env.BREVO_API_KEY || '',
     from: process.env.EMAIL_FROM || 'MyGrowth Diet App <no-reply@mygrowth.local>',
   },
 
@@ -84,3 +85,4 @@ export const config = {
 };
 
 export default config;
+
