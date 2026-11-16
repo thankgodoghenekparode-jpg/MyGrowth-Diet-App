@@ -369,10 +369,12 @@ class _DayContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _ProgressCard(bundle: bundle),
-        if (bundle.monthlyPlan?.theme != null ||
-            bundle.monthlyPlan?.prayerFocus != null) ...[
+        if (bundle.monthlyPlan?.theme != null) ...[
           const SizedBox(height: AppSpacing.md),
-          _MonthlyCard(plan: bundle.monthlyPlan!),
+          _MonthlyCard(
+            plan: bundle.monthlyPlan!,
+            onTap: () => context.push('/diet?section=bible_study'),
+          ),
         ],
         const SizedBox(height: AppSpacing.lg),
         SectionHeader(
@@ -451,22 +453,24 @@ class _ProgressCard extends StatelessWidget {
   }
 }
 
-/// The month's theme and prayer focus.
+/// The month's Bible study topic and link to its teaching.
 class _MonthlyCard extends StatelessWidget {
-  const _MonthlyCard({required this.plan});
+  const _MonthlyCard({required this.plan, required this.onTap});
 
   final DailyDietMonthlyPlan plan;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AppCard(
       color: AppColors.surfaceMuted,
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Month focus',
+            'Monthly focus',
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.inkMuted,
               letterSpacing: 0.6,
@@ -474,17 +478,23 @@ class _MonthlyCard extends StatelessWidget {
           ),
           if (plan.theme != null) ...[
             const SizedBox(height: 4),
-            Text(
-              plan.theme!,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.brandText,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    plan.theme!,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.brandText,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.inkMuted,
+                ),
+              ],
             ),
-          ],
-          if (plan.prayerFocus != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(plan.prayerFocus!, style: theme.textTheme.bodyMedium),
           ],
         ],
       ),
