@@ -70,15 +70,33 @@ class MemberHomeScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: SizedBox(
-                height: 72,
-                child: Image.asset(
-                  'assets/images/mygrowth_logo_slogan.png',
-                  fit: BoxFit.contain,
-                  semanticLabel:
-                      'MyGrowth Diet logo: Learn, Growth, Live it. Your personal journey of faith and growth.',
+            Builder(
+              builder: (shellContext) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  height: 72,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () =>
+                            Scaffold.of(shellContext).openDrawer(),
+                        tooltip: 'Open navigation menu',
+                        visualDensity: VisualDensity.compact,
+                        icon: Icon(
+                          Icons.menu_rounded,
+                          color: AppColors.brandText,
+                        ),
+                      ),
+                      Expanded(
+                        child: Image.asset(
+                          'assets/images/mygrowth_app_mark.png',
+                          fit: BoxFit.contain,
+                          semanticLabel: 'MyGrowth Diet app logo',
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -89,7 +107,6 @@ class MemberHomeScreen extends ConsumerWidget {
                 avatarUrl: user?.avatarUrl,
                 initials: user?.initials ?? '?',
                 onNotifications: () => context.go('/notifications'),
-                onMenu: () => Scaffold.of(shellContext).openDrawer(),
                 onReadMore: () => context.go('/devotion'),
               ),
             ),
@@ -145,7 +162,6 @@ class _WelcomeHero extends ConsumerWidget {
     required this.avatarUrl,
     required this.initials,
     required this.onNotifications,
-    required this.onMenu,
     required this.onReadMore,
   });
 
@@ -154,7 +170,6 @@ class _WelcomeHero extends ConsumerWidget {
   final String? avatarUrl;
   final String initials;
   final VoidCallback onNotifications;
-  final VoidCallback onMenu;
   final VoidCallback onReadMore;
 
   @override
@@ -196,15 +211,6 @@ class _WelcomeHero extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: onMenu,
-                          tooltip: 'Open navigation menu',
-                          visualDensity: VisualDensity.compact,
-                          icon: const Icon(
-                            Icons.menu_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
                         IconButton(
                           onPressed: onNotifications,
                           tooltip: 'Notifications',
