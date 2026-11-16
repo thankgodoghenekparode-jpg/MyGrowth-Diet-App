@@ -11,6 +11,9 @@ class AppWallpaper extends StatelessWidget {
   const AppWallpaper({super.key, required this.child});
 
   /// Bundled photo used by the home page, the navigation and every screen.
+  ///
+  /// The photo is stored at 2x (1188 x 2560) so it stays crisp on desktop,
+  /// where `BoxFit.cover` stretches it well beyond its natural width.
   static const String asset = 'assets/images/app_background.jpg';
 
   /// How strongly the page colour is washed over the photo. Keep this light so
@@ -31,6 +34,8 @@ class AppWallpaper extends StatelessWidget {
     return DecorationImage(
       image: const AssetImage(asset),
       fit: BoxFit.cover,
+      // Cubic sampling keeps the upscaled photo from looking soft and blocky.
+      filterQuality: FilterQuality.high,
       colorFilter: wash == null
           ? null
           : ColorFilter.mode(

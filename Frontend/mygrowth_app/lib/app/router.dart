@@ -870,17 +870,57 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  Timer? _splashTimer;
-  bool _sessionStarted = false;
-  bool _splashFinished = false;
+  /// The artwork plays once in 2.25 s, so keep the splash up for at least that
+  /// long — leaving earlier would cut the animation off mid-way.
+  static const Duration _minimumDisplay = Duration(milliseconds: 2400);
+
+  /// Safety net: never hold the splash longer than this, even if the session
+  /// restore stalls.
+  static const Duration _maximumDisplay = Duration(seconds: 5);
+
+  /// The artwork is dark navy, so on the navy dark-mood canvas it needs a lift
+  /// to stay legible. This brightens the artwork in place and adds no
+  /// background of its own.
+  static const ColorFilter _darkMoodLift = ColorFilter.matrix(<double>[
+    0.5, 0, 0, 0, 110, //
+    0, 0.5, 0, 0, 110, //
+    0, 0, 0.5, 0, 110, //
+    0, 0, 0, 1, 0, //
+  ]);
 
   /// The animated splash logo is 438 x 388 (see `splash_anim.webp`).
   static const Size _artworkSize = Size(438, 388);
 
+  Timer? _minimumTimer;
+  Timer? _maximumTimer;
+  ProviderSubscription<AuthState>? _authSub;
+  bool _minimumElapsed = false;
+  bool _restoreSettled = false;
+  bool _sessionStarted = false;
+  bool _splashFinished = false;
+
   @override
   void initState() {
     super.initState();
-    _splashTimer = Timer(const Duration(seconds: 5), _finishSplash);
+    _minimumTimer = Timer(_minimumDisplay, () {
+      _minimumElapsed = true;
+      _finishWhenReady();
+    });
+    _maximumTimer = Timer(_maximumDisplay, _finishSplash);
+    // Leave the splash as soon as the session has settled, not on a fixed wait.
+    _authSub = ref.listenManual<AuthState>(authControllerProvider, (_, next) {
+      if (next.status == AuthStatus.initial ||
+          next.status == AuthStatus.loading) {
+        return;
+      }
+      _restoreSettled = true;
+      _finishWhenReady();
+    });
+    // The session may already have settled before this screen appeared.
+    final status = ref.read(authControllerProvider).status;
+    if (status != AuthStatus.initial && status != AuthStatus.loading) {
+      _restoreSettled = true;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _sessionStarted) return;
       _sessionStarted = true;
@@ -889,16 +929,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     });
   }
 
+  void _finishWhenReady() {
+    if (_minimumElapsed && _restoreSettled) _finishSplash();
+  }
+
   void _finishSplash() {
     if (_splashFinished) return;
     _splashFinished = true;
-    _splashTimer?.cancel();
+    _minimumTimer?.cancel();
+    _maximumTimer?.cancel();
     if (mounted) ref.read(splashAnimationProvider.notifier).complete();
   }
 
   @override
   void dispose() {
-    _splashTimer?.cancel();
+    _minimumTimer?.cancel();
+    _maximumTimer?.cancel();
+    _authSub?.close();
     super.dispose();
   }
 
@@ -906,23 +953,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     // No background of its own: the transparent animation sits directly on the
     // app-wide wallpaper, the same backdrop every other page uses.
+    Widget artwork = Image.asset(
+      'assets/images/splash_anim.webp',
+      fit: BoxFit.fill,
+      semanticLabel: 'Healings E. Azuike',
+      errorBuilder: (_, _, _) => Image.asset(
+        'assets/images/splash_logo.png',
+        fit: BoxFit.contain,
+        semanticLabel: 'Healings E. Azuike',
+      ),
+    );
+    if (Theme.of(context).brightness == Brightness.dark) {
+      artwork = ColorFiltered(colorFilter: _darkMoodLift, child: artwork);
+    }
     return Scaffold(
       body: Center(
         child: FittedBox(
           fit: BoxFit.contain,
-          child: SizedBox.fromSize(
-            size: _artworkSize,
-            child: Image.asset(
-              'assets/images/splash_anim.webp',
-              fit: BoxFit.fill,
-              semanticLabel: 'Healings E. Azuike',
-              errorBuilder: (_, _, _) => Image.asset(
-                'assets/images/splash_logo.png',
-                fit: BoxFit.contain,
-                semanticLabel: 'Healings E. Azuike',
-              ),
-            ),
-          ),
+          child: SizedBox.fromSize(size: _artworkSize, child: artwork),
         ),
       ),
     );

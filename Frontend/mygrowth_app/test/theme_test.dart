@@ -15,20 +15,27 @@ const Color brandBlack = Color(0xFF000000);
 const Color brandGreyBrown = Color(0xFF815E22);
 const Color brandWhite = Color(0xFFFFFFFF);
 
+/// The light mood surfaces, which are warm off-whites rather than pure white.
+const Color lightCanvas = Color(0xFFF7F5F2);
+const Color lightSurface = Color(0xFFFFFDFB);
+const Color lightBorder = Color(0xFFE5DED5);
+const Color lightInk = Color(0xFF18243A);
+const Color lightAccent = Color(0xFFD4AF7C);
+
 void main() {
   setUp(() => AppColors.palette = AppPalette.light);
   tearDown(() => AppColors.palette = AppPalette.light);
 
   group('light mood', () {
-    test('paints a white canvas with the navy brand', () {
+    test('paints a warm canvas with the navy brand', () {
       final theme = AppTheme.light;
 
       expect(theme.brightness, Brightness.light);
-      expect(theme.scaffoldBackgroundColor, brandWhite);
-      expect(theme.colorScheme.surface, brandWhite);
+      expect(theme.scaffoldBackgroundColor, lightCanvas);
+      expect(theme.colorScheme.surface, lightSurface);
       expect(theme.colorScheme.primary, brandNavy);
       expect(theme.colorScheme.onPrimary, brandWhite);
-      expect(theme.textTheme.bodyMedium?.color, brandBlack);
+      expect(theme.textTheme.bodyMedium?.color, lightInk);
       expect(theme.appBarTheme.backgroundColor, brandNavy);
     });
   });
@@ -52,8 +59,11 @@ void main() {
       expect(theme.cardTheme.color, brandNavy);
       expect(
         theme.cardTheme.shape,
-        isA<RoundedRectangleBorder>()
-            .having((s) => s.side.color, 'side', const Color(0xFF1E3357)),
+        isA<RoundedRectangleBorder>().having(
+          (s) => s.side.color,
+          'side',
+          const Color(0xFF1E3357),
+        ),
       );
     });
   });
@@ -61,10 +71,10 @@ void main() {
   group('global colour tokens', () {
     test('follow the active palette', () {
       AppColors.palette = AppPalette.light;
-      expect(AppColors.background, brandWhite);
-      expect(AppColors.ink, brandBlack);
+      expect(AppColors.background, lightCanvas);
+      expect(AppColors.ink, lightInk);
       expect(AppColors.primaryAction, brandNavy);
-      expect(AppColors.accent, brandGreyBrown);
+      expect(AppColors.accent, lightAccent);
 
       AppColors.palette = AppPalette.dark;
       expect(AppColors.background, brandNavy);
@@ -93,21 +103,25 @@ void main() {
       );
     }
 
-    testWidgets('light mood renders white surfaces on a white canvas',
-        (tester) async {
+    testWidgets('light mood renders warm surfaces on a warm canvas', (
+      tester,
+    ) async {
       AppColors.palette = AppPalette.light;
       await tester.pumpWidget(harness(AppTheme.light));
 
       final theme = Theme.of(tester.element(find.byType(Scaffold)));
-      expect(theme.scaffoldBackgroundColor, brandWhite);
+      expect(theme.scaffoldBackgroundColor, lightCanvas);
       expect(theme.appBarTheme.backgroundColor, brandNavy);
 
       final card = tester.widget<Card>(find.byType(Card));
-      expect(card.color, brandWhite);
+      expect(card.color, lightSurface);
       expect(
         card.shape,
-        isA<RoundedRectangleBorder>()
-            .having((s) => s.side.color, 'side', const Color(0xFFDDE3EC)),
+        isA<RoundedRectangleBorder>().having(
+          (s) => s.side.color,
+          'side',
+          lightBorder,
+        ),
       );
 
       final buttonStyle = theme.filledButtonTheme.style!;
@@ -115,8 +129,9 @@ void main() {
       expect(buttonStyle.foregroundColor!.resolve({}), brandWhite);
     });
 
-    testWidgets('dark mood renders navy surfaces on a navy canvas',
-        (tester) async {
+    testWidgets('dark mood renders navy surfaces on a navy canvas', (
+      tester,
+    ) async {
       AppColors.palette = AppPalette.dark;
       await tester.pumpWidget(harness(AppTheme.dark));
 
@@ -128,8 +143,11 @@ void main() {
       expect(card.color, brandNavy);
       expect(
         card.shape,
-        isA<RoundedRectangleBorder>()
-            .having((s) => s.side.color, 'side', const Color(0xFF1E3357)),
+        isA<RoundedRectangleBorder>().having(
+          (s) => s.side.color,
+          'side',
+          const Color(0xFF1E3357),
+        ),
       );
 
       final buttonStyle = theme.filledButtonTheme.style!;
@@ -144,7 +162,7 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      expect(container.read(appearanceProvider), AppearanceMode.system);
+      expect(container.read(appearanceProvider), AppearanceMode.light);
 
       await tester.pump(const Duration(milliseconds: 50));
       await tester.pump();
@@ -157,9 +175,9 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      await container.read(appearanceProvider.notifier).setMode(
-            AppearanceMode.dark,
-          );
+      await container
+          .read(appearanceProvider.notifier)
+          .setMode(AppearanceMode.dark);
       await tester.pump();
 
       final prefs = await SharedPreferences.getInstance();
@@ -167,8 +185,9 @@ void main() {
       expect(container.read(appearanceProvider), AppearanceMode.dark);
     });
 
-    testWidgets('the header button flips between light and dark',
-        (tester) async {
+    testWidgets('the header button flips between light and dark', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(
         ProviderScope(

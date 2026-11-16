@@ -91,9 +91,8 @@ class MemberHomeScreen extends ConsumerWidget {
             const SizedBox(height: 28),
             Text(
               "Today's Activities",
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Column(
@@ -196,9 +195,7 @@ class _HomeBrandHeader extends StatelessWidget {
                     height: bannerHeight * .43,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          bannerHeight * .1,
-                        ),
+                        borderRadius: BorderRadius.circular(bannerHeight * .1),
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -245,155 +242,168 @@ class _WelcomeHero extends ConsumerWidget {
     );
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
-      child: Container(
-        height: 240,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/prayer.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.navy900.withValues(alpha: .22),
-                AppColors.navy900.withValues(alpha: .94),
-              ],
+      // The hero is at least 240 high, but it grows with its content so larger
+      // text scales never overflow the card.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 240),
+        child: IntrinsicHeight(
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/prayer.jpg'),
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.navy900.withValues(alpha: .22),
+                    AppColors.navy900.withValues(alpha: .94),
+                  ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: onMenu,
-                      tooltip: 'Open navigation menu',
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.menu_rounded, color: Colors.white),
-                    ),
-                    IconButton(
-                      onPressed: onNotifications,
-                      tooltip: 'Notifications',
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(
-                        Icons.notifications_none_rounded,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: onMenu,
+                          tooltip: 'Open navigation menu',
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(
+                            Icons.menu_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: onNotifications,
+                          tooltip: 'Notifications',
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(
+                            Icons.notifications_none_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Spacer(),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 220),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 19,
+                                backgroundColor: AppColors.champagneGold,
+                                backgroundImage: resolvedAvatar == null
+                                    ? null
+                                    : NetworkImage(resolvedAvatar),
+                                child: resolvedAvatar == null
+                                    ? Text(
+                                        initials,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 12,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      greeting,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            color: Colors.white.withValues(
+                                              alpha: .9,
+                                            ),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            height: 1.1,
+                                          ),
+                                    ),
+                                    Text(
+                                      name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                            height: 1.15,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const Spacer(),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 220),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 19,
-                            backgroundColor: AppColors.champagneGold,
-                            backgroundImage: resolvedAvatar == null
-                                ? null
-                                : NetworkImage(resolvedAvatar),
-                            child: resolvedAvatar == null
-                                ? Text(
-                                    initials,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 12,
-                                    ),
-                                  )
-                                : null,
+                    Container(
+                      width: 42,
+                      height: 3,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.champagneGold,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    Text(
+                      "TODAY'S SCRIPTURE",
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: AppColors.softGold,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _ScriptureCarousel(
+                      textStyle: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontStyle: FontStyle.italic,
+                        height: 1.2,
+                      ),
+                      referenceStyle: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.white.withValues(alpha: .84),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: onReadMore,
+                        iconAlignment: IconAlignment.end,
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                        label: const Text('Daily Devotion'),
+                        style: TextButton.styleFrom(
+                          backgroundColor: AppColors.champagneGold,
+                          foregroundColor: AppColors.navy900,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 13,
+                            vertical: 8,
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  greeting,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: Colors.white.withValues(alpha: .9),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.1,
-                                  ),
-                                ),
-                                Text(
-                                  name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
-                                    height: 1.15,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const Spacer(),
-                Container(
-                  width: 42,
-                  height: 3,
-                  margin: const EdgeInsets.only(bottom: 14),
-                  decoration: BoxDecoration(
-                    color: AppColors.champagneGold,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                Text(
-                  "TODAY'S SCRIPTURE",
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _ScriptureCarousel(
-                  textStyle: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
-                    height: 1.2,
-                  ),
-                  referenceStyle: theme.textTheme.labelSmall?.copyWith(
-                    color: Colors.white.withValues(alpha: .84),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: onReadMore,
-                    iconAlignment: IconAlignment.end,
-                    icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                    label: const Text('Daily Devotion'),
-                    style: TextButton.styleFrom(
-                      backgroundColor: AppColors.champagneGold,
-                      foregroundColor: AppColors.navy900,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
