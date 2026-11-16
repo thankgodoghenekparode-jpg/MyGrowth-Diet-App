@@ -28,248 +28,247 @@ class ProfileScreen extends ConsumerWidget {
     final avatarUrl = user?.avatarUrl;
     final isAdminArea = GoRouterState.of(context).uri.path.startsWith('/admin');
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile & Settings')),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(authControllerProvider.notifier).refreshUser();
-          ref.invalidate(notificationPrefsProvider);
-          await Future<void>.delayed(const Duration(milliseconds: 200));
-        },
-        child: ListView(
-          padding: Breakpoints.isCompact(context)
-              ? AppSpacing.pagePaddingMobile
-              : const EdgeInsets.all(AppSpacing.xl),
-          children: [
-            // --------------------------------------------- identity card
-            AppCard(
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: user == null
-                        ? null
-                        : () => _changeAvatar(context, ref),
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: AppColors.avatarBg,
-                          backgroundImage:
-                              (avatarUrl != null && avatarUrl.isNotEmpty)
-                              ? NetworkImage(AppConfig.resolveUrl(avatarUrl))
-                              : null,
-                          child:
-                              (user?.avatarUrl == null ||
-                                  user!.avatarUrl!.isEmpty)
-                              ? Text(
-                                  user?.initials ?? '?',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: AppColors.navy700,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 14,
-                              color: Colors.white,
-                            ),
+    // The member shell supplies the app bar (title and back arrow), so this
+    // page only provides its scrolling content.
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref.read(authControllerProvider.notifier).refreshUser();
+        ref.invalidate(notificationPrefsProvider);
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      },
+      child: ListView(
+        padding: Breakpoints.isCompact(context)
+            ? AppSpacing.pagePaddingMobile
+            : const EdgeInsets.all(AppSpacing.xl),
+        children: [
+          // --------------------------------------------- identity card
+          AppCard(
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: user == null
+                      ? null
+                      : () => _changeAvatar(context, ref),
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: AppColors.avatarBg,
+                        backgroundImage:
+                            (avatarUrl != null && avatarUrl.isNotEmpty)
+                            ? NetworkImage(AppConfig.resolveUrl(avatarUrl))
+                            : null,
+                        child:
+                            (user?.avatarUrl == null ||
+                                user!.avatarUrl!.isEmpty)
+                            ? Text(
+                                user?.initials ?? '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.navy700,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 14,
+                            color: Colors.white,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.name ?? 'Member',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      if (user != null)
+                        Text(
+                          user.email,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      if (user != null)
+                        TextButton.icon(
+                          onPressed: () => _changeAvatar(context, ref),
+                          icon: const Icon(
+                            Icons.photo_camera_outlined,
+                            size: 18,
+                          ),
+                          label: const Text('Change profile photo'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.navy700,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: AppSpacing.xs,
+                            ),
+                            alignment: Alignment.centerLeft,
+                          ),
+                        ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.xs,
+                        children: [
+                          StatusBadge(
+                            label: switch (user?.role) {
+                              'MAIN_ADMIN' => 'Main Admin',
+                              'ADMIN' => 'Admin',
+                              _ => 'Member',
+                            },
+                            tone: AppBadgeTone.navy,
+                          ),
+                          StatusBadge(
+                            label:
+                                '${humanizeStatus(user?.status ?? 'ACTIVE')} membership',
+                            tone: badgeToneFor(user?.status ?? 'ACTIVE'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          if (user != null)
+            _ProfileForm(
+              key: ValueKey(user.id),
+              initialName: user.name,
+              initialPhone: user.phone ?? '',
+              initialTimeZone: user.timeZone,
+            ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ------------------------------------- admin/member switch
+          if (user != null && user.canUseAdminArea)
+            AppCard(
+              onTap: () => context.go(isAdminArea ? '/home' : '/admin'),
+              child: Row(
+                children: [
+                  Icon(
+                    isAdminArea
+                        ? Icons.home_outlined
+                        : Icons.admin_panel_settings_outlined,
+                    color: AppColors.navy700,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.name ?? 'Member',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        if (user != null)
-                          Text(
-                            user.email,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        if (user != null)
-                          TextButton.icon(
-                            onPressed: () => _changeAvatar(context, ref),
-                            icon: const Icon(
-                              Icons.photo_camera_outlined,
-                              size: 18,
-                            ),
-                            label: const Text('Change profile photo'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.navy700,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 0,
-                                vertical: AppSpacing.xs,
-                              ),
-                              alignment: Alignment.centerLeft,
-                            ),
-                          ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Wrap(
-                          spacing: AppSpacing.xs,
-                          runSpacing: AppSpacing.xs,
-                          children: [
-                            StatusBadge(
-                              label: switch (user?.role) {
-                                'MAIN_ADMIN' => 'Main Admin',
-                                'ADMIN' => 'Admin',
-                                _ => 'Member',
-                              },
-                              tone: AppBadgeTone.navy,
-                            ),
-                            StatusBadge(
-                              label:
-                                  '${humanizeStatus(user?.status ?? 'ACTIVE')} membership',
-                              tone: badgeToneFor(user?.status ?? 'ACTIVE'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            if (user != null)
-              _ProfileForm(
-                key: ValueKey(user.id),
-                initialName: user.name,
-                initialPhone: user.phone ?? '',
-                initialTimeZone: user.timeZone,
-              ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // ------------------------------------- admin/member switch
-            if (user != null && user.canUseAdminArea)
-              AppCard(
-                onTap: () => context.go(isAdminArea ? '/home' : '/admin'),
-                child: Row(
-                  children: [
-                    Icon(
+                    child: Text(
                       isAdminArea
-                          ? Icons.home_outlined
-                          : Icons.admin_panel_settings_outlined,
-                      color: AppColors.navy700,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        isAdminArea
-                            ? 'Switch to member area'
-                            : 'Switch to admin area',
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: AppColors.inkMuted,
-                    ),
-                  ],
-                ),
-              ),
-            if (user != null && user.canUseAdminArea)
-              const SizedBox(height: AppSpacing.lg),
-
-            // ------------------------------------------- appearance
-            const SectionHeader(
-              title: 'Appearance',
-              subtitle: 'Choose the light or dark mood',
-              icon: Icons.palette_outlined,
-            ),
-            const AppCard(child: AppearanceSection()),
-            const SizedBox(height: AppSpacing.lg),
-
-            // ------------------------------------ notification settings
-            const SectionHeader(
-              title: 'Notification preferences',
-              subtitle: 'Choose how MyGrowth keeps in touch',
-              icon: Icons.notifications_outlined,
-            ),
-            const AppCard(child: NotificationPrefsSection()),
-            const SizedBox(height: AppSpacing.lg),
-
-            // ------------------------------------------ privacy & tone
-            const SectionHeader(
-              title: 'Privacy & your data',
-              icon: Icons.shield_outlined,
-            ),
-            AppCard(
-              color: AppColors.navy50,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '“Small steps, faithful days, lasting growth.”',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      color: AppColors.navy800,
-                      fontWeight: FontWeight.w600,
+                          ? 'Switch to member area'
+                          : 'Switch to admin area',
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    '• Your reflections journal and annual letter are private '
-                    'to you — administrators cannot see them.\n'
-                    '• Testimonies are only shared if you give consent, and '
-                    'only after ministry approval.\n'
-                    '• Activity records and reports are self-reported and '
-                    'shared only with ministry administrators for '
-                    'accountability.\n'
-                    '• Prayer partners only ever see general availability — '
-                    'never your exact schedule.',
-                    style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(height: 1.6),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: AppColors.inkMuted,
                   ),
                 ],
               ),
             ),
+          if (user != null && user.canUseAdminArea)
             const SizedBox(height: AppSpacing.lg),
 
-            // ------------------------------------------------- sign out
-            AppButton(
-              label: 'Sign out',
-              icon: Icons.logout_rounded,
-              variant: AppButtonVariant.outlined,
-              expand: true,
-              onPressed: () async {
-                final ok = await confirmDialog(
-                  context,
-                  title: 'Sign out?',
-                  message:
-                      'You’ll need to sign in again to access your growth '
-                      'plan. Your progress stays safe.',
-                  confirmLabel: 'Sign out',
-                );
-                if (!ok || !context.mounted) return;
-                await ref.read(authControllerProvider.notifier).signOut();
-                if (context.mounted) context.go('/login');
-              },
+          // ------------------------------------------- appearance
+          const SectionHeader(
+            title: 'Appearance',
+            subtitle: 'Choose the light or dark mood',
+            icon: Icons.palette_outlined,
+          ),
+          const AppCard(child: AppearanceSection()),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ------------------------------------ notification settings
+          const SectionHeader(
+            title: 'Notification preferences',
+            subtitle: 'Choose how MyGrowth keeps in touch',
+            icon: Icons.notifications_outlined,
+          ),
+          const AppCard(child: NotificationPrefsSection()),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ------------------------------------------ privacy & tone
+          const SectionHeader(
+            title: 'Privacy & your data',
+            icon: Icons.shield_outlined,
+          ),
+          AppCard(
+            color: AppColors.navy50,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '“Small steps, faithful days, lasting growth.”',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.navy800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  '• Your reflections journal and annual letter are private '
+                  'to you — administrators cannot see them.\n'
+                  '• Testimonies are only shared if you give consent, and '
+                  'only after ministry approval.\n'
+                  '• Activity records and reports are self-reported and '
+                  'shared only with ministry administrators for '
+                  'accountability.\n'
+                  '• Prayer partners only ever see general availability — '
+                  'never your exact schedule.',
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(height: 1.6),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.xl),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ------------------------------------------------- sign out
+          AppButton(
+            label: 'Sign out',
+            icon: Icons.logout_rounded,
+            variant: AppButtonVariant.outlined,
+            expand: true,
+            onPressed: () async {
+              final ok = await confirmDialog(
+                context,
+                title: 'Sign out?',
+                message:
+                    'You’ll need to sign in again to access your growth '
+                    'plan. Your progress stays safe.',
+                confirmLabel: 'Sign out',
+              );
+              if (!ok || !context.mounted) return;
+              await ref.read(authControllerProvider.notifier).signOut();
+              if (context.mounted) context.go('/login');
+            },
+          ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
       ),
     );
   }
@@ -336,8 +335,9 @@ Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
         : data is Map
         ? data['id']
         : null;
-    if (fileId == null)
+    if (fileId == null) {
       throw ApiException(500, 'upload_failed', 'Invalid upload response');
+    }
     await api.patch('/me', body: {'avatarFileId': fileId});
     await ref.read(authControllerProvider.notifier).refreshUser();
     if (context.mounted) Toast.success(context, 'Profile photo updated');
@@ -408,8 +408,9 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         Toast.error(context, 'Unable to save your profile just now.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

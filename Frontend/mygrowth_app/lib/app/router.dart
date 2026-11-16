@@ -581,14 +581,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/shape-space',
         parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) => _fade(
-          const MaterialPage(
-            child: _AdminPage(
-              title: 'Shape Space Q&A',
-              child: AdminShapeSpaceScreen(),
-            ),
-          ),
-        ),
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: AdminShapeSpaceScreen())),
       ),
       GoRoute(
         path: '/admin/programmes',
