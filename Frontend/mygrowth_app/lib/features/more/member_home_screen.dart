@@ -70,8 +70,18 @@ class MemberHomeScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
-            const _HomeBrandHeader(),
-            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SizedBox(
+                height: 72,
+                child: Image.asset(
+                  'assets/images/mygrowth_logo_slogan.png',
+                  fit: BoxFit.contain,
+                  semanticLabel:
+                      'MyGrowth Diet logo: Learn, Growth, Live it. Your personal journey of faith and growth.',
+                ),
+              ),
+            ),
             Builder(
               builder: (shellContext) => _WelcomeHero(
                 greeting: greeting,
@@ -126,92 +136,6 @@ class MemberHomeScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _HomeBrandHeader extends StatelessWidget {
-  const _HomeBrandHeader();
-
-  /// Intrinsic size of `assets/images/home_brand_banner.png`. The banner is
-  /// laid out at the width of the page (plus a little bleed), so its height
-  /// must be derived from this ratio.
-  static const double _bannerAspectRatio = 1254 / 206;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final bannerWidth = constraints.maxWidth + 32;
-      final bannerHeight = bannerWidth / _bannerAspectRatio;
-      // The header lives inside a vertical ListView, where height is
-      // unbounded. Give it an explicit height: an OverflowBox with no height
-      // constraints would otherwise be laid out at infinity and push every
-      // other element off-screen (the page then shows only the wallpaper).
-      return SizedBox(
-        height: bannerHeight,
-        child: OverflowBox(
-          alignment: Alignment.center,
-          minWidth: bannerWidth,
-          maxWidth: bannerWidth,
-          minHeight: bannerHeight,
-          maxHeight: bannerHeight,
-          child: ShaderMask(
-            blendMode: BlendMode.dstIn,
-            shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.white,
-                Colors.white,
-                Colors.transparent,
-              ],
-              stops: [0, .08, .78, 1],
-            ).createShader(bounds),
-            child: ShaderMask(
-              blendMode: BlendMode.dstIn,
-              shaderCallback: (bounds) => const LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Colors.transparent,
-                  Colors.white,
-                  Colors.white,
-                  Colors.transparent,
-                ],
-                stops: [0, .06, .94, 1],
-              ).createShader(bounds),
-              child: Stack(
-                children: [
-                  Image.asset(
-                    'assets/images/home_brand_banner.png',
-                    width: bannerWidth,
-                    height: bannerHeight,
-                    fit: BoxFit.contain,
-                    semanticLabel: 'MyGrowth banner: Grow. Learn. Live it.',
-                  ),
-                  Positioned(
-                    right: bannerWidth * .013,
-                    top: bannerHeight * .34,
-                    width: bannerWidth * .17,
-                    height: bannerHeight * .43,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(bannerHeight * .1),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xffe3e0e1), Color(0xffd7d5d9)],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  );
 }
 
 class _WelcomeHero extends ConsumerWidget {
