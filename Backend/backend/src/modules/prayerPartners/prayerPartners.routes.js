@@ -54,7 +54,7 @@ const availabilitySchema = z
       message: 'Provide both times and ensure the end is after the start.',
       path: ['timeEnd'],
     },
-  });
+  );
 
 /** Flat, Flutter-friendly projection of a PrayerAvailability row. */
 function availabilityShape(av) {
@@ -1103,3 +1103,4 @@ router.patch(
 );
 
 export default router;
+
