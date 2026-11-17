@@ -719,8 +719,8 @@ class _MaterialBlock extends StatelessWidget {
         : const <Map<String, dynamic>>[];
     // The audio and music sections list what to listen to for the period.
     final messages = section.key == 'audio_message'
-        ? (content?.messages ?? const <String>[])
-        : const <String>[];
+        ? (content?.messageItems ?? const <Map<String, dynamic>>[])
+        : const <Map<String, dynamic>>[];
     final songs = section.key == 'music'
         ? (content?.songs ?? const <String>[])
         : const <String>[];
@@ -745,8 +745,14 @@ class _MaterialBlock extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(AppSpacing.sm),
                       onTap: () => context.push(
-                        '/reading/audio?title='
-                        '${Uri.encodeQueryComponent(messages[i])}',
+                        Uri(
+                          path: '/reading/audio',
+                          queryParameters: {
+                            'title': (messages[i]['title'] ?? 'Audio message')
+                                .toString(),
+                            'url': (messages[i]['fileUrl'] ?? '').toString(),
+                          },
+                        ).toString(),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -760,7 +766,8 @@ class _MaterialBlock extends StatelessWidget {
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
                               child: Text(
-                                messages[i],
+                                (messages[i]['title'] ?? 'Audio message')
+                                    .toString(),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   height: 1.45,
                                 ),
@@ -844,6 +851,8 @@ class _MaterialBlock extends StatelessWidget {
                           if (books[i]['backCoverAsset'] != null)
                             'backCover':
                                 books[i]['backCoverAsset'].toString(),
+                          if (books[i]['fileUrl'] != null)
+                            'url': books[i]['fileUrl'].toString(),
                         };
                         context.push(
                           Uri(path: '/reading/book', queryParameters: query)

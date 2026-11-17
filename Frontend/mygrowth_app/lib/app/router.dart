@@ -46,6 +46,7 @@ import '../features/daily_diet/daily_devotion_screen.dart';
 import '../features/daily_diet/daily_diet_section_screen.dart';
 import '../features/daily_diet/reading_book_screen.dart';
 import '../features/daily_diet/reading_audio_screen.dart';
+import '../features/daily_diet/book_reader_screen.dart';
 import '../features/materials/material_detail_screen.dart';
 import '../features/materials/materials_screen.dart';
 import '../features/more/member_home_screen.dart';
@@ -300,6 +301,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               author: state.uri.queryParameters['author'] ?? '',
               coverAsset: state.uri.queryParameters['cover'],
               backCoverAsset: state.uri.queryParameters['backCover'],
+              fileUrl: state.uri.queryParameters['url'] ?? '',
             ),
           ),
         ),
@@ -311,6 +313,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           MaterialPage(
             child: ReadingAudioScreen(
               title: state.uri.queryParameters['title'] ?? 'Audio message',
+              url: state.uri.queryParameters['url'] ?? '',
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/reading/document',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, state) => _fade(
+          MaterialPage(
+            child: BookReaderScreen(
+              title: state.uri.queryParameters['title'] ?? 'Book',
+              url: state.uri.queryParameters['url'] ?? '',
             ),
           ),
         ),

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_card.dart';
 
-/// Destination for a book in the Growth Diet reading list.
-///
-/// Book files are uploaded separately, so this screen provides the selected
-/// book details until its reading content is available in the app.
+/// Details and in-app reading entry point for a Growth Diet book.
 class ReadingBookScreen extends StatelessWidget {
   const ReadingBookScreen({
     super.key,
@@ -16,12 +14,14 @@ class ReadingBookScreen extends StatelessWidget {
     required this.author,
     this.coverAsset,
     this.backCoverAsset,
+    required this.fileUrl,
   });
 
   final String title;
   final String author;
   final String? coverAsset;
   final String? backCoverAsset;
+  final String fileUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +35,7 @@ class ReadingBookScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _BookCovers(
-                  front: coverAsset,
-                  back: backCoverAsset,
-                ),
+                _BookCovers(front: coverAsset, back: backCoverAsset),
                 const SizedBox(height: AppSpacing.lg),
                 Text(title, style: theme.textTheme.headlineSmall),
                 if (author.trim().isNotEmpty) ...[
@@ -51,25 +48,19 @@ class ReadingBookScreen extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: AppSpacing.lg),
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.navy50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.info_outline, color: AppColors.navy700),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          'This book has been added to your reading list. '
-                          'Its reading file will be available here after it is uploaded.',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: fileUrl.isEmpty
+                        ? null
+                        : () => context.push(
+                            Uri(
+                              path: '/reading/document',
+                              queryParameters: {'title': title, 'url': fileUrl},
+                            ).toString(),
+                          ),
+                    icon: const Icon(Icons.menu_book_rounded),
+                    label: const Text('Read book'),
                   ),
                 ),
               ],
@@ -140,9 +131,8 @@ class _BookCovers extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   covers[i].$2,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: AppColors.inkMuted),
                 ),
               ],
             ),

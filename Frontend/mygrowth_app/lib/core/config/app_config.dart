@@ -30,6 +30,12 @@ class AppConfig {
     defaultValue: 'https://mygrowth-diet-app.onrender.com/bibles',
   );
 
+  /// Public, cacheable literature and audio materials for the programme.
+  static const String libraryContentBaseUrl = String.fromEnvironment(
+    'LIBRARY_CONTENT_BASE_URL',
+    defaultValue: 'https://mygrowth-diet-app.onrender.com/library',
+  );
+
   /// When true, a tiny in-memory demo dataset is used only if the backend is
   /// unreachable, purely so the UI can be previewed. Never enabled by default.
   static const bool allowOfflinePreview = bool.fromEnvironment(

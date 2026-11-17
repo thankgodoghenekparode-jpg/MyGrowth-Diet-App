@@ -90,6 +90,23 @@ export function createApp() {
     })
   );
 
+  const libraryContentDirectory = fileURLToPath(
+    new URL('../public/library', import.meta.url)
+  );
+  app.use(
+    '/library',
+    express.static(libraryContentDirectory, {
+      etag: true,
+      maxAge: '7d',
+      setHeaders(res) {
+        res.setHeader(
+          'Cache-Control',
+          'public, max-age=604800, stale-while-revalidate=86400'
+        );
+      },
+    })
+  );
+
   app.use(cookieParser());
   app.use(express.json({ limit: '1mb', verify(req, res, buffer) { req.rawBody = Buffer.from(buffer); } }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/config/app_config.dart';
 import '../../core/models/daily_diet_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/provider_cache.dart';
@@ -19,11 +20,32 @@ const _januaryLiteratureBooks = <Map<String, dynamic>>[
     'author': 'Kenneth E. Hagin',
     'coverAsset': 'assets/images/plans_purposes_pursuits_front.jpg',
     'backCoverAsset': 'assets/images/plans_purposes_pursuits_back.jpg',
+    'fileUrl': '${AppConfig.libraryContentBaseUrl}/2027-01/plans-purposes-pursuits.pdf',
   },
   {
     'title': 'Atomic Habits',
     'author': 'James Clear',
     'coverAsset': 'assets/images/atomic_habits_front.jpg',
+    'fileUrl': '${AppConfig.libraryContentBaseUrl}/2027-01/atomic-habits.epub',
+  },
+];
+
+const _januaryAudioMessages = <Map<String, dynamic>>[
+  {
+    'title': 'God as Father — Part 1',
+    'fileUrl': '${AppConfig.libraryContentBaseUrl}/2027-01/god-as-father-part-1.mp3',
+  },
+  {
+    'title': 'God as Father — Part 2',
+    'fileUrl': '${AppConfig.libraryContentBaseUrl}/2027-01/god-as-father-part-2.mp3',
+  },
+  {
+    'title': 'God as Father — Part 3',
+    'fileUrl': '${AppConfig.libraryContentBaseUrl}/2027-01/god-as-father-part-3.mp3',
+  },
+  {
+    'title': 'God as Father — Part 4',
+    'fileUrl': '${AppConfig.libraryContentBaseUrl}/2027-01/god-as-father-part-4.mp3',
   },
 ];
 
@@ -53,6 +75,41 @@ Map<String, dynamic> _withJanuaryLiterature(
           .join('\n');
       details.addAll({
         'books': _januaryLiteratureBooks,
+        'month': 'January',
+        'year': 2027,
+      });
+      content['details'] = details;
+      section['content'] = content;
+    }
+    sections.add(section);
+  }
+  return {...json, 'sections': sections};
+}
+
+Map<String, dynamic> _withJanuaryAudioMessages(
+  Map<String, dynamic> json,
+  String date,
+) {
+  if (!date.startsWith('2027-01-')) return json;
+  final rawSections = json['sections'];
+  if (rawSections is! List) return json;
+
+  final sections = <dynamic>[];
+  for (final rawSection in rawSections) {
+    if (rawSection is! Map) {
+      sections.add(rawSection);
+      continue;
+    }
+    final section = Map<String, dynamic>.from(rawSection);
+    if (section['key'] == 'audio_message' && section['content'] is Map) {
+      final content = Map<String, dynamic>.from(section['content'] as Map);
+      final details = content['details'] is Map
+          ? Map<String, dynamic>.from(content['details'] as Map)
+          : <String, dynamic>{};
+      content['title'] = 'January messages';
+      content['body'] = 'God as Father — Parts 1–4';
+      details.addAll({
+        'messages': _januaryAudioMessages,
         'month': 'January',
         'year': 2027,
       });
@@ -121,7 +178,8 @@ final dailyDietProvider =
   try {
     final data = await client.get('/daily-diet', query: {'date': date});
     final withStudy = await _withJanuaryBibleStudy(_asMap(data), date);
-    final json = _withJanuaryLiterature(withStudy, date);
+    final withBooks = _withJanuaryLiterature(withStudy, date);
+    final json = _withJanuaryAudioMessages(withBooks, date);
     if (cacheKey != null && json.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(cacheKey, jsonEncode(json));
@@ -135,7 +193,8 @@ final dailyDietProvider =
     final cached = jsonDecode(saved);
     if (cached is! Map<String, dynamic>) rethrow;
     final withStudy = await _withJanuaryBibleStudy(cached, date);
-    final json = _withJanuaryLiterature(withStudy, date);
+    final withBooks = _withJanuaryLiterature(withStudy, date);
+    final json = _withJanuaryAudioMessages(withBooks, date);
     return DailyDietBundle.fromJson(json);
   }
 });

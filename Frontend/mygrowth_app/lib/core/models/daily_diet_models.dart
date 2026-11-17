@@ -228,6 +228,9 @@ class DailyDietContent {
   /// Audio messages for the period.
   List<String> get messages => _stringList('messages');
 
+  /// Audio message entries, including optional playable file URLs.
+  List<Map<String, dynamic>> get messageItems => _mapList('messages');
+
   /// Report prompts for the period.
   List<String> get questions => _stringList('questions');
 
