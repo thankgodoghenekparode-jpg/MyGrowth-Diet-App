@@ -169,15 +169,12 @@ String reportAnswerLabel(String key) {
 
 // ----------------------------------------------------------- period keys
 
-/// Builds a period key for "new report" flows, e.g. '2026-W07',
-/// '2026-03', '2026-Q1', '2026'.
+/// Builds a period key for "new report" flows. Weekly keys are sent as dates;
+/// the API normalizes them to the start of the week in the member's timezone.
 String periodKeyFor(String type, DateTime date) {
   switch (type.toUpperCase()) {
     case 'WEEKLY':
-      final firstJan = DateTime(date.year, 1, 1);
-      final dayOffset = date.difference(firstJan).inDays;
-      final week = ((dayOffset + firstJan.weekday) / 7).ceil().clamp(1, 53);
-      return '${date.year}-W${week.toString().padLeft(2, '0')}';
+      return DateFormat('yyyy-MM-dd').format(date);
     case 'MONTHLY':
       return '${date.year}-${date.month.toString().padLeft(2, '0')}';
     case 'QUARTERLY':
@@ -213,6 +210,9 @@ DateTime periodStartDateFor(String type, String periodKey) {
       }
       return DateTime(now.year, (now.month - 1) ~/ 3 * 3 + 1);
     case 'WEEKLY':
+      final weekStart = DateTime.tryParse(periodKey);
+      if (weekStart != null) return weekStart;
+      // Support legacy ISO week keys if an older draft contains one.
       final parts = periodKey.split('-W');
       if (parts.length == 2) {
         final year = int.tryParse(parts[0]);
@@ -251,6 +251,10 @@ String humanizePeriodKey(String periodKey) {
   final weekly = RegExp(r'^(\d{4})-W(\d{1,2})$').firstMatch(periodKey);
   if (weekly != null) {
     return 'Week ${weekly.group(2)}, ${weekly.group(1)}';
+  }
+  final weekStart = DateTime.tryParse(periodKey);
+  if (weekStart != null && RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(periodKey)) {
+    return 'Week of ${DateFormat('MMMM d, yyyy').format(weekStart)}';
   }
   return periodKey;
 }
