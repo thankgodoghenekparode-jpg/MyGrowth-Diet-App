@@ -88,13 +88,22 @@ class MemberHomeScreen extends ConsumerWidget {
                         ),
                       ),
                       Expanded(
-                        child: Image.asset(
-                          'assets/images/mygrowth_app_mark.png',
-                          fit: BoxFit.contain,
-                          semanticLabel: 'MyGrowth Diet app logo',
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 220,
+                              maxHeight: 56,
+                            ),
+                            child: Image.asset(
+                              'assets/images/mygrowth_brand_lockup.png',
+                              fit: BoxFit.contain,
+                              alignment: Alignment.centerRight,
+                              semanticLabel: 'MyGrowth Diet logo and slogan',
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 48),
                     ],
                   ),
                 ),
