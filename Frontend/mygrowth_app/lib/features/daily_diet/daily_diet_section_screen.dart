@@ -385,6 +385,7 @@ class _IntroCard extends StatelessWidget {
           if (introBody != null &&
               !isDeclarations &&
               section.key != 'prayer' &&
+              section.key != 'scripture_reading' &&
               section.key != 'literature_reading' &&
               section.key != 'proverbs_reading' &&
               section.key != 'audio_message') ...[
