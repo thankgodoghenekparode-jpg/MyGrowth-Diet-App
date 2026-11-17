@@ -975,7 +975,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 3),
                   child: SelectableText.rich(
                     TextSpan(
                       children: [
@@ -992,8 +992,8 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                           text: hit.text,
                           style: TextStyle(
                             color: AppColors.ink,
-                            height: 1.25,
-                            fontSize: 16,
+                            height: 1.4,
+                            fontSize: 17,
                             letterSpacing: 0,
                             decoration: TextDecoration.none,
                           ),
