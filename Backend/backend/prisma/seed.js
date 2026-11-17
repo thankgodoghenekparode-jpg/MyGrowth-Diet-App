@@ -79,7 +79,7 @@ const MONTHS = [
   {
     month: 1,
     theme: 'The Fatherhood of God',
-    prayerFocus: 'Spend hours praying in the Spirit throughout the whole month.',
+    prayerFocus: 'Spend hours praying in the Spirit in the month of January.',
     bibleReadingGuidance: 'Matthew | Mark | Proverbs',
     audioMessages: ['God as Father 1–5 by Pastor Healings E. Azuike'],
     fastingGuidance: FASTING,

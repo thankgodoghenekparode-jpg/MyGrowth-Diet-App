@@ -381,6 +381,7 @@ class _IntroCard extends StatelessWidget {
             Text(section.description!, style: theme.textTheme.bodySmall),
           ],
           if (introBody != null &&
+              section.key != 'prayer' &&
               section.key != 'proverbs_reading' &&
               section.key != 'audio_message') ...[
             const SizedBox(height: AppSpacing.sm),
