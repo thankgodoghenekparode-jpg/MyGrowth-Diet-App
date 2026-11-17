@@ -66,106 +66,110 @@ class MemberHomeScreen extends ConsumerWidget {
             // The current profile remains visible when refreshing offline.
           }
         },
+        // The horizontal gutter lives on each child instead of on the list so
+        // the hero card can sit 8 px closer to each edge than the other cards.
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          padding: const EdgeInsets.only(top: 12, bottom: 28),
           children: [
-            Builder(
-              builder: (shellContext) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: SizedBox(
-                  height: 72,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () =>
-                            Scaffold.of(shellContext).openDrawer(),
-                        tooltip: 'Open navigation menu',
-                        visualDensity: VisualDensity.compact,
-                        icon: Icon(
-                          Icons.menu_rounded,
-                          color: AppColors.brandText,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Builder(
+                builder: (shellContext) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SizedBox(
+                    height: 72,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () =>
+                              Scaffold.of(shellContext).openDrawer(),
+                          tooltip: 'Open navigation menu',
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(
+                            Icons.menu_rounded,
+                            color: AppColors.brandText,
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 280,
-                              maxHeight: 68,
-                            ),
-                            child: Image.asset(
-                              'assets/images/mygrowth_brand_lockup.png',
-                              fit: BoxFit.contain,
-                              alignment: Alignment.center,
-                              semanticLabel: 'MyGrowth Diet logo and slogan',
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: 280,
+                                maxHeight: 68,
+                              ),
+                              child: Image.asset(
+                                'assets/images/mygrowth_brand_lockup.png',
+                                fit: BoxFit.contain,
+                                alignment: Alignment.center,
+                                semanticLabel: 'MyGrowth Diet logo and slogan',
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final heroWidth = constraints.maxWidth + 16;
-                return OverflowBox(
-                  alignment: Alignment.center,
-                  minWidth: heroWidth,
-                  maxWidth: heroWidth,
-                  child: SizedBox(
-                    width: heroWidth,
-                    child: _WelcomeHero(
-                      greeting: greeting,
-                      name: displayName.isEmpty ? 'there' : displayName,
-                      avatarUrl: user?.avatarUrl,
-                      initials: user?.initials ?? '?',
-                      onNotifications: () => context.go('/notifications'),
-                      onReadMore: () => context.go('/devotion'),
-                    ),
-                  ),
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: _WelcomeHero(
+                greeting: greeting,
+                name: displayName.isEmpty ? 'there' : displayName,
+                avatarUrl: user?.avatarUrl,
+                initials: user?.initials ?? '?',
+                onNotifications: () => context.go('/notifications'),
+                onReadMore: () => context.go('/devotion'),
+              ),
             ),
             const SizedBox(height: 16),
-            _GrowthProgressCard(
-              progress: progress,
-              onTap: () => context.go('/progress'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _GrowthProgressCard(
+                progress: progress,
+                onTap: () => context.go('/progress'),
+              ),
             ),
             const SizedBox(height: 28),
-            Text(
-              "Today's Activities",
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                "Today's Activities",
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
             ),
             const SizedBox(height: 8),
-            Column(
-              children: [
-                _HomeActionCard(
-                  icon: Icons.menu_book_rounded,
-                  title: 'Bible Reading',
-                  subtitle: "Read and reflect on God's Word",
-                  onTap: () => context.go('/bible'),
-                ),
-                const SizedBox(height: 12),
-                _HomeActionCard(
-                  icon: Icons.auto_stories_rounded,
-                  title: "Today's Proverb",
-                  subtitle: 'Wisdom for today - Proverbs ${now.day}',
-                  onTap: () =>
-                      context.go('/bible?book=Proverbs&chapter=${now.day}'),
-                ),
-                const SizedBox(height: 12),
-                _HomeActionCard(
-                  icon: Icons.record_voice_over_rounded,
-                  title: 'Daily Declarations',
-                  subtitle: "Speak today's declarations of faith",
-                  onTap: () => context.go('/diet?section=declarations'),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _HomeActionCard(
+                    icon: Icons.menu_book_rounded,
+                    title: 'Bible Reading',
+                    subtitle: "Read and reflect on God's Word",
+                    onTap: () => context.go('/bible'),
+                  ),
+                  const SizedBox(height: 12),
+                  _HomeActionCard(
+                    icon: Icons.auto_stories_rounded,
+                    title: "Today's Proverb",
+                    subtitle: 'Wisdom for today - Proverbs ${now.day}',
+                    onTap: () =>
+                        context.go('/bible?book=Proverbs&chapter=${now.day}'),
+                  ),
+                  const SizedBox(height: 12),
+                  _HomeActionCard(
+                    icon: Icons.record_voice_over_rounded,
+                    title: 'Daily Declarations',
+                    subtitle: "Speak today's declarations of faith",
+                    onTap: () => context.go('/diet?section=declarations'),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
           ],
@@ -202,155 +206,155 @@ class _WelcomeHero extends ConsumerWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       // The hero is at least 220 high, but it grows with its content so larger
-      // text scales never overflow the card.
+      // text scales never overflow the card. The card lives inside a scrolling
+      // list, so its height is unbounded: the column must size to its children
+      // instead of using a Spacer/Expanded, which would need a bounded height.
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 220),
-        child: IntrinsicHeight(
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/prayer.jpg'),
+              fit: BoxFit.cover,
+            ),
+          ),
           child: DecoratedBox(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/prayer.jpg'),
-                fit: BoxFit.cover,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.navy900.withValues(alpha: .22),
+                  AppColors.navy900.withValues(alpha: .94),
+                ],
               ),
             ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.navy900.withValues(alpha: .22),
-                    AppColors.navy900.withValues(alpha: .94),
-                  ],
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                radius: 23,
-                                backgroundColor: AppColors.champagneGold,
-                                backgroundImage: resolvedAvatar == null
-                                    ? null
-                                    : NetworkImage(resolvedAvatar),
-                                child: resolvedAvatar == null
-                                    ? Text(
-                                        initials,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 13,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 23,
+                              backgroundColor: AppColors.champagneGold,
+                              backgroundImage: resolvedAvatar == null
+                                  ? null
+                                  : NetworkImage(resolvedAvatar),
+                              child: resolvedAvatar == null
+                                  ? Text(
+                                      initials,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    greeting,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: Colors.white.withValues(
+                                            alpha: .9,
+                                          ),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.1,
                                         ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 10),
-                              Flexible(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      greeting,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelMedium
-                                          ?.copyWith(
-                                            color: Colors.white.withValues(
-                                              alpha: .9,
-                                            ),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            height: 1.1,
-                                          ),
+                                  ),
+                                  Text(
+                                    name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16,
+                                      height: 1.15,
                                     ),
-                                    Text(
-                                      name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.titleSmall
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 16,
-                                            height: 1.15,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: onNotifications,
-                          tooltip: 'Notifications',
-                          visualDensity: VisualDensity.compact,
-                          icon: const Icon(
-                            Icons.notifications_none_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Container(
-                      width: 42,
-                      height: 3,
-                      margin: const EdgeInsets.only(bottom: 14),
-                      decoration: BoxDecoration(
-                        color: AppColors.champagneGold,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    Text(
-                      "TODAY'S SCRIPTURE",
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: AppColors.softGold,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _ScriptureCarousel(
-                      textStyle: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontStyle: FontStyle.italic,
-                        height: 1.2,
-                      ),
-                      referenceStyle: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white.withValues(alpha: .84),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: onReadMore,
-                        iconAlignment: IconAlignment.end,
-                        icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                        label: const Text('Daily Devotion'),
-                        style: TextButton.styleFrom(
-                          backgroundColor: AppColors.champagneGold,
-                          foregroundColor: AppColors.navy900,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 13,
-                            vertical: 8,
-                          ),
+                            ),
+                          ],
                         ),
                       ),
+                      IconButton(
+                        onPressed: onNotifications,
+                        tooltip: 'Notifications',
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.notifications_none_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    width: 42,
+                    height: 3,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.champagneGold,
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  ],
-                ),
+                  ),
+                  Text(
+                    "TODAY'S SCRIPTURE",
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: AppColors.softGold,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _ScriptureCarousel(
+                    textStyle: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontStyle: FontStyle.italic,
+                      height: 1.2,
+                    ),
+                    referenceStyle: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.white.withValues(alpha: .84),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: onReadMore,
+                      iconAlignment: IconAlignment.end,
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                      label: const Text('Daily Devotion'),
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.champagneGold,
+                        foregroundColor: AppColors.navy900,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
