@@ -108,7 +108,7 @@ class _PartnersViewState extends ConsumerState<_PartnersView>
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
-                          'Choose a member to send a partnership request.',
+                          'Choose a member to send a prayer partner request.',
                           style: Theme.of(ctx).textTheme.bodySmall,
                         ),
                       );
@@ -166,7 +166,7 @@ class _PartnersViewState extends ConsumerState<_PartnersView>
           controller: _tabController,
           tabs: const [
             Tab(text: 'Find a Partner'),
-            Tab(text: 'My Partnership'),
+            Tab(text: 'My Partner'),
             Tab(text: 'Requests'),
           ],
         ),
@@ -225,7 +225,7 @@ Future<bool> _sendPartnerRequest(
   final message = await showDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Send partnership request'),
+      title: const Text('Send prayer partner request'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -321,7 +321,7 @@ class _DiscoverTab extends ConsumerWidget {
                   title: 'No partners to suggest right now',
                   message:
                       'The directory shows active members who are open to '
-                      'prayer partnerships. More suggestions will appear as '
+                      'finding a prayer partner. More suggestions will appear as '
                       'members join - you can also update your own '
                       'availability in the Prayer Room.',
                   actionLabel: 'Open Prayer Room',
@@ -532,11 +532,11 @@ class _PartnershipTab extends ConsumerWidget {
                 AppCard(
                   child: EmptyState(
                     icon: Icons.handshake_outlined,
-                    title: 'No active prayer partnership',
+                    title: 'No prayer partner yet',
                     message:
                         "You're not currently partnered with anyone, and "
                         "that's perfectly okay. When you connect with a "
-                        'partner, your partnership will appear here.',
+                        'partner, their details will appear here.',
                     actionLabel: 'Find a partner',
                     onAction: onFindPartner,
                   ),
@@ -590,7 +590,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
       if (mounted) {
-        Toast.error(context, 'Unable to update the partnership just now.');
+        Toast.error(context, 'Unable to update your prayer partner just now.');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -600,16 +600,16 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
   Future<void> _endPartnership() async {
     final ok = await confirmDialog(
       context,
-      title: 'End partnership?',
+      title: 'End prayer partner connection?',
       message:
-          'You and ${partnership.partnerName} will no longer be paired as '
+          'You and ${partnership.partnerName} will no longer be connected as '
           'prayer partners. You can always find a new partner afterwards. '
           'No hard feelings.',
-      confirmLabel: 'End partnership',
+      confirmLabel: 'End connection',
       destructive: true,
     );
     if (!ok) return;
-    await _setStatus('ENDED', successMessage: 'Partnership ended.');
+    await _setStatus('ENDED', successMessage: 'Prayer partner connection ended.');
   }
 
   Future<void> _report() async {
@@ -752,7 +752,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
                   busy: _busy,
                   onPressed: () => _setStatus(
                     'PAUSED',
-                    successMessage: 'Partnership paused. Resume anytime. No pressure.',
+                    successMessage: 'Prayer partner connection paused. Resume anytime.',
                   ),
                 ),
               if (partnership.status == 'PAUSED')
@@ -762,12 +762,12 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
                   busy: _busy,
                   onPressed: () => _setStatus(
                     'ACTIVE',
-                    successMessage: 'Partnership resumed. Welcome back!',
+                    successMessage: 'Prayer partner connection resumed. Welcome back!',
                   ),
                 ),
               if (partnership.status != 'ENDED')
                 AppButton(
-                  label: 'End partnership',
+                  label: 'End connection',
                   variant: AppButtonVariant.text,
                   busy: _busy,
                   onPressed: _endPartnership,
