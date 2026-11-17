@@ -403,7 +403,10 @@ class _IntroCard extends StatelessWidget {
               color: AppColors.surfaceMuted,
               child: BibleReferenceText(
                 text: introBody,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: section.key == 'bible_study' ? 15 : null,
+                  height: section.key == 'bible_study' ? 1.75 : 1.6,
+                ),
               ),
             ),
           ],
