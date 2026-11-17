@@ -183,8 +183,9 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         Toast.error(context, 'Unable to save availability just now.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -381,8 +382,9 @@ class _SessionCardState extends ConsumerState<_SessionCard> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         Toast.error(context, 'Unable to update the session just now.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -915,8 +915,9 @@ class _RequestListCardState extends ConsumerState<_RequestListCard> {
     } on ApiException catch (e) {
       if (mounted) Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         Toast.error(context, 'Unable to update the request just now.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

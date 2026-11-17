@@ -28,17 +28,19 @@ class _AdminMinistryPartnershipsScreenState
       final response =
           await ref.read(apiClientProvider).get('/admin/ministry-partnerships')
               as Map<String, dynamic>;
-      if (mounted)
+      if (mounted) {
         setState(() {
           _rows = response['data'] as List<dynamic>? ?? [];
           _loading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = '$e';
           _loading = false;
         });
+      }
     }
   }
 

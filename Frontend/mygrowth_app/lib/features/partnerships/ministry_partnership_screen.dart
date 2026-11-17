@@ -54,11 +54,12 @@ class _MinistryPartnershipScreenState
         _loading = false;
       });
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _error = '$e';
         });
+      }
     }
   }
 
@@ -96,11 +97,12 @@ class _MinistryPartnershipScreenState
         ),
       );
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _saving = false;
           _error = '$e';
         });
+      }
     }
   }
 
@@ -112,17 +114,19 @@ class _MinistryPartnershipScreenState
                   .read(apiClientProvider)
                   .patch('/partnerships/mine', body: {'status': status})
               as Map<String, dynamic>;
-      if (mounted)
+      if (mounted) {
         setState(() {
           _current = result['partnership'] as Map<String, dynamic>?;
           _saving = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _saving = false;
           _error = '$e';
         });
+      }
     }
   }
 
