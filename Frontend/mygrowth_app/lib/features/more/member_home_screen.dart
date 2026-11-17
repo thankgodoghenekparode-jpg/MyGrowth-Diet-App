@@ -109,15 +109,26 @@ class MemberHomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            Builder(
-              builder: (shellContext) => _WelcomeHero(
-                greeting: greeting,
-                name: displayName.isEmpty ? 'there' : displayName,
-                avatarUrl: user?.avatarUrl,
-                initials: user?.initials ?? '?',
-                onNotifications: () => context.go('/notifications'),
-                onReadMore: () => context.go('/devotion'),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final heroWidth = constraints.maxWidth + 16;
+                return OverflowBox(
+                  alignment: Alignment.center,
+                  minWidth: heroWidth,
+                  maxWidth: heroWidth,
+                  child: SizedBox(
+                    width: heroWidth,
+                    child: _WelcomeHero(
+                      greeting: greeting,
+                      name: displayName.isEmpty ? 'there' : displayName,
+                      avatarUrl: user?.avatarUrl,
+                      initials: user?.initials ?? '?',
+                      onNotifications: () => context.go('/notifications'),
+                      onReadMore: () => context.go('/devotion'),
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             _GrowthProgressCard(
@@ -190,10 +201,10 @@ class _WelcomeHero extends ConsumerWidget {
     );
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
-      // The hero is at least 240 high, but it grows with its content so larger
+      // The hero is at least 220 high, but it grows with its content so larger
       // text scales never overflow the card.
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 240),
+        constraints: const BoxConstraints(minHeight: 220),
         child: IntrinsicHeight(
           child: DecoratedBox(
             decoration: const BoxDecoration(
@@ -220,23 +231,12 @@ class _WelcomeHero extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: onNotifications,
-                          tooltip: 'Notifications',
-                          visualDensity: VisualDensity.compact,
-                          icon: const Icon(
-                            Icons.notifications_none_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Spacer(),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 220),
+                        Expanded(
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               CircleAvatar(
-                                radius: 19,
+                                radius: 23,
                                 backgroundColor: AppColors.champagneGold,
                                 backgroundImage: resolvedAvatar == null
                                     ? null
@@ -247,12 +247,12 @@ class _WelcomeHero extends ConsumerWidget {
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w800,
-                                          fontSize: 12,
+                                          fontSize: 13,
                                         ),
                                       )
                                     : null,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Flexible(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -267,7 +267,7 @@ class _WelcomeHero extends ConsumerWidget {
                                             color: Colors.white.withValues(
                                               alpha: .9,
                                             ),
-                                            fontSize: 11,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.w600,
                                             height: 1.1,
                                           ),
@@ -280,7 +280,7 @@ class _WelcomeHero extends ConsumerWidget {
                                           ?.copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 14,
+                                            fontSize: 16,
                                             height: 1.15,
                                           ),
                                     ),
@@ -288,6 +288,15 @@ class _WelcomeHero extends ConsumerWidget {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: onNotifications,
+                          tooltip: 'Notifications',
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(
+                            Icons.notifications_none_rounded,
+                            color: Colors.white,
                           ),
                         ),
                       ],
