@@ -381,6 +381,7 @@ class _IntroCard extends StatelessWidget {
             Text(section.description!, style: theme.textTheme.bodySmall),
           ],
           if (introBody != null &&
+              !isDeclarations &&
               section.key != 'prayer' &&
               section.key != 'literature_reading' &&
               section.key != 'proverbs_reading' &&
@@ -408,16 +409,6 @@ class _IntroCard extends StatelessWidget {
                   fontSize: section.key == 'bible_study' ? 15 : null,
                   height: section.key == 'bible_study' ? 1.75 : 1.6,
                 ),
-              ),
-            ),
-          ],
-          if (isDeclarations && introBody == null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            AppCard(
-              color: AppColors.surfaceMuted,
-              child: Text(
-                'No daily declaration has been published yet.',
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
               ),
             ),
           ],
