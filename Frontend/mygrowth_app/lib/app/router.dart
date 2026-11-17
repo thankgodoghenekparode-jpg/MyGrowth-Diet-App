@@ -203,7 +203,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // -------------------------------------------------- member shell
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AreaShell(
-          title: _memberShellTitle(shell.currentIndex),
+          title: _memberShellTitle(shell.currentIndex, state.uri.path),
           destinations: memberBottomDestinations,
           area: AppArea.member,
           child: shell,
@@ -228,10 +228,29 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   ),
                 ),
               ),
+              GoRoute(
+                path: '/plan',
+                pageBuilder: (_, _) => const NoTransitionPage(
+                  child: GrowthPlanScreen(showAppBar: false),
+                ),
+              ),
             ],
           ),
           StatefulShellBranch(
+            initialLocation: '/bible',
             routes: [
+              GoRoute(
+                path: '/bible',
+                pageBuilder: (_, state) => NoTransitionPage(
+                  child: BibleReaderScreen(
+                    initialBook: state.uri.queryParameters['book'],
+                    initialChapter: int.tryParse(
+                      state.uri.queryParameters['chapter'] ?? '',
+                    ),
+                    showAppBar: false,
+                  ),
+                ),
+              ),
               GoRoute(
                 path: '/bible-reading',
                 pageBuilder: (_, _) =>
@@ -270,26 +289,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             child: _MemberPage(title: 'Dashboard', child: DashboardScreen()),
           ),
         ),
-      ),
-      GoRoute(
-        path: '/bible',
-        parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, state) => _fade(
-          MaterialPage(
-            child: BibleReaderScreen(
-              initialBook: state.uri.queryParameters['book'],
-              initialChapter: int.tryParse(
-                state.uri.queryParameters['chapter'] ?? '',
-              ),
-            ),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: '/plan',
-        parentNavigatorKey: rootNavigatorKey,
-        pageBuilder: (_, _) =>
-            _fade(const MaterialPage(child: GrowthPlanScreen())),
       ),
       GoRoute(
         path: '/reading/book',
@@ -841,7 +840,9 @@ class _AdminPage extends StatelessWidget {
   }
 }
 
-String _memberShellTitle(int index) => switch (index) {
+String _memberShellTitle(int index, String location) {
+  if (location == '/plan') return 'Diet Plan';
+  return switch (index) {
   0 => 'Home',
   1 => "Today's Diet",
   2 => 'Bible',
@@ -849,6 +850,7 @@ String _memberShellTitle(int index) => switch (index) {
   4 => 'Profile',
   _ => 'Home',
 };
+}
 
 String _adminShellTitle(int index) => switch (index) {
   0 => 'Home',

@@ -18,15 +18,19 @@ import '../programme/programme_providers.dart';
 /// My Growth Plan: the published monthly guidance for the programme year,
 /// with a year switcher, month selector and weekly plans.
 class GrowthPlanScreen extends ConsumerWidget {
-  const GrowthPlanScreen({super.key});
+  const GrowthPlanScreen({this.showAppBar = true, super.key});
+
+  final bool showAppBar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        leading: const AppBackButton(),
-        title: const Text('Diet Plan'),
-      ),
+      appBar: showAppBar
+          ? AppBar(
+              leading: const AppBackButton(),
+              title: const Text('Diet Plan'),
+            )
+          : null,
       body: const _GrowthPlanView(),
     );
   }

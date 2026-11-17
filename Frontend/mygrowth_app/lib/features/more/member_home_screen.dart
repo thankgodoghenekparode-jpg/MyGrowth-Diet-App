@@ -133,7 +133,7 @@ class MemberHomeScreen extends ConsumerWidget {
                 onTap: () => context.go('/progress'),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
@@ -153,7 +153,7 @@ class MemberHomeScreen extends ConsumerWidget {
                     subtitle: "Read and reflect on God's Word",
                     onTap: () => context.go('/bible'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _HomeActionCard(
                     icon: Icons.auto_stories_rounded,
                     title: "Today's Proverb",
@@ -161,17 +161,24 @@ class MemberHomeScreen extends ConsumerWidget {
                     onTap: () =>
                         context.go('/bible?book=Proverbs&chapter=${now.day}'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _HomeActionCard(
                     icon: Icons.record_voice_over_rounded,
                     title: 'Daily Declarations',
                     subtitle: "Speak today's declarations of faith",
                     onTap: () => context.go('/diet?section=declarations'),
                   ),
+                  const SizedBox(height: 8),
+                  _HomeActionCard(
+                    icon: Icons.self_improvement_rounded,
+                    title: 'Prayer Room',
+                    subtitle: 'Pray and connect with a prayer partner',
+                    onTap: () => context.go('/prayer'),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
           ],
         ),
       ),

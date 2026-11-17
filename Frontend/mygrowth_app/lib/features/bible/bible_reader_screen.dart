@@ -137,10 +137,16 @@ class _VerseHit {
 
 /// Bible reader with an offline WEB translation and selectable downloads.
 class BibleReaderScreen extends StatefulWidget {
-  const BibleReaderScreen({this.initialBook, this.initialChapter, super.key});
+  const BibleReaderScreen({
+    this.initialBook,
+    this.initialChapter,
+    this.showAppBar = true,
+    super.key,
+  });
 
   final String? initialBook;
   final int? initialChapter;
+  final bool showAppBar;
 
   @override
   State<BibleReaderScreen> createState() => _BibleReaderScreenState();
@@ -699,10 +705,12 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: const AppBackButton(),
-        title: const Text('Bible'),
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              leading: const AppBackButton(),
+              title: const Text('Bible'),
+            )
+          : null,
       body: FutureBuilder<_BibleSession>(
         future: _session,
         builder: (context, snapshot) {
