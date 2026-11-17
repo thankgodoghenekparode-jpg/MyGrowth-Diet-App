@@ -240,7 +240,7 @@ Future<bool> _sendPartnerRequest(
             controller: messageController,
             maxLines: 3,
             hint:
-                'Hi, I would love to partner with you in prayerÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦',
+                'Hi, I would love to partner with you in prayer...',
           ),
         ],
       ),
@@ -400,7 +400,7 @@ class _SuggestionCardState extends ConsumerState<_SuggestionCard> {
   Widget build(BuildContext context) {
     final timeRange =
         (suggestion.timeStart != null && suggestion.timeEnd != null)
-        ? '${suggestion.timeStart}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“${suggestion.timeEnd}'
+        ? '${suggestion.timeStart} to ${suggestion.timeEnd}'
         : 'Times flexible';
     return AppCard(
       child: Column(
@@ -448,7 +448,7 @@ class _SuggestionCardState extends ConsumerState<_SuggestionCard> {
           _InfoRow(
             icon: Icons.schedule_rounded,
             text:
-                '$timeRange Ãƒâ€šÃ‚Â· ${suggestion.preferredDurationMinutes} min',
+                '$timeRange | ${suggestion.preferredDurationMinutes} min',
           ),
           _InfoRow(icon: Icons.public_rounded, text: suggestion.timeZone),
           if (suggestion.language != null &&
@@ -534,8 +534,8 @@ class _PartnershipTab extends ConsumerWidget {
                     icon: Icons.handshake_outlined,
                     title: 'No active prayer partnership',
                     message:
-                        'YouÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢re not currently partnered with anyone ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â and '
-                        'thatÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s perfectly okay. When you connect with a '
+                        "You're not currently partnered with anyone, and "
+                        "that's perfectly okay. When you connect with a "
                         'partner, your partnership will appear here.',
                     actionLabel: 'Find a partner',
                     onAction: onFindPartner,
@@ -603,8 +603,8 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
       title: 'End partnership?',
       message:
           'You and ${partnership.partnerName} will no longer be paired as '
-          'prayer partners. You can always find a new partner afterwards ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â '
-          'no hard feelings.',
+          'prayer partners. You can always find a new partner afterwards. '
+          'No hard feelings.',
       confirmLabel: 'End partnership',
       destructive: true,
     );
@@ -632,7 +632,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
               required: true,
               controller: reasonController,
               maxLines: 4,
-              hint: 'Describe the concernÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦',
+              hint: 'Describe the concern...',
             ),
           ],
         ),
@@ -669,8 +669,8 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
         Toast.show(
           context,
           message:
-              'Report received. Ministry administrators will review it ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â '
-              'thank you for trusting us with this.',
+              'Report received. Ministry administrators will review it. '
+              'Thank you for trusting us with this.',
           tone: ToastTone.info,
           duration: const Duration(seconds: 5),
         );
@@ -752,7 +752,7 @@ class _PartnershipCardState extends ConsumerState<_PartnershipCard> {
                   busy: _busy,
                   onPressed: () => _setStatus(
                     'PAUSED',
-                    successMessage: 'Partnership paused. Resume anytime ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no pressure.',
+                    successMessage: 'Partnership paused. Resume anytime. No pressure.',
                   ),
                 ),
               if (partnership.status == 'PAUSED')
@@ -863,7 +863,7 @@ class _RequestsTab extends ConsumerWidget {
                       icon: Icons.send_outlined,
                       title: 'No requests sent yet',
                       message:
-                          'Find a partner and send a request ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â it will show '
+                          'Find a partner and send a request. It will show '
                           'up here while you wait.',
                     ),
                   )
