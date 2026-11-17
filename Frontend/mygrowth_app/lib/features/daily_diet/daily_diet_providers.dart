@@ -13,6 +13,57 @@ import '../../core/network/provider_cache.dart';
 Map<String, dynamic> _asMap(dynamic data) =>
     data is Map<String, dynamic> ? data : const {};
 
+const _januaryLiteratureBooks = <Map<String, dynamic>>[
+  {
+    'title': 'Plans, Purposes & Pursuits',
+    'author': 'Kenneth E. Hagin',
+    'coverAsset': 'assets/images/plans_purposes_pursuits_front.jpg',
+    'backCoverAsset': 'assets/images/plans_purposes_pursuits_back.jpg',
+  },
+  {
+    'title': 'Atomic Habits',
+    'author': 'James Clear',
+    'coverAsset': 'assets/images/atomic_habits_front.jpg',
+  },
+];
+
+Map<String, dynamic> _withJanuaryLiterature(
+  Map<String, dynamic> json,
+  String date,
+) {
+  if (!date.startsWith('2027-01-')) return json;
+  final rawSections = json['sections'];
+  if (rawSections is! List) return json;
+
+  final sections = <dynamic>[];
+  for (final rawSection in rawSections) {
+    if (rawSection is! Map) {
+      sections.add(rawSection);
+      continue;
+    }
+    final section = Map<String, dynamic>.from(rawSection);
+    if (section['key'] == 'literature_reading' && section['content'] is Map) {
+      final content = Map<String, dynamic>.from(section['content'] as Map);
+      final details = content['details'] is Map
+          ? Map<String, dynamic>.from(content['details'] as Map)
+          : <String, dynamic>{};
+      content['title'] = 'Literature — January 2027';
+      content['body'] = _januaryLiteratureBooks
+          .map((book) => '${book['title']} — ${book['author']}')
+          .join('\n');
+      details.addAll({
+        'books': _januaryLiteratureBooks,
+        'month': 'January',
+        'year': 2027,
+      });
+      content['details'] = details;
+      section['content'] = content;
+    }
+    sections.add(section);
+  }
+  return {...json, 'sections': sections};
+}
+
 Future<Map<String, dynamic>> _withJanuaryBibleStudy(
   Map<String, dynamic> json,
   String date,
@@ -69,7 +120,8 @@ final dailyDietProvider =
   final cacheKey = userId == null ? null : 'mgdp.dailyDiet.$userId.$date';
   try {
     final data = await client.get('/daily-diet', query: {'date': date});
-    final json = await _withJanuaryBibleStudy(_asMap(data), date);
+    final withStudy = await _withJanuaryBibleStudy(_asMap(data), date);
+    final json = _withJanuaryLiterature(withStudy, date);
     if (cacheKey != null && json.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(cacheKey, jsonEncode(json));
@@ -82,7 +134,8 @@ final dailyDietProvider =
     if (saved == null) rethrow;
     final cached = jsonDecode(saved);
     if (cached is! Map<String, dynamic>) rethrow;
-    final json = await _withJanuaryBibleStudy(cached, date);
+    final withStudy = await _withJanuaryBibleStudy(cached, date);
+    final json = _withJanuaryLiterature(withStudy, date);
     return DailyDietBundle.fromJson(json);
   }
 });

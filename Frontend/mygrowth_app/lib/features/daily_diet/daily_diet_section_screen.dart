@@ -836,9 +836,18 @@ class _MaterialBlock extends StatelessWidget {
                       onTap: () {
                         final title = (books[i]['title'] ?? '').toString();
                         final author = (books[i]['author'] ?? '').toString();
+                        final query = <String, String>{
+                          'title': title,
+                          'author': author,
+                          if (books[i]['coverAsset'] != null)
+                            'cover': books[i]['coverAsset'].toString(),
+                          if (books[i]['backCoverAsset'] != null)
+                            'backCover':
+                                books[i]['backCoverAsset'].toString(),
+                        };
                         context.push(
-                          '/reading/book?title=${Uri.encodeQueryComponent(title)}'
-                          '&author=${Uri.encodeQueryComponent(author)}',
+                          Uri(path: '/reading/book', queryParameters: query)
+                              .toString(),
                         );
                       },
                       child: Padding(

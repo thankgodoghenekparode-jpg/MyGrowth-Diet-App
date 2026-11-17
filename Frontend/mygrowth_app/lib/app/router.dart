@@ -299,6 +299,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             child: ReadingBookScreen(
               title: state.uri.queryParameters['title'] ?? 'Book',
               author: state.uri.queryParameters['author'] ?? '',
+              coverAsset: state.uri.queryParameters['cover'],
+              backCoverAsset: state.uri.queryParameters['backCover'],
             ),
           ),
         ),

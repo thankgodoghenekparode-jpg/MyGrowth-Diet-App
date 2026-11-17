@@ -84,8 +84,8 @@ const MONTHS = [
     audioMessages: ['God as Father 1–5 by Pastor Healings E. Azuike'],
     fastingGuidance: FASTING,
     literatureList: [
-      { title: 'The Father and His Family', author: 'E. W. Kenyon' },
-      { title: 'The 7 Habits of Highly Effective People', author: 'Stephen Covey' },
+      { title: 'Plans, Purposes & Pursuits', author: 'Kenneth E. Hagin' },
+      { title: 'Atomic Habits', author: 'James Clear' },
     ],
     monthlyConfession:
       'My path is a shining light, and it shines brighter and brighter unto a perfect day. Pro 4vs1',
