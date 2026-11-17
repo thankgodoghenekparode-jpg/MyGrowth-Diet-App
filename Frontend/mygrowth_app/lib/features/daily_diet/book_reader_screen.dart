@@ -18,15 +18,24 @@ class BookReaderScreen extends StatefulWidget {
 class _BookReaderScreenState extends State<BookReaderScreen> {
   late final Uri _uri = Uri.parse(widget.url);
   late final bool _isPdf = _uri.path.toLowerCase().endsWith('.pdf');
+
   PdfControllerPinch? _pdfController;
   final EpubController _epubController = EpubController();
+
   Object? _error;
 
   @override
   void initState() {
     super.initState();
+
     if (_isPdf) {
-      _pdfController = PdfControllerPinch(document: PdfDocument.openUri(_uri));
+      _pdfController = PdfControllerPinch(
+        document: PdfDocument.openData(
+          NetworkAssetBundle(_uri)
+              .load(_uri.toString())
+              .then((data) => data.buffer.asUint8List()),
+        ),
+      );
     }
   }
 
@@ -57,7 +66,9 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
           ? PdfViewPinch(
               controller: _pdfController!,
               onDocumentError: (error) {
-                if (mounted) setState(() => _error = error);
+                if (mounted) {
+                  setState(() => _error = error);
+                }
               },
             )
           : EpubViewer(
@@ -70,7 +81,9 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
                 allowScriptedContent: false,
               ),
               onLoadError: (error) {
-                if (mounted) setState(() => _error = error);
+                if (mounted) {
+                  setState(() => _error = error);
+                }
               },
             ),
     );
