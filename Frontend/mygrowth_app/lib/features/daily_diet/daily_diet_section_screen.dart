@@ -254,8 +254,10 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
           ? AppSpacing.pagePaddingMobile
           : const EdgeInsets.all(AppSpacing.xl),
       children: [
-        _IntroCard(section: section, bundle: bundle),
-        const SizedBox(height: AppSpacing.md),
+        if (section.behaviour != DailyDietBehaviour.partner) ...[
+          _IntroCard(section: section, bundle: bundle),
+          const SizedBox(height: AppSpacing.md),
+        ],
         switch (section.behaviour) {
           DailyDietBehaviour.timer => _PrayerBlock(
               section: section,
