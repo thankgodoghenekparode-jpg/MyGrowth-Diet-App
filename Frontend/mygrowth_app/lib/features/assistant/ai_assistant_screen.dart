@@ -112,7 +112,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                           const Icon(Icons.auto_awesome_outlined, size: 42),
                           const SizedBox(height: 12),
                           Text(
-                            'How can I support your spiritual growth today?',
+                            'What can I help you with today?',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.titleLarge,
                           ),
@@ -126,8 +126,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                                       'How do I use the Daily Diet?',
                                       'Where can I read today\'s devotion?',
                                       'How do I ask a question in Shape Space?',
-                                      'Guide me in a morning prayer',
-                                      'Explain a Bible passage to me',
+                                      'Show me easy hairstyle ideas for locs',
+                                      'Help me plan a healthy week',
                                     ]
                                     .map(
                                       (question) => ActionChip(
@@ -141,7 +141,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                           ),
                           const SizedBox(height: 14),
                           const Text(
-                            'Ask how to use app features or get spiritual-growth guidance. AI answers may need confirmation from a ministry administrator.',
+                            'Ask about anything—from app features and faith to everyday questions, learning, ideas, and planning.',
                             textAlign: TextAlign.center,
                           ),
                         ],
