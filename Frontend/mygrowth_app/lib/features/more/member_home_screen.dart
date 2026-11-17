@@ -89,16 +89,16 @@ class MemberHomeScreen extends ConsumerWidget {
                       ),
                       Expanded(
                         child: Align(
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.center,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(
-                              maxWidth: 220,
-                              maxHeight: 56,
+                              maxWidth: 280,
+                              maxHeight: 68,
                             ),
                             child: Image.asset(
                               'assets/images/mygrowth_brand_lockup.png',
                               fit: BoxFit.contain,
-                              alignment: Alignment.centerRight,
+                              alignment: Alignment.center,
                               semanticLabel: 'MyGrowth Diet logo and slogan',
                             ),
                           ),
