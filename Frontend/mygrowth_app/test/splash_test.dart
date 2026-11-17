@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mygrowth_app/app/router.dart';
@@ -67,5 +70,48 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 400));
     expect(container.read(splashAnimationProvider), isTrue);
+  });
+
+  testWidgets('splash artwork has no background of its own', (tester) async {
+    await tester.runAsync(() async {
+      final data = await rootBundle.load('assets/images/splash_anim.webp');
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      expect(codec.frameCount, 9);
+
+      // Every frame must be a clean cut-out. A leaky key leaves a translucent
+      // film across the frame, which reads as a bright box over the dark
+      // wallpaper once the splash applies its dark-mood brightness lift.
+      for (var i = 0; i < codec.frameCount; i++) {
+        final frame = await codec.getNextFrame();
+        expect(frame.image.width, 438);
+        expect(frame.image.height, 388);
+
+        final bytes = await frame.image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        final rgba = bytes!.buffer.asUint8List();
+        var transparent = 0;
+        var film = 0;
+        for (var p = 3; p < rgba.length; p += 4) {
+          final alpha = rgba[p];
+          if (alpha == 0) {
+            transparent++;
+          } else if (alpha != 255) {
+            film++;
+          }
+        }
+        final total = rgba.length ~/ 4;
+        expect(
+          transparent / total,
+          greaterThan(0.8),
+          reason: 'frame $i is not mostly transparent',
+        );
+        expect(
+          film / total,
+          lessThan(0.02),
+          reason: 'frame $i keeps a translucent background film',
+        );
+      }
+    });
   });
 }

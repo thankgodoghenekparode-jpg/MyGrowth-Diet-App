@@ -884,7 +884,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     0, 0, 0, 1, 0, //
   ]);
 
-  /// The animated splash logo is 438 x 388 (see `splash_anim.webp`).
+  /// The animated splash logo is 438 x 388. It is generated from
+  /// `assets/source/splash_source.mp4` by `scripts/make-splash-animation.ps1`,
+  /// which keys the clip's white backdrop out so the artwork is transparent.
   static const Size _artworkSize = Size(438, 388);
 
   Timer? _minimumTimer;
@@ -948,7 +950,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     // No background of its own: the transparent animation sits directly on the
-    // app-wide wallpaper, the same backdrop every other page uses.
+    // app-wide wallpaper, the same backdrop every other page uses. The asset is
+    // a keyed-out copy of `assets/source/splash_source.mp4` (see
+    // `scripts/make-splash-animation.ps1`).
     Widget artwork = Image.asset(
       'assets/images/splash_anim.webp',
       fit: BoxFit.fill,
