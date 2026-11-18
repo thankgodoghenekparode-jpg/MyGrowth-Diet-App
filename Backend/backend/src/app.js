@@ -56,6 +56,30 @@ export function createApp() {
     })
   );
 
+  // Programme books and recordings are public files, so the web app must be
+  // able to fetch them even when its deployment origin is not in API CORS.
+  const libraryContentDirectory = fileURLToPath(
+    new URL('../public/library', import.meta.url)
+  );
+  app.use(
+    '/library',
+    cors({
+      origin: '*',
+      credentials: false,
+      methods: ['GET', 'HEAD', 'OPTIONS'],
+    }),
+    express.static(libraryContentDirectory, {
+      etag: true,
+      maxAge: '7d',
+      setHeaders(res) {
+        res.setHeader(
+          'Cache-Control',
+          'public, max-age=604800, stale-while-revalidate=86400'
+        );
+      },
+    })
+  );
+
   // CORS — allowlisted origins only, credentials enabled for the refresh cookie
   app.use(
     cors({
@@ -79,23 +103,6 @@ export function createApp() {
   app.use(
     '/bibles',
     express.static(bibleContentDirectory, {
-      etag: true,
-      maxAge: '7d',
-      setHeaders(res) {
-        res.setHeader(
-          'Cache-Control',
-          'public, max-age=604800, stale-while-revalidate=86400'
-        );
-      },
-    })
-  );
-
-  const libraryContentDirectory = fileURLToPath(
-    new URL('../public/library', import.meta.url)
-  );
-  app.use(
-    '/library',
-    express.static(libraryContentDirectory, {
       etag: true,
       maxAge: '7d',
       setHeaders(res) {
