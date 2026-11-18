@@ -112,7 +112,10 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
   bool _initialized = false;
   bool _busy = false;
 
-  static final _timePattern = RegExp(r'^\d{2}:\d{2}$');
+  static final _timePattern = RegExp(
+    r'^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$',
+    caseSensitive: false,
+  );
 
   @override
   void dispose() {
@@ -129,8 +132,8 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
     _days
       ..clear()
       ..addAll(a.availableDays);
-    _timeStart.text = a.timeStart ?? '';
-    _timeEnd.text = a.timeEnd ?? '';
+    _timeStart.text = _displayTime(a.timeStart);
+    _timeEnd.text = _displayTime(a.timeEnd);
     _timeZone.text = a.timeZone;
     _duration = _durationOptions.contains(a.preferredDurationMinutes)
         ? a.preferredDurationMinutes
@@ -141,21 +144,26 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
 
   Future<void> _save() async {
     if (_busy) return;
-    final start = _timeStart.text.trim();
-    final end = _timeEnd.text.trim();
-    if ((start.isNotEmpty && !_timePattern.hasMatch(start)) ||
-        (end.isNotEmpty && !_timePattern.hasMatch(end))) {
-      Toast.error(context, 'Times must use the HH:MM format, e.g. 18:00.');
+    final startText = _timeStart.text.trim();
+    final endText = _timeEnd.text.trim();
+    final startTime = _parseTime(startText);
+    final endTime = _parseTime(endText);
+    if ((startText.isNotEmpty && startTime == null) ||
+        (endText.isNotEmpty && endTime == null)) {
+      Toast.error(context, 'Choose a valid time, including hour and minutes.');
       return;
     }
-    if (start.isEmpty != end.isEmpty) {
+    if (startText.isEmpty != endText.isEmpty) {
       Toast.error(
         context,
         'Enter both a start and end time, or leave both blank.',
       );
       return;
     }
-    if (start.isNotEmpty && start.compareTo(end) >= 0) {
+    final start = startTime == null ? null : _apiTime(startTime);
+    final end = endTime == null ? null : _apiTime(endTime);
+    if (startTime != null && endTime != null &&
+        _minutesSinceMidnight(startTime) >= _minutesSinceMidnight(endTime)) {
       Toast.error(context, 'The end time must be later than the start time.');
       return;
     }
@@ -164,8 +172,8 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
     final availability = PrayerAvailability(
       status: _status,
       availableDays: _days.toList()..sort(),
-      timeStart: start.isEmpty ? null : start,
-      timeEnd: end.isEmpty ? null : end,
+      timeStart: start,
+      timeEnd: end,
       timeZone: _timeZone.text.trim().isEmpty
           ? 'Africa/Lagos'
           : _timeZone.text.trim(),
@@ -190,6 +198,86 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _pickTime(
+    TextEditingController controller, {
+    required String label,
+    required int defaultHour,
+  }) async {
+    final current = _parseTime(controller.text.trim());
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: current ?? TimeOfDay(hour: defaultHour, minute: 0),
+      initialEntryMode: TimePickerEntryMode.dial,
+      helpText: label,
+      hourLabelText: 'Hour',
+      minuteLabelText: 'Minute',
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+        child: child!,
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() => controller.text = _formatTime(picked));
+    }
+  }
+
+  static TimeOfDay? _parseTime(String value) {
+    final match = _timePattern.firstMatch(value.trim());
+    if (match == null) return null;
+    var hour = int.tryParse(match.group(1)!);
+    final minute = int.tryParse(match.group(2)!);
+    if (hour == null || minute == null || minute > 59) return null;
+    final meridiem = match.group(3)?.toUpperCase();
+    if (meridiem != null) {
+      if (hour < 1 || hour > 12) return null;
+      hour = (hour % 12) + (meridiem == 'PM' ? 12 : 0);
+    } else if (hour > 23) {
+      return null;
+    }
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  static String _displayTime(String? value) {
+    if (value == null || value.isEmpty) return '';
+    final time = _parseTime(value);
+    return time == null ? value : _formatTime(time);
+  }
+
+  static String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute ${time.period == DayPeriod.am ? 'AM' : 'PM'}';
+  }
+
+  static String _apiTime(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  static int _minutesSinceMidnight(TimeOfDay time) =>
+      time.hour * 60 + time.minute;
+
+  Widget _timeField({
+    required String label,
+    required TextEditingController controller,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          readOnly: true,
+          onTap: onTap,
+          decoration: const InputDecoration(
+            hintText: 'Select hour and minute',
+            suffixIcon: Icon(Icons.access_time_rounded, size: 20),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -245,20 +333,26 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
               Row(
                 children: [
                   Expanded(
-                    child: AppTextField(
+                    child: _timeField(
                       label: 'Preferred start time',
                       controller: _timeStart,
-                      hint: '18:00',
-                      keyboardType: TextInputType.datetime,
+                      onTap: () => _pickTime(
+                        _timeStart,
+                        label: 'Select start time',
+                        defaultHour: 18,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: AppTextField(
+                    child: _timeField(
                       label: 'Preferred end time',
                       controller: _timeEnd,
-                      hint: '19:00',
-                      keyboardType: TextInputType.datetime,
+                      onTap: () => _pickTime(
+                        _timeEnd,
+                        label: 'Select end time',
+                        defaultHour: 19,
+                      ),
                     ),
                   ),
                 ],
