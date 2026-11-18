@@ -20,10 +20,15 @@ $Target = [System.IO.Path]::GetFullPath($Target)
 # hqdn3d            calms the clip's compression noise so the key is stable
 # colorkey          turns the near-white backdrop transparent, with a short
 #                   blend band so the artwork's soft edges stay anti-aliased
+# geq               changes only bright cyan-blue pixels to white, leaving the
+#                   dark navy logo unchanged and preserving the keyed alpha
 # libwebp_anim      animated WebP with an alpha channel
+$whiteMovingLight = "geq=r='if(gt(g(X,Y)-r(X,Y),12)*gt(b(X,Y)-r(X,Y),24)*gt(r(X,Y)+g(X,Y)+b(X,Y),540),255,r(X,Y))':g='if(gt(g(X,Y)-r(X,Y),12)*gt(b(X,Y)-r(X,Y),24)*gt(r(X,Y)+g(X,Y)+b(X,Y),540),255,g(X,Y))':b='if(gt(g(X,Y)-r(X,Y),12)*gt(b(X,Y)-r(X,Y),24)*gt(r(X,Y)+g(X,Y)+b(X,Y),540),255,b(X,Y))':a='alpha(X,Y)'"
+$videoFilter = "hqdn3d=8:6:12:8,format=rgba,colorkey=0xF5F5F5:0.09:0.02,$whiteMovingLight"
+
 # -loop 1           play once and hold the last frame (0 would loop forever)
 & $Ffmpeg -hide_banner -y -i $Source `
-  -vf 'hqdn3d=8:6:12:8,format=rgba,colorkey=0xF5F5F5:0.09:0.02' `
+  -vf $videoFilter `
   -c:v libwebp_anim -quality 90 -loop 1 -an $Target
 
 if ($LASTEXITCODE -ne 0) {
