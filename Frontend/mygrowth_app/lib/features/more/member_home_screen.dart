@@ -175,6 +175,13 @@ class MemberHomeScreen extends ConsumerWidget {
                     subtitle: 'Pray and connect with a prayer partner',
                     onTap: () => context.go('/prayer'),
                   ),
+                  const SizedBox(height: 8),
+                  _HomeActionCard(
+                    icon: Icons.headphones_rounded,
+                    title: 'Listen to music',
+                    subtitle: 'Listen to this month’s music',
+                    onTap: () => context.go('/diet?section=music'),
+                  ),
                 ],
               ),
             ),
