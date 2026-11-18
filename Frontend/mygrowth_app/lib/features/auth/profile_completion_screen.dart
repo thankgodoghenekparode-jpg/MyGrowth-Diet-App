@@ -7,6 +7,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_buttons.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/app_time_zone_dropdown.dart';
 import '../../../core/widgets/toast.dart';
 import 'login_screen.dart';
 
@@ -104,14 +105,12 @@ class _ProfileCompletionScreenState
               prefixIcon: Icons.phone_outlined,
             ),
             const SizedBox(height: fieldGap),
-            AppTextField(
-              label: 'Time zone',
+            AppTimeZoneDropdown(
+              value: _timeZone.text,
               required: true,
-              controller: _timeZone,
-              prefixIcon: Icons.public_outlined,
-              helper: 'Default is Africa/Lagos',
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Enter a time zone' : null,
+              onChanged: (value) {
+                if (value != null) setState(() => _timeZone.text = value);
+              },
             ),
             const SizedBox(height: AppSpacing.lg),
             AppButton(

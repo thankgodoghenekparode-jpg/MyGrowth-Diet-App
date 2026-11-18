@@ -13,6 +13,7 @@ import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/app_time_zone_dropdown.dart';
 import '../../core/widgets/feedback_states.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/toast.dart';
@@ -273,10 +274,11 @@ class _AvailabilityCardState extends ConsumerState<_AvailabilityCard> {
                 onChanged: (v) => setState(() => _duration = v ?? 30),
               ),
               const SizedBox(height: AppSpacing.sm),
-              AppTextField(
-                label: 'Time zone',
-                controller: _timeZone,
-                hint: 'Africa/Lagos',
+              AppTimeZoneDropdown(
+                value: _timeZone.text,
+                onChanged: (value) {
+                  if (value != null) setState(() => _timeZone.text = value);
+                },
               ),
               const SizedBox(height: AppSpacing.xs),
               AppSwitchRow(

@@ -13,6 +13,7 @@ import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/app_time_zone_dropdown.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/toast.dart';
 import '../notifications/notification_prefs_section.dart';
@@ -443,11 +444,11 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
                 prefixIcon: Icons.phone_outlined,
               ),
               const SizedBox(height: fieldGap),
-              AppTextField(
-                label: 'Time zone',
-                controller: _timeZone,
-                hint: 'Africa/Lagos',
-                prefixIcon: Icons.public_rounded,
+              AppTimeZoneDropdown(
+                value: _timeZone.text,
+                onChanged: (value) {
+                  if (value != null) setState(() => _timeZone.text = value);
+                },
               ),
               const SizedBox(height: AppSpacing.md),
               AppButton(
