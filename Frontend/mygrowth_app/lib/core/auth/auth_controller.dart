@@ -55,6 +55,7 @@ class AuthController extends Notifier<AuthState> {
     client.onConnectionRestored = () {
       if (state.offlineMode) state = state.copyWith(offlineMode: false);
     };
+    Future.microtask(bootstrapSession);
     return const AuthState();
   }
 
@@ -77,6 +78,10 @@ class AuthController extends Notifier<AuthState> {
       state = const AuthState(status: AuthStatus.unauthenticated);
       return null;
     }
+    final cached = await _cachedOfflineState();
+    if (cached != null) {
+      state = cached;
+    }
     try {
       final data = await _api.get('/me') as Map<String, dynamic>;
       final user = AppUser.fromJson(data);
@@ -90,10 +95,11 @@ class AuthController extends Notifier<AuthState> {
       return user;
     } on ApiException catch (e) {
       if (e.isNetworkError) {
-        final cached = await _cachedOfflineState();
-        if (cached != null) {
-          state = cached;
-          return cached.user;
+        if (cached != null) return cached.user;
+        final fallback = await _cachedOfflineState();
+        if (fallback != null) {
+          state = fallback;
+          return fallback.user;
         }
       }
       state = const AuthState(status: AuthStatus.unauthenticated);

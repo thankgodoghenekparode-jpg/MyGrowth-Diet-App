@@ -71,38 +71,20 @@ import '../app/area_shell.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-final splashAnimationProvider =
-    NotifierProvider<SplashAnimationController, bool>(
-      SplashAnimationController.new,
-    );
-
-class SplashAnimationController extends Notifier<bool> {
-  @override
-  bool build() => false;
-
-  void reset() => state = false;
-  void complete() => state = true;
-}
-
 /// Listens to auth state changes so GoRouter can re-evaluate redirects.
 class _AuthStateNotifier extends ChangeNotifier {
   _AuthStateNotifier(this._ref) {
     _sub = _ref.listen<AuthState>(authControllerProvider, (_, _) {
       notifyListeners();
     });
-    _splashSub = _ref.listen<bool>(splashAnimationProvider, (_, _) {
-      notifyListeners();
-    });
   }
 
   final Ref _ref;
   late final ProviderSubscription _sub;
-  late final ProviderSubscription _splashSub;
 
   @override
   void dispose() {
     _sub.close();
-    _splashSub.close();
     super.dispose();
   }
 }
@@ -113,7 +95,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/',
     debugLogDiagnostics: kDebugMode,
     refreshListenable: authNotifier,
     redirect: (context, state) {
@@ -128,15 +110,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // Session still restoring on cold start.
       if (auth.status == AuthStatus.initial ||
           auth.status == AuthStatus.loading) {
-        if (!ref.read(splashAnimationProvider)) {
-          return path == '/splash' ? null : '/splash';
-        }
-        // Do not keep the splash visible indefinitely if session restore is slow.
-        return path == '/splash' ? '/login' : null;
+        if (onAuthPage) return null;
+        return path == '/' ? null : '/';
       }
-
-      // Let the logo reveal finish before routing to the signed-in or auth area.
-      if (path == '/splash' && !ref.read(splashAnimationProvider)) return null;
 
       if (!auth.isAuthenticated) {
         return onAuthPage ? null : '/login';
@@ -145,15 +121,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final user = auth.user;
       if (user == null) return null;
 
-      // Once the session has restored, leave the splash for the home screen.
-      if (path == '/splash') {
+      if (onAuthPage || path == '/') {
         return user.canUseAdminArea ? '/admin' : '/home';
       }
-
-      if (onAuthPage) {
-        return user.canUseAdminArea ? '/admin' : '/home';
-      }
-      if (path == '/login' || path == '/register' || path == '/') {
+      if (path == '/login' || path == '/register') {
         return user.canUseAdminArea ? '/admin' : '/home';
       }
 
@@ -168,8 +139,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(
-        path: '/splash',
-        pageBuilder: (_, _) => _fade(const MaterialPage(child: SplashScreen())),
+        path: '/',
+        pageBuilder: (_, _) => _fade(
+          const MaterialPage(
+            child: Scaffold(
+              body: SizedBox.expand(),
+            ),
+          ),
+        ),
       ),
       GoRoute(
         path: '/login',
@@ -873,126 +850,6 @@ String _adminShellTitle(int index) => switch (index) {
   2 => 'Reports & Reviews',
   _ => 'Home',
 };
-
-/// Cold-start splash: restores the session then lets the router redirect.
-class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends ConsumerState<SplashScreen> {
-  /// The artwork plays once in 2.25 s, so keep the splash up for at least that
-  /// long — leaving earlier would cut the animation off mid-way.
-  static const Duration _minimumDisplay = Duration(milliseconds: 2400);
-
-  /// Safety net: never hold the splash longer than this, even if the session
-  /// restore stalls.
-  static const Duration _maximumDisplay = Duration(seconds: 5);
-
-  /// The artwork is dark navy, so on the navy dark-mood canvas it needs a lift
-  /// to stay legible. This brightens the artwork in place and adds no
-  /// background of its own.
-  static const ColorFilter _darkMoodLift = ColorFilter.matrix(<double>[
-    0.5, 0, 0, 0, 110, //
-    0, 0.5, 0, 0, 110, //
-    0, 0, 0.5, 0, 110, //
-    0, 0, 0, 1, 0, //
-  ]);
-
-  /// The animated splash logo is 438 x 388. It is generated from
-  /// `assets/source/splash_source.mp4` by `scripts/make-splash-animation.ps1`,
-  /// which keys the clip's white backdrop out so the artwork is transparent.
-  static const Size _artworkSize = Size(438, 388);
-
-  Timer? _minimumTimer;
-  Timer? _maximumTimer;
-  ProviderSubscription<AuthState>? _authSub;
-  bool _minimumElapsed = false;
-  bool _restoreSettled = false;
-  bool _sessionStarted = false;
-  bool _splashFinished = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _minimumTimer = Timer(_minimumDisplay, () {
-      _minimumElapsed = true;
-      _finishWhenReady();
-    });
-    _maximumTimer = Timer(_maximumDisplay, _finishSplash);
-    // Leave the splash as soon as the session has settled, not on a fixed wait.
-    _authSub = ref.listenManual<AuthState>(authControllerProvider, (_, next) {
-      if (next.status == AuthStatus.initial ||
-          next.status == AuthStatus.loading) {
-        return;
-      }
-      _restoreSettled = true;
-      _finishWhenReady();
-    });
-    // The session may already have settled before this screen appeared.
-    final status = ref.read(authControllerProvider).status;
-    if (status != AuthStatus.initial && status != AuthStatus.loading) {
-      _restoreSettled = true;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _sessionStarted) return;
-      _sessionStarted = true;
-      ref.read(splashAnimationProvider.notifier).reset();
-      ref.read(authControllerProvider.notifier).bootstrapSession();
-    });
-  }
-
-  void _finishWhenReady() {
-    if (_minimumElapsed && _restoreSettled) _finishSplash();
-  }
-
-  void _finishSplash() {
-    if (_splashFinished) return;
-    _splashFinished = true;
-    _minimumTimer?.cancel();
-    _maximumTimer?.cancel();
-    if (mounted) ref.read(splashAnimationProvider.notifier).complete();
-  }
-
-  @override
-  void dispose() {
-    _minimumTimer?.cancel();
-    _maximumTimer?.cancel();
-    _authSub?.close();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // No background of its own: the transparent animation sits directly on the
-    // app-wide wallpaper, the same backdrop every other page uses. The asset is
-    // a keyed-out copy of `assets/source/splash_source.mp4` (see
-    // `scripts/make-splash-animation.ps1`).
-    Widget artwork = Image.asset(
-      'assets/images/splash_anim.webp',
-      fit: BoxFit.fill,
-      semanticLabel: 'Healings E. Azuike',
-      errorBuilder: (_, _, _) => Image.asset(
-        'assets/images/splash_logo.png',
-        fit: BoxFit.contain,
-        semanticLabel: 'Healings E. Azuike',
-      ),
-    );
-    if (Theme.of(context).brightness == Brightness.dark) {
-      artwork = ColorFiltered(colorFilter: _darkMoodLift, child: artwork);
-    }
-    return Scaffold(
-      body: Center(
-        child: FittedBox(
-          fit: BoxFit.contain,
-          child: SizedBox.fromSize(size: _artworkSize, child: artwork),
-        ),
-      ),
-    );
-  }
-}
 
 class _NotFoundScreen extends StatelessWidget {
   const _NotFoundScreen({required this.location});
