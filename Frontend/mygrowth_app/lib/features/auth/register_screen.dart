@@ -48,7 +48,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
     setState(() => _busy = true);
     try {
-      await ref.read(authControllerProvider.notifier).register(
+      final sessionStarted = await ref
+          .read(authControllerProvider.notifier)
+          .register(
             name: _name.text.trim(),
             email: _email.text.trim(),
             password: _password.text,
@@ -56,9 +58,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
       if (!mounted) return;
       TextInput.finishAutofillContext(shouldSave: true);
-      Toast.success(
-          context, 'Account created. Check your email for a 6-digit code.');
-      context.go('/verify-email?email=${Uri.encodeComponent(_email.text.trim())}');
+      if (!sessionStarted) {
+        Toast.success(
+          context,
+          'Account created. Check your email for a 6-digit code.',
+        );
+        context.go(
+          '/verify-email?email=${Uri.encodeComponent(_email.text.trim())}',
+        );
+        return;
+      }
+      final auth = ref.read(authControllerProvider);
+      final user = auth.user;
+      Toast.success(context, 'Account created. Welcome to MyGrowth!');
+      if (user != null && user.isPendingApproval) {
+        context.go('/home');
+      } else if (auth.needsProfileCompletion) {
+        context.go('/setup-profile');
+      } else {
+        context.go(user?.canUseAdminArea == true ? '/admin' : '/home');
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       Toast.error(context, e.fieldError ?? e.message);
@@ -78,8 +97,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Text('Already have an account?',
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Already have an account?',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           TextButton(
             onPressed: () => context.go('/login'),
             child: const Text('Sign in'),
@@ -90,96 +111,96 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Registration creates a member account. We’ll email you a '
-              '6-digit code to verify your address before you enter the app. '
-              'Administrative access is granted separately by the ministry.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(
-              label: 'Full name',
-              required: true,
-              controller: _name,
-              textCapitalization: TextCapitalization.words,
-              prefixIcon: Icons.person_outline_rounded,
-              validator: (v) => (v == null || v.trim().length < 2)
-                  ? 'Enter your full name'
-                  : null,
-            ),
-            const SizedBox(height: fieldGap),
-            AppTextField(
-              label: 'Email address',
-              required: true,
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.username],
-              prefixIcon: Icons.mail_outline_rounded,
-              validator: (v) {
-                final value = v?.trim() ?? '';
-                if (value.isEmpty) return 'Enter your email address';
-                if (!value.contains('@') || !value.contains('.')) {
-                  return 'Enter a valid email address';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: fieldGap),
-            AppTextField(
-              label: 'Phone number (optional)',
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              prefixIcon: Icons.phone_outlined,
-            ),
-            const SizedBox(height: fieldGap),
-            AppTextField(
-              label: 'Password',
-              required: true,
-              controller: _password,
-              obscure: true,
-              autofillHints: const [AutofillHints.newPassword],
-              helper: 'At least 8 characters',
-              prefixIcon: Icons.lock_outline_rounded,
-              validator: (v) {
-                if (v == null || v.length < 8) {
-                  return 'Use at least 8 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: fieldGap),
-            AppTextField(
-              label: 'Confirm password',
-              required: true,
-              controller: _confirm,
-              obscure: true,
-              autofillHints: const [AutofillHints.newPassword],
-              prefixIcon: Icons.lock_outline_rounded,
-              validator: (v) =>
-                  v != _password.text ? 'Passwords do not match' : null,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            CheckboxListTile(
-              value: _agreed,
-              onChanged: (v) => setState(() => _agreed = v ?? false),
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              title: Text(
-                'I understand that my personal reflections and reports stay '
-                'private, and I accept the ministry’s privacy notice.',
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Registration creates a member account. We’ll email you a '
+                '6-digit code to verify your address before you enter the app. '
+                'Administrative access is granted separately by the ministry.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            AppButton(
-              label: 'Create account',
-              busy: _busy,
-              expand: true,
-              onPressed: _submit,
-            ),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              AppTextField(
+                label: 'Full name',
+                required: true,
+                controller: _name,
+                textCapitalization: TextCapitalization.words,
+                prefixIcon: Icons.person_outline_rounded,
+                validator: (v) => (v == null || v.trim().length < 2)
+                    ? 'Enter your full name'
+                    : null,
+              ),
+              const SizedBox(height: fieldGap),
+              AppTextField(
+                label: 'Email address',
+                required: true,
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.username],
+                prefixIcon: Icons.mail_outline_rounded,
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return 'Enter your email address';
+                  if (!value.contains('@') || !value.contains('.')) {
+                    return 'Enter a valid email address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: fieldGap),
+              AppTextField(
+                label: 'Phone number (optional)',
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                prefixIcon: Icons.phone_outlined,
+              ),
+              const SizedBox(height: fieldGap),
+              AppTextField(
+                label: 'Password',
+                required: true,
+                controller: _password,
+                obscure: true,
+                autofillHints: const [AutofillHints.newPassword],
+                helper: 'At least 8 characters',
+                prefixIcon: Icons.lock_outline_rounded,
+                validator: (v) {
+                  if (v == null || v.length < 8) {
+                    return 'Use at least 8 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: fieldGap),
+              AppTextField(
+                label: 'Confirm password',
+                required: true,
+                controller: _confirm,
+                obscure: true,
+                autofillHints: const [AutofillHints.newPassword],
+                prefixIcon: Icons.lock_outline_rounded,
+                validator: (v) =>
+                    v != _password.text ? 'Passwords do not match' : null,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              CheckboxListTile(
+                value: _agreed,
+                onChanged: (v) => setState(() => _agreed = v ?? false),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text(
+                  'I understand that my personal reflections and reports stay '
+                  'private, and I accept the ministry’s privacy notice.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              AppButton(
+                label: 'Create account',
+                busy: _busy,
+                expand: true,
+                onPressed: _submit,
+              ),
+            ],
           ),
         ),
       ),

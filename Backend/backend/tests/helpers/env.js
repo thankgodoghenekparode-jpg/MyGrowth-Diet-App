@@ -16,6 +16,10 @@ import path from 'node:path';
 
 process.env.NODE_ENV = 'test';
 
+// The OTP flow tests exercise strict mode explicitly. Production defaults to
+// the temporary bypass while Brevo email delivery is being resolved.
+process.env.EMAIL_VERIFICATION_REQUIRED ??= 'true';
+
 // Keep test uploads out of the development storage directory, and make sure
 // multer's destination exists before the first upload.
 process.env.UPLOAD_DIR =

@@ -34,7 +34,7 @@ auth, member features, admin features, scheduler and the test suite.
 | Language | JavaScript, ESM (`"type": "module"`), no TypeScript |
 | Server | Express 4 |
 | Database | PostgreSQL 16 via Prisma 6 |
-| Auth | JWT access token (15m) + rotating refresh token (30d, hashed at rest); new members must verify an emailed 6-digit OTP first |
+| Auth | JWT access token (15m) + rotating refresh token (30d, hashed at rest); OTP verification is temporarily bypassed (`EMAIL_VERIFICATION_REQUIRED=false`) until Brevo delivery is fixed |
 | Validation | Zod, applied through a shared `validate()` middleware |
 | Email | Pluggable — `console` (default) or `resend` |
 | Storage | Pluggable — `local` disk (default, served via `/api/v1/files/:id`) or `s3` stub |
@@ -110,6 +110,7 @@ Copy `.env.example` to `.env`. **Never commit `.env`.** Full reference:
 | `RESEND_API_KEY` | *(empty)* | Required only when `EMAIL_PROVIDER=resend` |
 | `BREVO_API_KEY` | *(empty)* | Required only when `EMAIL_PROVIDER=brevo` |
 | `EMAIL_FROM` | `MyGrowth Diet App <no-reply@mygrowth.local>` | From header |
+| `EMAIL_VERIFICATION_REQUIRED` | `false` | Temporary Brevo workaround: `false` skips OTP and starts the session at registration; set `true` to restore mandatory email OTP |
 | `EMAIL_OTP_TTL_MINUTES` | `10` | Verification code lifetime |
 | `EMAIL_OTP_MAX_ATTEMPTS` | `5` | Wrong-code attempts before a resend is required |
 | `EMAIL_OTP_RESEND_SECONDS` | `60` | Resend cooldown |

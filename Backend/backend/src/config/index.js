@@ -16,6 +16,12 @@ function int(name, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function bool(name, fallback) {
+  const v = process.env[name];
+  if (v == null) return fallback;
+  return !['false', '0', 'no', 'off'].includes(v.trim().toLowerCase());
+}
+
 export const config = {
   env,
   isProd,
@@ -59,6 +65,9 @@ export const config = {
   },
 
   emailVerification: {
+    // Temporarily off while Brevo cannot deliver OTP emails. Set
+    // EMAIL_VERIFICATION_REQUIRED=true to restore the mandatory OTP gate.
+    required: bool('EMAIL_VERIFICATION_REQUIRED', false),
     otpTtlMinutes: int('EMAIL_OTP_TTL_MINUTES', 10),
     maxAttempts: int('EMAIL_OTP_MAX_ATTEMPTS', 5),
     resendSeconds: int('EMAIL_OTP_RESEND_SECONDS', 60),

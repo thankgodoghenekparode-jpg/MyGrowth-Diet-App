@@ -223,15 +223,16 @@ class AuthController extends Notifier<AuthState> {
     await _applyAuthResponse(data);
   }
 
-  /// Creates the account but deliberately does not store a session. The user
-  /// must complete the emailed OTP before any app data becomes available.
-  Future<void> register({
+  /// Creates the account. Returns true when the backend started a session
+  /// immediately (email verification temporarily disabled), and false when the
+  /// user still needs to complete the emailed OTP.
+  Future<bool> register({
     required String name,
     required String email,
     required String password,
     String? phone,
   }) async {
-    await _api.post(
+    final data = await _api.post(
       '/auth/register',
       body: {
         'name': name,
@@ -240,6 +241,11 @@ class AuthController extends Notifier<AuthState> {
         if (phone != null && phone.isNotEmpty) 'phone': phone,
       },
     );
+    if (data is Map<String, dynamic> && data['accessToken'] is String) {
+      await _applyAuthResponse(data);
+      return true;
+    }
+    return false;
   }
 
   /// Verifies the emailed 6-digit code and starts the authenticated session.

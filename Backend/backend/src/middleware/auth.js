@@ -1,4 +1,5 @@
 import prisma from '../db/index.js';
+import config from '../config/index.js';
 import { errors, asyncHandler } from '../lib/errors.js';
 import { verifyAccessToken } from '../lib/jwt.js';
 import { audit } from '../lib/audit.js';
@@ -32,7 +33,7 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
   if (user.status === 'SUSPENDED' || user.status === 'DEACTIVATED') {
     throw errors.forbidden('This account has been suspended. Contact the ministry administrator.', 'ACCOUNT_SUSPENDED');
   }
-  if (!user.emailVerifiedAt) {
+  if (config.emailVerification.required && !user.emailVerifiedAt) {
     throw errors.forbidden(
       'Verify your email address before continuing.',
       'EMAIL_NOT_VERIFIED'

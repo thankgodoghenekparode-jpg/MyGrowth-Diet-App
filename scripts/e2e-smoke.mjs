@@ -103,6 +103,12 @@ async function registerAndVerify(name, email) {
   const registered = await call('POST', '/auth/register', {
     body: { name, email, password },
   });
+  // When email verification is temporarily disabled, registration returns a
+  // session directly and no OTP is issued.
+  const immediateToken = field(registered.json, 'accessToken');
+  if (immediateToken) {
+    return { registered, verified: registered, token: immediateToken };
+  }
   const code =
     field(field(registered.json, 'verification'), 'devCode') ??
     field(registered.json, 'devCode');
@@ -131,18 +137,18 @@ async function main() {
   // 1. two members register (always MEMBER role)
   console.log('\n— Members register —');
   const memberA = await registerAndVerify('Smoke Member A', emailA);
-  ok('member A registers and verifies email',
+  ok('member A registers and starts a session',
     memberA.registered.status >= 200 && memberA.registered.status < 300 &&
     memberA.verified.status >= 200 && memberA.verified.status < 300,
     `register=${memberA.registered.status} verify=${memberA.verified.status}`);
   const tokenA = memberA.token;
-  ok('member A receives token after verification', !!tokenA);
+  ok('member A receives a session token', !!tokenA);
   ok('registration never assigns admin role',
     (field(memberA.registered.json, 'user')?.role ?? 'MEMBER') === 'MEMBER');
 
   const memberB = await registerAndVerify('Smoke Member B', emailB);
   const tokenB = memberB.token;
-  ok('member B registers and verifies email', !!tokenB);
+  ok('member B registers and starts a session', !!tokenB);
 
   // duplicate email rejected
   const dup = await call('POST', '/auth/register', {

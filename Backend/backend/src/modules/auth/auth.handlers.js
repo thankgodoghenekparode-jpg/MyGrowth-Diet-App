@@ -216,6 +216,41 @@ export const register = [
       },
     });
 
+    if (!config.emailVerification.required) {
+      // Temporary bypass while OTP email delivery is unavailable: create a
+      // verified account and start the session without contacting Brevo.
+      const verifiedAt = new Date();
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerifiedAt: verifiedAt },
+      });
+      const verifiedUser = { ...user, emailVerifiedAt: verifiedAt };
+      await notify({
+        userId: user.id,
+        eventType: 'welcome_verification',
+        eventKey: 'registration',
+        title: 'Welcome',
+        body: 'Your MyGrowth account is ready.',
+      });
+      const tokens = await issueTokens(res, verifiedUser, req);
+      await audit({
+        actor: verifiedUser,
+        action: 'login',
+        targetType: 'user',
+        targetId: verifiedUser.id,
+        outcome: 'SUCCESS',
+        req,
+      });
+      return res.status(201).json({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.expiresIn,
+        profileCompleted: Boolean(verifiedUser.profileCompletedAt),
+        user: publicUser(verifiedUser),
+        verification: { required: false, emailSent: false },
+      });
+    }
+
     const { code, sent } = await issueEmailOtp(user);
     await notify({
       userId: user.id,
@@ -257,7 +292,7 @@ export const login = [
   validate({ body: loginSchema }),
   asyncHandler(async (req, res) => {
     const { email, password } = req.valid.body;
-    const user = await prisma.user.findUnique({ where: { email } });
+    let user = await prisma.user.findUnique({ where: { email } });
 
     const genericFailure = () =>
       errors.unauthorized('Invalid email or password', 'INVALID_CREDENTIALS');
@@ -278,12 +313,21 @@ export const login = [
       throw errors.forbidden('This account has been suspended. Contact the ministry administrator.', 'ACCOUNT_SUSPENDED');
     }
 
-    if (!user.emailVerifiedAt) {
+    if (config.emailVerification.required && !user.emailVerifiedAt) {
       await audit({ actor: user, action: 'login_blocked_unverified', targetType: 'user', targetId: user.id, outcome: 'DENIED', req });
       throw errors.forbidden(
         'Verify your email with the code we sent before signing in.',
         'EMAIL_NOT_VERIFIED'
       );
+    }
+
+    // Normalise accounts created before the bypass so re-enabling OTP later
+    // does not suddenly lock out members who already signed in successfully.
+    if (!config.emailVerification.required && !user.emailVerifiedAt) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerifiedAt: new Date() },
+      });
     }
 
     // Admin accounts have no access until the Main Admin grants it.
@@ -345,7 +389,7 @@ export const refresh = asyncHandler(async (req, res) => {
     throw errors.unauthorized('Refresh token expired', 'REFRESH_TOKEN_EXPIRED');
   }
 
-  const user = await prisma.user.findUnique({ where: { id: stored.userId } });
+  let user = await prisma.user.findUnique({ where: { id: stored.userId } });
   if (!user) {
     clearCookie(res);
     throw errors.unauthorized('Account not found', 'INVALID_REFRESH_TOKEN');
@@ -355,10 +399,16 @@ export const refresh = asyncHandler(async (req, res) => {
     clearCookie(res);
     throw errors.forbidden('This account has been suspended.', 'ACCOUNT_SUSPENDED');
   }
-  if (!user.emailVerifiedAt) {
+  if (config.emailVerification.required && !user.emailVerifiedAt) {
     await revokeAllRefreshTokens(user.id);
     clearCookie(res);
     throw errors.forbidden('Verify your email before continuing.', 'EMAIL_NOT_VERIFIED');
+  }
+  if (!config.emailVerification.required && !user.emailVerifiedAt) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerifiedAt: new Date() },
+    });
   }
   if (user.role !== 'MEMBER' && user.adminAccess !== 'ACTIVE') {
     await revokeAllRefreshTokens(user.id);

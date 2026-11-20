@@ -473,6 +473,7 @@ CORS_ORIGINS=https://your-app.vercel.app
 APP_BASE_URL=https://your-service.onrender.com
 FRONTEND_URL=https://your-app.vercel.app
 EMAIL_PROVIDER=console            # production: resend/brevo + API key + EMAIL_FROM
+EMAIL_VERIFICATION_REQUIRED=false # temporary Brevo bypass; set true to restore OTP
 EMAIL_OTP_TTL_MINUTES=10
 EMAIL_OTP_MAX_ATTEMPTS=5
 EMAIL_OTP_RESEND_SECONDS=60

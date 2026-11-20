@@ -82,7 +82,7 @@ routes).
 
 | Method | Path | Auth | Notes |
 | --- | --- | --- | --- |
-| POST | `/auth/register` | Public | Create a member account and email a 6-digit OTP. No session is issued yet. May start `PENDING` if approval is required. |
+| POST | `/auth/register` | Public | Create a member account. With `EMAIL_VERIFICATION_REQUIRED=false` (temporary Brevo workaround) a session is returned immediately; when `true`, a 6-digit OTP is emailed and no session is issued yet. May start `PENDING` if approval is required. |
 | POST | `/auth/verify-email-otp` | Public | Verify `{ email, code }`; on success returns tokens and starts the session. |
 | POST | `/auth/resend-email-otp` | Public | Issue a replacement OTP after the resend cooldown. |
 | POST | `/auth/login` | Public | Returns `{ accessToken, user }`; sets the httpOnly refresh cookie. Unverified accounts receive `EMAIL_NOT_VERIFIED`. |
@@ -94,6 +94,11 @@ routes).
 | POST | `/auth/resend-verification` | Public | Re-sends the verification link. |
 | POST | `/auth/change-password` | Member | Requires the current password; revokes other sessions. Body accepts `newPassword` or the Flutter alias `password`. |
 | GET | `/auth/session` | Member | Returns the current `{ user }`. |
+
+Email OTP verification is currently bypassed by default
+(`EMAIL_VERIFICATION_REQUIRED=false`) because Brevo delivery is unresolved.
+Set `EMAIL_VERIFICATION_REQUIRED=true` to restore the mandatory OTP gate; the
+`/auth/verify-email-otp` and `/auth/resend-email-otp` endpoints remain available.
 
 Verification codes expire after 10 minutes by default, allow 5 attempts, and
 can be resent after 60 seconds (`EMAIL_OTP_TTL_MINUTES`,

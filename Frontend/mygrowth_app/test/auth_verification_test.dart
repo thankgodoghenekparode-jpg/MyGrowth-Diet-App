@@ -22,6 +22,7 @@ class _VerificationApiClient extends ApiClient {
   final List<String> calls = <String>[];
   final List<Object?> bodies = <Object?>[];
   bool sessionSaved = false;
+  bool registrationStartsSession = false;
 
   @override
   bool get hasSession => false;
@@ -38,6 +39,14 @@ class _VerificationApiClient extends ApiClient {
     bodies.add(body);
     switch (path) {
       case '/auth/register':
+        if (registrationStartsSession) {
+          return {
+            'accessToken': 'access-token',
+            'refreshToken': 'refresh-token',
+            'profileCompleted': false,
+            'user': _user.toJson(),
+          };
+        }
         return {
           'user': _user.toJson(),
           'verification': {'required': true, 'emailSent': true},
@@ -105,6 +114,33 @@ void main() {
       contains('"email":"${_user.email}"'),
     );
   });
+
+  test(
+    'registration starts a session when email verification is disabled',
+    () async {
+      final client = _VerificationApiClient()..registrationStartsSession = true;
+      final container = ProviderContainer(
+        overrides: [apiClientProvider.overrideWithValue(client)],
+      );
+      addTearDown(container.dispose);
+      await _waitForBootstrap(container);
+
+      final startedSession = await container
+          .read(authControllerProvider.notifier)
+          .register(
+            name: _user.name,
+            email: _user.email,
+            password: 'StrongPass1!',
+          );
+
+      expect(startedSession, isTrue);
+      expect(client.calls, contains('/auth/register'));
+      expect(client.sessionSaved, isTrue);
+      final state = container.read(authControllerProvider);
+      expect(state.status, AuthStatus.authenticated);
+      expect(state.user?.id, _user.id);
+    },
+  );
 
   test('email OTP verification starts the session', () async {
     final client = _VerificationApiClient();
