@@ -105,6 +105,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
       final path = state.uri.path;
+      final isGuestRoute =
+          path == '/giving' || path == '/upcoming' || path == '/live';
       final onAuthPage =
           path == '/login' ||
           path == '/register' ||
@@ -116,13 +118,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // session. Only a cold start with no cached identity waits on `/`.
       if (auth.status == AuthStatus.initial ||
           (auth.status == AuthStatus.loading && auth.user == null)) {
-        if (onAuthPage) return null;
+        if (onAuthPage || isGuestRoute) return null;
         return path == '/' ? null : '/';
       }
 
       final user = auth.user;
       if (!auth.isAuthenticated && user == null) {
-        return (onAuthPage || path == '/giving') ? null : '/login';
+        return (onAuthPage || isGuestRoute) ? null : '/login';
       }
       if (user == null) return null;
 

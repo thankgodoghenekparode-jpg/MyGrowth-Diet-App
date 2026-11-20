@@ -148,8 +148,9 @@ export function createApp() {
   // Individual subscription routes authenticate themselves; the webhook is
   // public by design and validates Monnify's signature itself.
   app.use('/api/v1/subscription', subscriptionRoutes);
-  // Ministry platform modules. Giving owns its public categories/webhook and
-  // authenticates member routes internally; event routes require members.
+  // Ministry platform modules. Giving, programme browsing/registration, live
+  // service images and prayer requests expose only their public operations;
+  // each router authenticates member/admin actions internally.
   app.use('/api/v1/giving', givingRoutes);
   app.use('/api/v1/events', eventsRoutes);
   app.use('/api/v1/live-services', liveServicesRoutes);

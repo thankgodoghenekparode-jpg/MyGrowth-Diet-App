@@ -284,6 +284,7 @@ const NOTIFICATION_EVENTS = [
   { key: 'quarterly_review_reminder', label: 'Quarterly review reminder', description: 'Reminder at the start of each quarter.' },
   { key: 'annual_reflection_reminder', label: 'Annual reflection reminder', description: 'Reminder to write the annual reflection.' },
   { key: 'new_announcement', label: 'New announcement', description: 'Broadcast when an announcement is published.' },
+  { key: 'prayer_request_received', label: 'Prayer request received', description: 'Notify administrators when a visitor or member submits a prayer request.' },
   { key: 'partner_request_received', label: 'Prayer partner request received', description: 'A member received a partner request.' },
   { key: 'partner_request_accepted', label: 'Prayer partner request accepted', description: 'A partner request was accepted.' },
   { key: 'partner_request_declined', label: 'Prayer partner request declined', description: 'A partner request was declined or ended.' },

@@ -5,14 +5,13 @@
 - Monnify giving categories are seeded; the new additive migration is applied to the local
   `mygrowth_diet_plan` database.
 - Member flows include guest/member giving checkout, transaction verification, member history,
-  PDF receipts, programme registration, past programmes and prayer requests.
-- Admin flows include giving records/categories/partners, daily/weekly/monthly report PDFs,
+  PDF receipts, programme registration, guest registration, past programmes and prayer requests.
+- Admin flows include giving records/categories/partners, daily/weekly/monthly PDF and CSV reports,
   programme create/edit/publish/attendee management, live-service create/edit/start/end,
-  and prayer-request review.
+  image upload for programme banners and service thumbnails, and prayer-request review with
+  in-app and configured email notifications to active administrators.
 - YouTube streams with a parseable video ID play in-app. Other streaming URLs open externally.
-- Remaining: export raw CSV/Excel, banner/thumbnail upload in the new editors, guest event
-  registration, notification delivery for new prayer requests, and end-to-end payment/provider
-  verification. No test suite or analyzer has been run for this upgrade yet.
+- Remaining: end-to-end payment/provider verification. Tests and the analyzer have not been run.
 
 Live checklist. ✅ done · 🚧 in progress · ⬜ not started
 

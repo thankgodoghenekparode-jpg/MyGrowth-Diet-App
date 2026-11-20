@@ -111,7 +111,7 @@ const eventBody = z.object({
 ministryPlatformAdminRouter.get('/events', validate({ query: paginationQuery }), asyncHandler(async (req, res) => {
   const { page, pageSize, skip, take } = pageArgs(req.valid.query);
   const [data, total] = await Promise.all([
-    prisma.upcomingEvent.findMany({ include: { _count: { select: { registrations: true } } }, orderBy: { startDate: 'desc' }, skip, take }),
+    prisma.upcomingEvent.findMany({ include: { _count: { select: { registrations: true } }, bannerFile: { select: { id: true, originalName: true, mimeType: true } } }, orderBy: { startDate: 'desc' }, skip, take }),
     prisma.upcomingEvent.count(),
   ]);
   res.json({ data: { items: data }, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
@@ -162,7 +162,7 @@ const liveBody = z.object({
 ministryPlatformAdminRouter.get('/live-services', validate({ query: paginationQuery }), asyncHandler(async (req, res) => {
   const { page, pageSize, skip, take } = pageArgs(req.valid.query);
   const [data, total] = await Promise.all([
-    prisma.liveService.findMany({ orderBy: { scheduledAt: 'desc' }, skip, take }), prisma.liveService.count(),
+    prisma.liveService.findMany({ include: { thumbnailFile: { select: { id: true, originalName: true, mimeType: true } } }, orderBy: { scheduledAt: 'desc' }, skip, take }), prisma.liveService.count(),
   ]);
   res.json({ data: { items: data }, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
 }));

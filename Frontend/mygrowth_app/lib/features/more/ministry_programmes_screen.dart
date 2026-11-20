@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/config/app_config.dart';
 import '../../core/widgets/app_back_button.dart';
 
 class MinistryProgrammesScreen extends ConsumerStatefulWidget {
@@ -38,8 +39,82 @@ class _MinistryProgrammesScreenState
   }
 
   Future<void> _register(String id) async {
+    final user = ref.read(authControllerProvider).user;
+    Map<String, dynamic>? guestDetails;
+    if (user == null) {
+      final name = TextEditingController();
+      final email = TextEditingController();
+      final phone = TextEditingController();
+      final formKey = GlobalKey<FormState>();
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Register as a guest'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: name,
+                  decoration: const InputDecoration(labelText: 'Full name'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Enter your name'
+                      : null,
+                ),
+                TextFormField(
+                  controller: email,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) =>
+                      value == null ||
+                          !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                              .hasMatch(value.trim())
+                      ? 'Enter a valid email'
+                      : null,
+                ),
+                TextFormField(
+                  controller: phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone (optional)',
+                  ),
+                  keyboardType: TextInputType.phone,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(dialogContext, true);
+                }
+              },
+              child: const Text('Register'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true) {
+        guestDetails = {
+          'guestName': name.text.trim(),
+          'guestEmail': email.text.trim(),
+          if (phone.text.trim().isNotEmpty) 'guestPhone': phone.text.trim(),
+        };
+      }
+      name.dispose();
+      email.dispose();
+      phone.dispose();
+      if (confirmed != true || !mounted) return;
+    }
     try {
-      await ref.read(apiClientProvider).post('/events/$id/register');
+      await ref
+          .read(apiClientProvider)
+          .post('/events/$id/register', body: guestDetails ?? {});
       if (!mounted) return;
       setState(() => _events = _load());
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,9 +173,24 @@ class _MinistryProgrammesScreenState
               final event = events[index] as Map<String, dynamic>;
               final date = DateTime.tryParse('${event['startDate'] ?? ''}')
                   ?.toLocal();
+              final banner = event['bannerFile'] as Map<String, dynamic>?;
               return Card(
                 child: ListTile(
-                  leading: const Icon(Icons.event_available_outlined),
+                  leading: banner?['id'] is String
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            AppConfig.resolveUrl(
+                              '/api/v1/live-services/media/${banner!['id']}',
+                            ),
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) =>
+                                const Icon(Icons.event_available_outlined),
+                          ),
+                        )
+                      : const Icon(Icons.event_available_outlined),
                   title: Text('${event['title'] ?? 'Programme'}'),
                   trailing: !_past && event['registrationRequired'] == true
                       ? event['isRegistered'] == true
@@ -332,6 +422,19 @@ class _LiveServiceScreenState extends ConsumerState<LiveServiceScreen> {
               ),
               if (live != null) ...[
                 const SizedBox(height: 12),
+                if ((live['thumbnailFile'] as Map<String, dynamic>?)?['id']
+                    is String)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(
+                      AppConfig.resolveUrl(
+                        '/api/v1/live-services/media/${(live['thumbnailFile'] as Map<String, dynamic>)['id']}',
+                      ),
+                      height: 210,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
                 Text(
                   '${live['title'] ?? 'Live Service'}',
                   textAlign: TextAlign.center,
@@ -397,6 +500,20 @@ class _LiveServiceScreenState extends ConsumerState<LiveServiceScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
+                const SizedBox(height: 8),
+                if ((next['thumbnailFile'] as Map<String, dynamic>?)?['id']
+                    is String)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(
+                      AppConfig.resolveUrl(
+                        '/api/v1/live-services/media/${(next['thumbnailFile'] as Map<String, dynamic>)['id']}',
+                      ),
+                      height: 210,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Text(
                   '${next['title'] ?? 'Service'}',

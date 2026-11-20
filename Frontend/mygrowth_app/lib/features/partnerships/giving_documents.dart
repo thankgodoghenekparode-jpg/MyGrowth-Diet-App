@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -112,6 +116,56 @@ Future<void> shareGivingReport(Map<String, dynamic> report) async {
     filename: 'mygrowth-giving-$date.pdf',
     subject: 'MyGrowth Ministry giving report',
   );
+}
+
+/// Save the period's confirmed gifts as an Excel-compatible UTF-8 CSV.
+Future<bool> saveGivingReportCsv(Map<String, dynamic> report) async {
+  final transactions = report['transactions'] as List<dynamic>? ?? [];
+  final rows = <List<Object?>>[
+    <Object?>['Report period', report['period'], 'Report date', report['date']],
+    <Object?>[
+      'Paid At',
+      'Receipt Number',
+      'Payment Reference',
+      'Category',
+      'Donor Name',
+      'Donor Email',
+      'Currency',
+      'Amount',
+    ],
+    ...transactions.map((item) {
+      final row = item as Map<String, dynamic>;
+      return <Object?>[
+        row['paidAt'],
+        row['receiptNumber'],
+        row['paymentReference'],
+        row['category'],
+        row['donorName'],
+        row['donorEmail'],
+        row['currency'] ?? 'NGN',
+        row['amount'],
+      ];
+    }),
+  ];
+  String csvCell(Object? value) {
+    var text = value == null ? '' : '$value';
+    if (value is String && RegExp(r'^\s*[=+@-]').hasMatch(text)) {
+      text = "'$text";
+    }
+    return '"${text.replaceAll('"', '""')}"';
+  }
+
+  final csv = rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
+  final bytes = Uint8List.fromList([0xEF, 0xBB, 0xBF, ...utf8.encode(csv)]);
+  final date = '${report['date'] ?? 'report'}';
+  final saved = await FilePicker.saveFile(
+    fileName: 'mygrowth-giving-$date.csv',
+    bytes: bytes,
+    mimeType: 'text/csv',
+    dialogTitle: 'Save giving report',
+    allowedExtensions: const ['csv'],
+  );
+  return saved != null;
 }
 
 pw.Widget _line(String label, String value) => pw.Padding(

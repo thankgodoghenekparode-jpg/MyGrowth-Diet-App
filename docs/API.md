@@ -251,12 +251,15 @@ pledges require authentication.
 | GET | `/giving/history` | Member | Own transactions. |
 | GET | `/giving/receipt/:id` | Member | Own paid transaction details. |
 | GET/POST/PATCH | `/giving/partner` | Member | Read, create, or update a recurring partnership pledge. |
-| GET | `/events` | Approved member | Upcoming published programmes. |
-| GET | `/events/past` | Approved member | Completed programmes; elapsed published events are moved to completed on read. |
-| GET | `/events/:id` | Approved member | Published programme detail. |
-| POST/DELETE | `/events/:id/register` | Approved member | Register or unregister for a programme. |
+| GET | `/events` | Public (optional member session) | Upcoming published programmes and current member registration state. |
+| GET | `/events/past` | Public (optional member session) | Completed programmes; elapsed published events are moved to completed on read. |
+| GET | `/events/:id` | Public (optional member session) | Published programme detail. |
+| POST | `/events/:id/register` | Public or member | Register as a member, or submit `guestName`, `guestEmail` and optional `guestPhone`. |
+| DELETE | `/events/:id/register` | Member | Cancel the signed-in member's registration. |
 | GET | `/live-services/current` | Public | Current broadcast and next scheduled service. |
-| POST | `/live-services/prayer-requests` | Public | Submit a prayer request. |
+| GET | `/live-services/media/:id` | Public | Image attached to a published/completed programme or scheduled/live service. |
+| POST | `/live-services/prayer-requests` | Public | Submit a request; active administrators receive an in-app notification and configured email. |
+| POST | `/admin/files` | Admin | Upload an image using multipart field `file`, then attach its ID as a programme banner or service thumbnail. |
 | GET | `/admin/giving/transactions` | Admin | Paginated transactions plus paid total summary. |
 | GET | `/admin/giving/reports?period=DAILY&date=YYYY-MM-DD` | Admin | Paid totals and category breakdown for `DAILY`, `WEEKLY`, or `MONTHLY` in Africa/Lagos. |
 | GET/PATCH | `/admin/giving/categories` and `/admin/giving/categories/:id` | Admin | List categories and update category name, description, order, type, or active state. |

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/widgets/app_back_button.dart';
@@ -213,7 +214,11 @@ class _AdminDataListState extends ConsumerState<_AdminDataList> {
                       return ListTile(
                         title: Text('$name'),
                         subtitle: Text(
-                          '${user?['email'] ?? registration['guestEmail'] ?? ''}',
+                          [
+                            '${user?['email'] ?? registration['guestEmail'] ?? ''}',
+                            if (registration['guestPhone'] != null)
+                              '${registration['guestPhone']}',
+                          ].where((value) => value.isNotEmpty).join(' · '),
                         ),
                       );
                     }).toList(),
@@ -232,6 +237,34 @@ class _AdminDataListState extends ConsumerState<_AdminDataList> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('$e')));
     }
+  }
+
+  Future<Map<String, dynamic>?> _uploadImage() async {
+    final selected = await FilePicker.pickFile(
+      dialogTitle: 'Choose an image',
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    );
+    if (selected == null) return null;
+    final bytes = await selected.readAsBytes();
+    final extension = selected.extension?.toLowerCase();
+    final mimeType = switch (extension) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      _ => null,
+    };
+    final result = await ref
+        .read(apiClientProvider)
+        .upload(
+          '/admin/files',
+          bytes: bytes,
+          fieldName: 'file',
+          filename: selected.name,
+          contentType: mimeType,
+        );
+    return (result as Map<String, dynamic>)['file'] as Map<String, dynamic>?;
   }
 
   Future<void> _createRecord([Map<String, dynamic>? existing]) async {
@@ -258,6 +291,14 @@ class _AdminDataListState extends ConsumerState<_AdminDataList> {
         )?.toLocal() ??
         DateTime.now().add(const Duration(days: 1));
     var registrationRequired = existing?['registrationRequired'] == true;
+    String? imageFileId = event
+        ? (existing?['bannerFileId'] as String?)
+        : (existing?['thumbnailFileId'] as String?);
+    final existingImage = event
+        ? (existing?['bannerFile'] as Map<String, dynamic>?)
+        : (existing?['thumbnailFile'] as Map<String, dynamic>?);
+    var imageFileName = existingImage?['originalName'] as String?;
+    var uploadingImage = false;
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -322,6 +363,53 @@ class _AdminDataListState extends ConsumerState<_AdminDataList> {
                       ),
                     ),
                   if (event) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: uploadingImage
+                            ? null
+                            : () async {
+                                setDialogState(() => uploadingImage = true);
+                                try {
+                                  final file = await _uploadImage();
+                                  if (file != null && dialogContext.mounted) {
+                                    setDialogState(() {
+                                      imageFileId = '${file['id']}';
+                                      imageFileName = '${file['originalName']}';
+                                    });
+                                  }
+                                } catch (error) {
+                                  if (dialogContext.mounted) {
+                                    ScaffoldMessenger.of(dialogContext)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(
+                                        SnackBar(content: Text('$error')),
+                                      );
+                                  }
+                                } finally {
+                                  if (dialogContext.mounted) {
+                                    setDialogState(
+                                      () => uploadingImage = false,
+                                    );
+                                  }
+                                }
+                              },
+                        icon: uploadingImage
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.image_outlined),
+                        label: Text(
+                          imageFileName ??
+                              (uploadingImage
+                                  ? 'Uploading image…'
+                                  : 'Upload banner'),
+                        ),
+                      ),
+                    ),
                     TextFormField(
                       controller: description,
                       decoration: const InputDecoration(
@@ -356,6 +444,53 @@ class _AdminDataListState extends ConsumerState<_AdminDataList> {
                           setDialogState(() => registrationRequired = value),
                     ),
                   ] else ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: uploadingImage
+                            ? null
+                            : () async {
+                                setDialogState(() => uploadingImage = true);
+                                try {
+                                  final file = await _uploadImage();
+                                  if (file != null && dialogContext.mounted) {
+                                    setDialogState(() {
+                                      imageFileId = '${file['id']}';
+                                      imageFileName = '${file['originalName']}';
+                                    });
+                                  }
+                                } catch (error) {
+                                  if (dialogContext.mounted) {
+                                    ScaffoldMessenger.of(dialogContext)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(
+                                        SnackBar(content: Text('$error')),
+                                      );
+                                  }
+                                } finally {
+                                  if (dialogContext.mounted) {
+                                    setDialogState(
+                                      () => uploadingImage = false,
+                                    );
+                                  }
+                                }
+                              },
+                        icon: uploadingImage
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.image_outlined),
+                        label: Text(
+                          imageFileName ??
+                              (uploadingImage
+                                  ? 'Uploading image…'
+                                  : 'Upload thumbnail'),
+                        ),
+                      ),
+                    ),
                     DropdownButtonFormField<String>(
                       initialValue: _newStreamPlatform,
                       decoration: const InputDecoration(labelText: 'Platform'),
@@ -470,6 +605,7 @@ class _AdminDataListState extends ConsumerState<_AdminDataList> {
                 : meetingLink.text.trim(),
             'minister': minister.text.trim(),
             'registrationRequired': registrationRequired,
+            'bannerFileId': imageFileId,
             'startDate': starts.toUtc().toIso8601String(),
             'status': existing?['status'] ?? 'DRAFT',
             'timezone': 'Africa/Lagos',
@@ -482,6 +618,7 @@ class _AdminDataListState extends ConsumerState<_AdminDataList> {
                 : streamUrl.text.trim(),
             'description': description.text.trim(),
             'platform': _newStreamPlatform,
+            'thumbnailFileId': imageFileId,
             'scheduledAt': starts.toUtc().toIso8601String(),
             'status': existing?['status'] ?? 'SCHEDULED',
             'timezone': 'Africa/Lagos',

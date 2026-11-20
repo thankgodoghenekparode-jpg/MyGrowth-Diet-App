@@ -138,22 +138,58 @@ class _AdminGivingReportsScreenState
                       ),
                     ),
                   const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed:
-                        (report['transactions'] as List<dynamic>? ?? []).isEmpty
-                        ? null
-                        : () async {
-                            try {
-                              await shareGivingReport(report);
-                            } catch (e) {
-                              if (context.mounted)
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(SnackBar(content: Text('$e')));
-                            }
-                          },
-                    icon: const Icon(Icons.download_outlined),
-                    label: const Text('Download report PDF'),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.icon(
+                        onPressed:
+                            (report['transactions'] as List<dynamic>? ?? [])
+                                .isEmpty
+                            ? null
+                            : () async {
+                                try {
+                                  await shareGivingReport(report);
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('$e')),
+                                    );
+                                  }
+                                }
+                              },
+                        icon: const Icon(Icons.picture_as_pdf_outlined),
+                        label: const Text('Download report PDF'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed:
+                            (report['transactions'] as List<dynamic>? ?? [])
+                                .isEmpty
+                            ? null
+                            : () async {
+                                try {
+                                  final saved = await saveGivingReportCsv(
+                                    report,
+                                  );
+                                  if (context.mounted && saved) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('CSV report saved.'),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('$e')),
+                                    );
+                                  }
+                                }
+                              },
+                        icon: const Icon(Icons.table_view_outlined),
+                        label: const Text('Export CSV for Excel'),
+                      ),
+                    ],
                   ),
                 ],
               );
