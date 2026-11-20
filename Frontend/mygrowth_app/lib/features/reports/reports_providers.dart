@@ -9,6 +9,7 @@ final reportsListProvider =
     FutureProvider.autoDispose.family<List<Report>, String>(
   (ref, type) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) return const [];
     final data = await client.get('/me/reports', query: {'type': type});
     if (data is List) {
       return data
@@ -25,6 +26,7 @@ final reportDetailProvider =
     FutureProvider.autoDispose.family<Report?, String>(
   (ref, id) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) return null;
     final data = await client.get('/me/reports/$id');
     if (data is Map<String, dynamic>) return Report.fromJson(data);
     return null;

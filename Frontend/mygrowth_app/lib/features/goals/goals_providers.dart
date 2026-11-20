@@ -9,6 +9,7 @@ final goalsProvider =
     FutureProvider.autoDispose.family<List<Goal>, String>(
   (ref, periodType) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) return const [];
     final data =
         await client.get('/me/goals', query: {'periodType': periodType});
     return asJsonList(data).map(Goal.fromJson).toList();

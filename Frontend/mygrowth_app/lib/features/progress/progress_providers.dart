@@ -7,6 +7,7 @@ import '../../core/models/activity_models.dart';
 final progressSummaryProvider =
     FutureProvider.autoDispose<ProgressSummary>((ref) async {
   final client = ref.watch(apiClientProvider);
+  if (!client.hasSession) return const ProgressSummary();
   final data = await client.get('/me/progress');
   if (data is Map<String, dynamic>) {
     return ProgressSummary.fromJson(data);

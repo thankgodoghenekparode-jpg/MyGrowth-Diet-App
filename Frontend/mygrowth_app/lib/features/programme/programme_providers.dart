@@ -96,6 +96,7 @@ final dailyChecklistProvider = FutureProvider.autoDispose
     .family<List<PlannedActivity>, DateTime>(
   (ref, date) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) return const [];
     final key = DateFormat('yyyy-MM-dd').format(date);
     final data = await client.get('/me/activities', query: {'date': key});
     return _asJsonList(data).map(PlannedActivity.fromJson).toList();
@@ -116,6 +117,7 @@ final notificationsProvider =
     FutureProvider.autoDispose<List<AppNotification>>(
   (ref) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) return const [];
     final data = await client.get('/me/notifications');
     return _asJsonList(data).map(AppNotification.fromJson).toList();
   },

@@ -15,6 +15,10 @@ final notificationPrefsProvider =
     FutureProvider.autoDispose<NotificationPrefs>(
   (ref) async {
     final client = ref.watch(apiClientProvider);
+    // Don't attempt a network call when the session has no token (e.g. offline
+    // mode after a failed refresh). The provider will re-evaluate when the
+    // auth state changes and a new token becomes available.
+    if (!client.hasSession) return const NotificationPrefs();
     try {
       final data = await client.get('/me/notification-preferences');
       if (data is Map<String, dynamic>) {
@@ -22,8 +26,9 @@ final notificationPrefsProvider =
       }
       return const NotificationPrefs();
     } on ApiException catch (e) {
-      if (e.statusCode == 404 || e.statusCode == 501) {
-        // Endpoint not configured yet — fall back to defaults.
+      if (e.statusCode == 401 || e.statusCode == 404 || e.statusCode == 501) {
+        // 401: token expired mid-request — use defaults until reconnect.
+        // 404/501: Endpoint not configured yet — fall back to defaults.
         return const NotificationPrefs();
       }
       rethrow;

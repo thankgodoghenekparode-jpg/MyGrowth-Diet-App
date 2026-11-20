@@ -9,6 +9,7 @@ final reflectionsProvider =
     FutureProvider.autoDispose<List<ReflectionEntry>>(
   (ref) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) return const [];
     final data = await client.get('/me/reflections');
     if (data is List) {
       return data
@@ -24,6 +25,7 @@ final reflectionsProvider =
 final testimoniesProvider = FutureProvider.autoDispose<List<Testimony>>(
   (ref) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) return const [];
     final data = await client.get('/me/testimonies');
     if (data is List) {
       return data
@@ -47,6 +49,9 @@ class AnnualLetterState {
 final annualLetterProvider = FutureProvider.autoDispose<AnnualLetterState>(
   (ref) async {
     final client = ref.watch(apiClientProvider);
+    if (!client.hasSession) {
+      return const AnnualLetterState(available: false);
+    }
     try {
       final data = await client.get('/me/annual-letter');
       if (data is Map<String, dynamic>) {
