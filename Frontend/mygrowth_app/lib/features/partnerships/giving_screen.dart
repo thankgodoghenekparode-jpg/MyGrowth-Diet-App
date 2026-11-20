@@ -40,6 +40,10 @@ class _GivingScreenState extends ConsumerState<GivingScreen> {
   }
 
   Future<void> _loadCategories() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final result =
           await ref.read(apiClientProvider).get('/giving/categories')
@@ -187,8 +191,22 @@ class _GivingScreenState extends ConsumerState<GivingScreen> {
                     }).toList(),
                     onChanged: (value) => setState(() => _categoryId = value),
                   )
-                else if (_error == null)
-                  const Text('Giving categories are not available yet.'),
+                else ...[
+                  Text(
+                    _error == null
+                        ? 'Giving categories are not available yet. Please try loading them again.'
+                        : 'Giving categories could not be loaded. Check your connection and try again.',
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: _loading ? null : _loadCategories,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Reload giving categories'),
+                    ),
+                  ),
+                ],
                 if (isGuest) ...[
                   const SizedBox(height: 14),
                   TextField(
