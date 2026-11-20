@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart';
 
 import '../../core/widgets/app_back_button.dart';
@@ -23,21 +23,47 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
   PdfControllerPinch? _pdfController;
 
   Object? _error;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
 
-    if (_isPdf) {
-      _pdfController = PdfControllerPinch(
-        document: PdfDocument.openData(_downloadBytes()),
-      );
-    }
+    if (_isPdf) _loadPdf();
   }
 
-  Future<Uint8List> _downloadBytes() async {
-    final data = await NetworkAssetBundle(_uri).load(_uri.toString());
-    return data.buffer.asUint8List();
+  Future<void> _loadPdf() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final response = await http.get(_uri).timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw StateError('Download failed (HTTP ${response.statusCode})');
+      }
+      if (response.bodyBytes.isEmpty) {
+        throw StateError('The downloaded book is empty');
+      }
+      final controller = PdfControllerPinch(
+        document: PdfDocument.openData(response.bodyBytes),
+      );
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+      setState(() {
+        _pdfController?.dispose();
+        _pdfController = controller;
+        _loading = false;
+      });
+    } on Object catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -63,13 +89,26 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(
-                  'This book could not be opened. Check your internet '
-                  'connection and try again.',
-                  textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'This book could not be opened. Check your internet '
+                      'connection and try again.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: _loadPdf,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Try again'),
+                    ),
+                  ],
                 ),
               ),
             )
+          : _loading || _pdfController == null
+          ? const Center(child: CircularProgressIndicator())
           : PdfViewPinch(
               controller: _pdfController!,
               onDocumentError: (error) {
