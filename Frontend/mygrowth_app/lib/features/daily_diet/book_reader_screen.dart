@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_epub_viewer/flutter_epub_viewer.dart';
 import 'package:pdfx/pdfx.dart';
 
 import '../../core/widgets/app_back_button.dart';
+import 'epub_reader_screen.dart';
 
 /// Opens the programme's PDF or EPUB book inside the app.
 class BookReaderScreen extends StatefulWidget {
@@ -21,7 +21,6 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
   late final bool _isPdf = _uri.path.toLowerCase().endsWith('.pdf');
 
   PdfControllerPinch? _pdfController;
-  final EpubController _epubController = EpubController();
 
   Object? _error;
 
@@ -31,13 +30,14 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
 
     if (_isPdf) {
       _pdfController = PdfControllerPinch(
-        document: PdfDocument.openData(
-          NetworkAssetBundle(_uri)
-              .load(_uri.toString())
-              .then((data) => data.buffer.asUint8List()),
-        ),
+        document: PdfDocument.openData(_downloadBytes()),
       );
     }
+  }
+
+  Future<Uint8List> _downloadBytes() async {
+    final data = await NetworkAssetBundle(_uri).load(_uri.toString());
+    return data.buffer.asUint8List();
   }
 
   @override
@@ -48,6 +48,12 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // EPUBs are read by the self-contained text reader. The WebView/epub.js
+    // viewer renders a blank page for EPUB 3 books on the web.
+    if (!_isPdf) {
+      return EpubReaderScreen(title: widget.title, url: widget.url);
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: const AppBackButton(),
@@ -58,30 +64,15 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'This book could not be opened. Check your internet connection and try again.',
+                  'This book could not be opened. Check your internet '
+                  'connection and try again.',
                   textAlign: TextAlign.center,
                 ),
               ),
             )
-          : _isPdf
-          ? PdfViewPinch(
+          : PdfViewPinch(
               controller: _pdfController!,
               onDocumentError: (error) {
-                if (mounted) {
-                  setState(() => _error = error);
-                }
-              },
-            )
-          : EpubViewer(
-              epubController: _epubController,
-              epubSource: EpubSource.fromUrl(widget.url),
-              displaySettings: EpubDisplaySettings(
-                flow: EpubFlow.paginated,
-                snap: true,
-                theme: EpubTheme.light(),
-                allowScriptedContent: false,
-              ),
-              onLoadError: (error) {
                 if (mounted) {
                   setState(() => _error = error);
                 }

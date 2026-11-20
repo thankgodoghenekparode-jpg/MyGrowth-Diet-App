@@ -50,7 +50,11 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   just_audio: ^0.10.6
   pdfx: ^2.11.0
-  flutter_epub_viewer: ^2.2.1
+  # EPUB books are parsed and rendered with Flutter widgets instead of the
+  # WebView-based epub.js viewer, which renders a blank page on web for the
+  # programme's EPUB 3 books.
+  archive: ^3.6.1
+  xml: ^6.6.1
 
 dev_dependencies:
   flutter_test:
