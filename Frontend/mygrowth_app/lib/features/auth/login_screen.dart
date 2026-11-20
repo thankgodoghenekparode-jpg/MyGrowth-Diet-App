@@ -27,18 +27,14 @@ class AuthBrandHeader extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Text(
           'MyGrowth Diet App',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
+          style: Theme.of(context).textTheme.headlineSmall
               ?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 6),
         Text(
           'Healings Erhuvwuigho Azuike Ministry',
           textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
+          style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: AppColors.inkSecondary),
         ),
         if (showTagline) ...[
@@ -46,9 +42,7 @@ class AuthBrandHeader extends StatelessWidget {
           Text(
             'Growing in the Word, consistent in prayer, accountability in purpose',
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .labelMedium
+            style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(color: AppColors.inkMuted, height: 1.5),
           ),
         ],
@@ -91,9 +85,7 @@ class AuthScaffold extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: AppSpacing.lg),
@@ -137,15 +129,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _busy = true);
     try {
-      await ref.read(authControllerProvider.notifier).signIn(
-            email: _email.text.trim(),
-            password: _password.text,
-          );
+      await ref
+          .read(authControllerProvider.notifier)
+          .signIn(email: _email.text.trim(), password: _password.text);
       if (!mounted) return;
       TextInput.finishAutofillContext(shouldSave: true);
       final auth = ref.read(authControllerProvider);
       final user = auth.user;
-      Toast.success(context, 'Welcome back${user == null ? '' : ', ${user.name.split(' ').first}'}!');
+      Toast.success(
+        context,
+        'Welcome back${user == null ? '' : ', ${user.name.split(' ').first}'}!',
+      );
       if (user != null && user.isPendingApproval) {
         context.go('/home');
       } else if (auth.needsProfileCompletion) {
@@ -156,7 +150,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       if (e.code == 'EMAIL_NOT_VERIFIED') {
-        context.go('/verify-email?email=${Uri.encodeComponent(_email.text.trim())}');
+        context.go(
+          '/verify-email?email=${Uri.encodeComponent(_email.text.trim())}',
+        );
         return;
       }
       Toast.error(context, e.fieldError ?? e.message);
@@ -176,8 +172,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Text('New to MyGrowth?',
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'New to MyGrowth?',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           TextButton(
             onPressed: () => context.go('/register'),
             child: const Text('Create an account'),
@@ -188,57 +186,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppTextField(
-              label: 'Email address',
-              required: true,
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.username],
-              textInputAction: TextInputAction.next,
-              prefixIcon: Icons.mail_outline_rounded,
-              hint: 'you@example.com',
-              validator: (v) {
-                final value = v?.trim() ?? '';
-                if (value.isEmpty) return 'Enter your email address';
-                if (!value.contains('@') || !value.contains('.')) {
-                  return 'Enter a valid email address';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: fieldGap),
-            AppTextField(
-              label: 'Password',
-              required: true,
-              controller: _password,
-              obscure: true,
-              autofillHints: const [AutofillHints.password],
-              textInputAction: TextInputAction.done,
-              prefixIcon: Icons.lock_outline_rounded,
-              onSubmitted: (_) => _submit(),
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Enter your password' : null,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => context.go('/forgot-password'),
-                child: const Text('Forgot password?'),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTextField(
+                label: 'Email address',
+                required: true,
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.username],
+                textInputAction: TextInputAction.next,
+                prefixIcon: Icons.mail_outline_rounded,
+                hint: 'you@example.com',
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return 'Enter your email address';
+                  if (!value.contains('@') || !value.contains('.')) {
+                    return 'Enter a valid email address';
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            AppButton(
-              label: 'Sign in',
-              busy: _busy,
-              expand: true,
-              onPressed: _submit,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const _PrivacyNotice(),
-          ],
+              const SizedBox(height: fieldGap),
+              AppTextField(
+                label: 'Password',
+                required: true,
+                controller: _password,
+                obscure: true,
+                autofillHints: const [AutofillHints.password],
+                textInputAction: TextInputAction.done,
+                prefixIcon: Icons.lock_outline_rounded,
+                onSubmitted: (_) => _submit(),
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Enter your password' : null,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => context.go('/forgot-password'),
+                  child: const Text('Forgot password?'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              AppButton(
+                label: 'Sign in',
+                busy: _busy,
+                expand: true,
+                onPressed: _submit,
+              ),
+              TextButton.icon(
+                onPressed: () => context.go('/giving'),
+                icon: const Icon(Icons.volunteer_activism_outlined),
+                label: const Text('Give as a guest'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const _PrivacyNotice(),
+            ],
           ),
         ),
       ),
@@ -266,9 +269,7 @@ class _PrivacyNotice extends StatelessWidget {
             child: Text(
               'Your reflections, prayer requests and reports are private. '
               'They are only shared according to the visibility you choose.',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
+              style: Theme.of(context).textTheme.labelSmall
                   ?.copyWith(height: 1.45),
             ),
           ),

@@ -79,11 +79,7 @@ class DailyDietSectionScreen extends ConsumerWidget {
                   'for the selected day.',
             );
           }
-          return _SectionBody(
-            section: found,
-            bundle: bundle,
-            dateISO: dateISO,
-          );
+          return _SectionBody(section: found, bundle: bundle, dateISO: dateISO);
         },
       ),
     );
@@ -134,8 +130,8 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
         date: widget.dateISO,
         status: status,
         note: note ?? (keepExistingNote ? section.completion?.note : null),
-        actualDurationMinutes: actualDurationMinutes ??
-            section.completion?.actualDurationMinutes,
+        actualDurationMinutes:
+            actualDurationMinutes ?? section.completion?.actualDurationMinutes,
         attachmentFileId:
             attachmentFileId ?? section.completion?.attachmentFileId,
       );
@@ -144,11 +140,7 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
       }
     } catch (error) {
       if (mounted) {
-        Toast.show(
-          context,
-          message: _messageFor(error),
-          tone: ToastTone.error,
-        );
+        Toast.show(context, message: _messageFor(error), tone: ToastTone.error);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -163,15 +155,15 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
     try {
       await writer.clear(completionId: completion.id, date: widget.dateISO);
       if (mounted) {
-        Toast.show(context, message: 'Marked as not done', tone: ToastTone.info);
+        Toast.show(
+          context,
+          message: 'Marked as not done',
+          tone: ToastTone.info,
+        );
       }
     } catch (error) {
       if (mounted) {
-        Toast.show(
-          context,
-          message: _messageFor(error),
-          tone: ToastTone.error,
-        );
+        Toast.show(context, message: _messageFor(error), tone: ToastTone.error);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -233,11 +225,7 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
       }
     } catch (error) {
       if (mounted) {
-        Toast.show(
-          context,
-          message: _messageFor(error),
-          tone: ToastTone.error,
-        );
+        Toast.show(context, message: _messageFor(error), tone: ToastTone.error);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -260,41 +248,41 @@ class _SectionBodyState extends ConsumerState<_SectionBody> {
         ],
         switch (section.behaviour) {
           DailyDietBehaviour.timer => _PrayerBlock(
-              section: section,
-              bundle: bundle,
-              busy: _busy,
-              onSave: (minutes) => _save(actualDurationMinutes: minutes),
-              onClear: _clear,
-            ),
+            section: section,
+            bundle: bundle,
+            busy: _busy,
+            onSave: (minutes) => _save(actualDurationMinutes: minutes),
+            onClear: _clear,
+          ),
           DailyDietBehaviour.tick => _FastingBlock(
-              section: section,
-              bundle: bundle,
-              busy: _busy,
-              onToggle: section.isCompleted ? _clear : () => _save(),
-            ),
+            section: section,
+            bundle: bundle,
+            busy: _busy,
+            onToggle: section.isCompleted ? _clear : () => _save(),
+          ),
           DailyDietBehaviour.report => _ReportBlock(
-              section: section,
-              bundle: bundle,
-              busy: _busy,
-              onUpload: _upload,
-              onSave: () => _save(),
-            ),
+            section: section,
+            bundle: bundle,
+            busy: _busy,
+            onUpload: _upload,
+            onSave: () => _save(),
+          ),
           DailyDietBehaviour.partner => _PartnerBlock(
-              section: section,
-              busy: _busy,
-              onDone: () => _save(),
-            ),
+            section: section,
+            busy: _busy,
+            onDone: () => _save(),
+          ),
           DailyDietBehaviour.material => _MaterialBlock(
-              section: section,
-              busy: _busy,
-              onDone: () => _save(),
-            ),
+            section: section,
+            busy: _busy,
+            onDone: () => _save(),
+          ),
           DailyDietBehaviour.text => _TextBlock(
-              section: section,
-              bundle: bundle,
-              busy: _busy,
-              onDone: () => _save(),
-            ),
+            section: section,
+            bundle: bundle,
+            busy: _busy,
+            onDone: () => _save(),
+          ),
         },
         const SizedBox(height: AppSpacing.lg),
       ],
@@ -314,19 +302,21 @@ class _IntroCard extends StatelessWidget {
     final theme = Theme.of(context);
     final content = section.content;
     final isDeclarations = section.key == 'declarations';
-    final dayDeclarations = section.dayContent?.declarations ?? const <String>[];
+    final dayDeclarations =
+        section.dayContent?.declarations ?? const <String>[];
     final dayBody = section.dayContent?.hasBody == true
         ? section.dayContent!.body
         : null;
-    final dailyDeclaration = (dayDeclarations.isNotEmpty
-            ? dayDeclarations.first
-            : dayBody ?? bundle.programme?.dailyAffirmation)
-        ?.trim();
+    final dailyDeclaration =
+        (dayDeclarations.isNotEmpty
+                ? dayDeclarations.first
+                : dayBody ?? bundle.programme?.dailyAffirmation)
+            ?.trim();
     final introBody = isDeclarations
         ? (dailyDeclaration?.isNotEmpty == true ? dailyDeclaration : null)
         : content?.hasBody == true
-            ? content!.body
-            : null;
+        ? content!.body
+        : null;
 
     return AppCard(
       child: Column(
@@ -468,16 +458,16 @@ class _TextBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = section.key == 'declarations'
         ? section.monthContent ??
-            (section.content?.scope == DailyDietScope.month
-                ? section.content
-                : null)
+              (section.content?.scope == DailyDietScope.month
+                  ? section.content
+                  : null)
         : section.content;
     final monthlyConfession = bundle.monthlyPlan?.monthlyConfession?.trim();
     final declarations = content?.declarations.isNotEmpty == true
         ? content!.declarations
         : monthlyConfession?.isNotEmpty == true
-            ? [monthlyConfession!]
-            : const <String>[];
+        ? [monthlyConfession!]
+        : const <String>[];
     final theme = Theme.of(context);
     final date = DateTime.tryParse(bundle.date);
     final proverbsReading = section.key == 'proverbs_reading' && date != null
@@ -569,7 +559,9 @@ class _TextBlock extends StatelessWidget {
                       Expanded(
                         child: BibleReferenceText(
                           text: content.teachings[i],
-                          style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.45,
+                          ),
                         ),
                       ),
                     ],
@@ -679,9 +671,9 @@ class _HighlightCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-          BibleReferenceText(
-            text: value,
-            style: theme.textTheme.titleMedium?.copyWith(
+                  BibleReferenceText(
+                    text: value,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.brandText,
                     ),
@@ -789,6 +781,16 @@ class _MaterialBlock extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
         ],
+        if (section.key == 'music') ...[
+          AppButton(
+            label: 'Open music player',
+            icon: Icons.play_arrow_rounded,
+            variant: AppButtonVariant.outlined,
+            expand: true,
+            onPressed: () => context.push('/music'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         if (songs.isNotEmpty) ...[
           SectionHeader(
             title: 'Songs',
@@ -813,7 +815,9 @@ class _MaterialBlock extends StatelessWidget {
                       Expanded(
                         child: Text(
                           songs[i],
-                          style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.45,
+                          ),
                         ),
                       ),
                     ],
@@ -849,14 +853,15 @@ class _MaterialBlock extends StatelessWidget {
                           if (books[i]['coverAsset'] != null)
                             'cover': books[i]['coverAsset'].toString(),
                           if (books[i]['backCoverAsset'] != null)
-                            'backCover':
-                                books[i]['backCoverAsset'].toString(),
+                            'backCover': books[i]['backCoverAsset'].toString(),
                           if (books[i]['fileUrl'] != null)
                             'url': books[i]['fileUrl'].toString(),
                         };
                         context.push(
-                          Uri(path: '/reading/book', queryParameters: query)
-                              .toString(),
+                          Uri(
+                            path: '/reading/book',
+                            queryParameters: query,
+                          ).toString(),
                         );
                       },
                       child: Padding(
@@ -885,9 +890,8 @@ class _MaterialBlock extends StatelessWidget {
                                       .isNotEmpty)
                                     Text(
                                       (books[i]['author'] ?? '').toString(),
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: AppColors.inkMuted,
-                                      ),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(color: AppColors.inkMuted),
                                     ),
                                 ],
                               ),
@@ -1000,7 +1004,8 @@ class _MaterialTile extends StatelessWidget {
                   Text(
                     [
                       type,
-                      if (material.author != null && material.author!.isNotEmpty)
+                      if (material.author != null &&
+                          material.author!.isNotEmpty)
                         material.author!,
                       if (size.isNotEmpty) size,
                     ].join(' • '),
@@ -1023,13 +1028,13 @@ class _MaterialTile extends StatelessWidget {
   }
 
   static IconData _iconFor(String type) => switch (type) {
-        'Audio' => Icons.headphones_rounded,
-        'Video' => Icons.movie_rounded,
-        'Image' => Icons.image_rounded,
-        'PDF' => Icons.picture_as_pdf_rounded,
-        'Document' => Icons.description_rounded,
-        _ => Icons.insert_drive_file_rounded,
-      };
+    'Audio' => Icons.headphones_rounded,
+    'Video' => Icons.movie_rounded,
+    'Image' => Icons.image_rounded,
+    'PDF' => Icons.picture_as_pdf_rounded,
+    'Document' => Icons.description_rounded,
+    _ => Icons.insert_drive_file_rounded,
+  };
 }
 
 /// Prayer: the direction for the week or month plus the stopwatch.
@@ -1051,9 +1056,11 @@ class _PrayerBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = section.content;
-    final target = content?.durationTargetMinutes ??
+    final target =
+        content?.durationTargetMinutes ??
         bundle.weeklyPlan?.prayerDurationTargetMinutes;
-    final focus = content?.monthlyFocus ??
+    final focus =
+        content?.monthlyFocus ??
         bundle.monthlyPlan?.prayerFocus ??
         bundle.weeklyPlan?.keyLessonPrompt;
 
@@ -1069,7 +1076,8 @@ class _PrayerBlock extends StatelessWidget {
             color: AppColors.surfaceMuted,
             child: Text(
               focus,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(height: 1.5),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1114,7 +1122,8 @@ class _FastingBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final guidance = section.content?.body ??
+    final guidance =
+        section.content?.body ??
         section.content?.guidance ??
         bundle.weeklyPlan?.fastingSchedule ??
         bundle.monthlyPlan?.fastingGuidance;
@@ -1166,14 +1175,17 @@ class _FastingBlock extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               AppButton(
-                label: section.isCompleted ? 'Undo — I did not fast' : 'I fasted today',
+                label: section.isCompleted
+                    ? 'Undo — I did not fast'
+                    : 'I fasted today',
                 icon: section.isCompleted
                     ? Icons.undo_rounded
                     : Icons.check_rounded,
                 expand: true,
                 busy: busy,
-                variant:
-                    section.isCompleted ? AppButtonVariant.outlined : AppButtonVariant.filled,
+                variant: section.isCompleted
+                    ? AppButtonVariant.outlined
+                    : AppButtonVariant.filled,
                 onPressed: onToggle,
               ),
             ],
@@ -1235,7 +1247,9 @@ class _ReportBlock extends StatelessWidget {
                       Expanded(
                         child: Text(
                           questions[i],
-                          style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.45,
+                          ),
                         ),
                       ),
                     ],
@@ -1305,8 +1319,7 @@ class _ReportBlock extends StatelessWidget {
                   ],
                 ),
               ],
-              if (section.completion?.note != null &&
-                  attachment == null) ...[
+              if (section.completion?.note != null && attachment == null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   section.completion!.note!,
@@ -1402,7 +1415,9 @@ class _DoneButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppButton(
       label: done ? 'Completed' : label,
-      icon: done ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+      icon: done
+          ? Icons.check_circle_rounded
+          : Icons.check_circle_outline_rounded,
       expand: true,
       busy: busy,
       variant: done ? AppButtonVariant.outlined : AppButtonVariant.filled,

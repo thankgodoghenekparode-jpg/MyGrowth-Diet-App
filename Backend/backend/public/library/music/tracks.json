@@ -1,0 +1,86 @@
+{
+  "title": "MyGrowth Music Library",
+  "description": "Worship and gospel songs for the Growth Diet Plan.",
+  "tracks": [
+    {
+      "id": "this-is-the-air-i-breathe",
+      "title": "This Is The Air I Breathe",
+      "artist": "Hillsong Worship",
+      "album": "MyGrowth Music Library",
+      "file": "music-01.mp3",
+      "durationSeconds": 313
+    },
+    {
+      "id": "dependable-jesus",
+      "title": "Dependable Jesus",
+      "artist": "Esther Oji",
+      "album": "MyGrowth Music Library",
+      "file": "music-02.mp3",
+      "durationSeconds": 368
+    },
+    {
+      "id": "glorified",
+      "title": "Glorified",
+      "artist": "Esther Oji",
+      "album": "MyGrowth Music Library",
+      "file": "music-03.mp3",
+      "durationSeconds": 92
+    },
+    {
+      "id": "all-i-see-is-you",
+      "title": "All I See Is You",
+      "artist": "Sinach",
+      "album": "MyGrowth Music Library",
+      "file": "music-04.mp3",
+      "durationSeconds": 448
+    },
+    {
+      "id": "nothing-like-your-presence",
+      "title": "Nothing Like Your Presence",
+      "artist": "Todd Galberth & Chris Lawson",
+      "album": "MyGrowth Music Library",
+      "file": "music-05.mp3",
+      "durationSeconds": 485
+    },
+    {
+      "id": "heart-of-worship",
+      "title": "Heart Of Worship",
+      "artist": "Brandon Lake",
+      "album": "MyGrowth Music Library",
+      "file": "music-06.mp3",
+      "durationSeconds": 331
+    },
+    {
+      "id": "god-im-just-grateful",
+      "title": "God I'm Just Grateful",
+      "artist": "Elevation Worship",
+      "album": "MyGrowth Music Library",
+      "file": "music-07.mp3",
+      "durationSeconds": 298
+    },
+    {
+      "id": "ori-mi",
+      "title": "Ori Mi",
+      "artist": "Neeja",
+      "album": "MyGrowth Music Library",
+      "file": "music-08.mp3",
+      "durationSeconds": 171
+    },
+    {
+      "id": "the-only-home-i-know",
+      "title": "The Only Home I Know",
+      "artist": "May the Lord Studio",
+      "album": "MyGrowth Music Library",
+      "file": "music-09.mp3",
+      "durationSeconds": 176
+    },
+    {
+      "id": "this-is-not-the-first-time",
+      "title": "This Is Not The First Time",
+      "artist": "Sunvera Scott",
+      "album": "MyGrowth Music Library",
+      "file": "music-10.mp3",
+      "durationSeconds": 230
+    }
+  ]
+}

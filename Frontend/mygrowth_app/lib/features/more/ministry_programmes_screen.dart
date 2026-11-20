@@ -27,15 +27,29 @@ class _MinistryProgrammesScreenState
   }
 
   Future<List<dynamic>> _load() async {
-    final response =
-        await ref
-                .read(apiClientProvider)
-                .get(_past ? '/events/past' : '/events')
-            as Map<String, dynamic>;
-    final data = response;
-    if (data is List) return data;
-    if (data is Map && data['events'] is List) return data['events'] as List;
-    return const [];
+    final response = await ref
+        .read(apiClientProvider)
+        .get(_past ? '/events/past' : '/events');
+
+    // ApiClient unwraps the standard {data: ...} envelope. The events
+    // endpoint then returns {events, total, page, totalPages}, while keeping
+    // list handling here makes this work with endpoints/proxies that return a
+    // bare list as well.
+    if (response is List) return List<dynamic>.from(response);
+    if (response is Map) {
+      final events = response['events'];
+      if (events is List) return List<dynamic>.from(events);
+
+      // Also accept a still-enveloped response for clients that do not unwrap
+      // the API envelope before it reaches this screen.
+      final data = response['data'];
+      if (data is List) return List<dynamic>.from(data);
+      if (data is Map) {
+        final nestedEvents = data['events'];
+        if (nestedEvents is List) return List<dynamic>.from(nestedEvents);
+      }
+    }
+    return const <dynamic>[];
   }
 
   Future<void> _register(String id) async {
