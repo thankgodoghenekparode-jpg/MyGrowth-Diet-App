@@ -11,6 +11,7 @@ import { adminShapeSpaceRouter } from './shapeSpace.routes.js';
 import { adminDevotionsRouter } from '../devotions/devotions.routes.js';
 import { adminConnectRouter } from './connect.routes.js';
 import { adminPartnershipsRouter } from './partnerships.routes.js';
+import { ministryPlatformAdminRouter } from './ministryPlatform.routes.js';
 
 const router = Router();
 
@@ -24,6 +25,7 @@ router.use('/shape-space', adminShapeSpaceRouter); // /shape-space/conversations
 router.use('/devotions', adminDevotionsRouter); // /devotions/bulk-import
 router.use(adminPartnersRouter); // /prayer-partnerships, /prayer-partner-requests
 router.use(adminPartnershipsRouter); // /ministry-partnerships
+router.use(ministryPlatformAdminRouter); // giving, events, live services, prayer requests
 router.use(materialsRouter); // /materials
 router.use(filesRouter); // /files (upload)
 router.use(reportsRouter); // /reports + reviews

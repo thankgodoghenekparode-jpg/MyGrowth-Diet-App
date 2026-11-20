@@ -40,9 +40,9 @@ class _MinistryPartnershipScreenState
   Future<void> _load() async {
     try {
       final result =
-          await ref.read(apiClientProvider).get('/partnerships/mine')
+          await ref.read(apiClientProvider).get('/giving/partner')
               as Map<String, dynamic>;
-      final data = result['partnership'] as Map<String, dynamic>?;
+      final data = result['partner'] as Map<String, dynamic>?;
       if (!mounted) return;
       setState(() {
         _current = data;
@@ -74,21 +74,24 @@ class _MinistryPartnershipScreenState
       _error = null;
     });
     try {
+      final body = {
+        'amount': amount,
+        'frequency': _frequency,
+        'note': _note.text.trim(),
+        if (_current?['status'] == 'CANCELLED') 'status': 'ACTIVE',
+      };
       final result =
-          await ref
-                  .read(apiClientProvider)
-                  .post(
-                    '/partnerships',
-                    body: {
-                      'amount': amount,
-                      'frequency': _frequency,
-                      'note': _note.text.trim(),
-                    },
-                  )
+          await (_current == null
+                  ? ref
+                        .read(apiClientProvider)
+                        .post('/giving/partner', body: body)
+                  : ref
+                        .read(apiClientProvider)
+                        .patch('/giving/partner', body: body))
               as Map<String, dynamic>;
       if (!mounted) return;
       setState(() {
-        _current = result['partnership'] as Map<String, dynamic>?;
+        _current = result['partner'] as Map<String, dynamic>?;
         _saving = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,11 +115,11 @@ class _MinistryPartnershipScreenState
       final result =
           await ref
                   .read(apiClientProvider)
-                  .patch('/partnerships/mine', body: {'status': status})
+                  .patch('/giving/partner', body: {'status': status})
               as Map<String, dynamic>;
       if (mounted) {
         setState(() {
-          _current = result['partnership'] as Map<String, dynamic>?;
+          _current = result['partner'] as Map<String, dynamic>?;
           _saving = false;
         });
       }
@@ -187,7 +190,11 @@ class _MinistryPartnershipScreenState
                 items: const [
                   DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
                   DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
-                  DropdownMenuItem(value: 'YEARLY', child: Text('Yearly')),
+                  DropdownMenuItem(
+                    value: 'QUARTERLY',
+                    child: Text('Quarterly'),
+                  ),
+                  DropdownMenuItem(value: 'ANNUALLY', child: Text('Annually')),
                 ],
                 onChanged: (v) {
                   if (v != null) setState(() => _frequency = v);
@@ -241,9 +248,11 @@ class _MinistryPartnershipScreenState
                         onPressed: _saving ? null : () => _setStatus('ACTIVE'),
                         child: const Text('Resume pledge'),
                       ),
-                    if (_current!['status'] != 'ENDED')
+                    if (_current!['status'] != 'CANCELLED')
                       TextButton(
-                        onPressed: _saving ? null : () => _setStatus('ENDED'),
+                        onPressed: _saving
+                            ? null
+                            : () => _setStatus('CANCELLED'),
                         child: const Text('End pledge'),
                       ),
                   ],

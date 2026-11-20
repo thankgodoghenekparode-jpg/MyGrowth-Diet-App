@@ -29,13 +29,16 @@ class MoreScreen extends ConsumerWidget {
     final greeting = now.hour < 12
         ? 'Good morning'
         : now.hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
     final firstName = (user?.name ?? '').trim().split(RegExp(r'\s+')).first;
-    final dashboardPath =
-        area == AppArea.admin ? '/admin/dashboard' : '/dashboard';
+    final dashboardPath = area == AppArea.admin
+        ? '/admin/dashboard'
+        : '/dashboard';
 
-    final actions = area == AppArea.admin ? _adminQuickActions : _memberQuickActions;
+    final actions = area == AppArea.admin
+        ? _adminQuickActions
+        : _memberQuickActions;
     final slides = area == AppArea.admin ? _adminSlides : _memberSlides;
     final tools = area == AppArea.admin ? _adminTools : _memberTools;
 
@@ -51,7 +54,11 @@ class MoreScreen extends ConsumerWidget {
         padding: wide
             ? const EdgeInsets.all(AppSpacing.xl)
             : const EdgeInsets.fromLTRB(
-                AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xxl),
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.xxl,
+              ),
         children: [
           // ------------------------------------------------------- greeting
           _GreetingHeader(
@@ -63,8 +70,7 @@ class MoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           _GreetingStrip(
-            greeting:
-                '$greeting, ${firstName.isEmpty ? 'friend' : firstName}',
+            greeting: '$greeting, ${firstName.isEmpty ? 'friend' : firstName}',
             subtitle: 'Grow, learn, and become.',
             initials: user?.initials ?? '?',
           ),
@@ -142,7 +148,8 @@ const _memberSlides = <_HomeSlide>[
   _HomeSlide(
     image: 'assets/images/slide_2.jpg',
     title: 'Healings E. Azuike',
-    caption: 'Available on Selar · Inspiring and empowering believers worldwide.',
+    caption:
+        'Available on Selar · Inspiring and empowering believers worldwide.',
     actionLabel: 'Explore books',
     path: '/materials',
     icon: Icons.star_outline_rounded,
@@ -206,7 +213,8 @@ const _memberSlides = <_HomeSlide>[
   _HomeSlide(
     image: 'assets/images/materials.jpg',
     title: 'Study Materials',
-    caption: 'Audio messages, declarations and resources to strengthen your faith.',
+    caption:
+        'Audio messages, declarations and resources to strengthen your faith.',
     actionLabel: 'View materials',
     path: '/materials',
     icon: Icons.local_library_outlined,
@@ -308,6 +316,12 @@ const _memberQuickActions = <_QuickAction>[
     path: '/materials',
   ),
   _QuickAction(
+    icon: Icons.music_note_rounded,
+    label: 'Music',
+    caption: 'Play in background',
+    path: '/music',
+  ),
+  _QuickAction(
     icon: Icons.fact_check_outlined,
     label: 'Reports',
     caption: 'Share progress',
@@ -375,11 +389,7 @@ const _adminQuickActions = <_QuickAction>[
 // ----------------------------------------------------------------- tools
 
 class _Tool {
-  const _Tool({
-    required this.icon,
-    required this.label,
-    required this.path,
-  });
+  const _Tool({required this.icon, required this.label, required this.path});
 
   final IconData icon;
   final String label;
@@ -387,6 +397,18 @@ class _Tool {
 }
 
 const _memberTools = <_Tool>[
+  _Tool(
+    icon: Icons.volunteer_activism_outlined,
+    label: 'Giving & Partnership',
+    path: '/giving',
+  ),
+  _Tool(
+    icon: Icons.event_available_outlined,
+    label: 'Upcoming Programmes',
+    path: '/upcoming',
+  ),
+  _Tool(icon: Icons.live_tv_outlined, label: 'Live Service', path: '/live'),
+  _Tool(icon: Icons.music_note_rounded, label: 'Music Library', path: '/music'),
   _Tool(
     icon: Icons.volunteer_activism_outlined,
     label: 'Partner with the Ministry',
@@ -402,11 +424,7 @@ const _memberTools = <_Tool>[
     label: 'Reflections',
     path: '/reflections',
   ),
-  _Tool(
-    icon: Icons.insights_outlined,
-    label: 'My Progress',
-    path: '/progress',
-  ),
+  _Tool(icon: Icons.insights_outlined, label: 'My Progress', path: '/progress'),
   _Tool(
     icon: Icons.campaign_outlined,
     label: 'Announcements',
@@ -420,6 +438,16 @@ const _memberTools = <_Tool>[
 ];
 
 const _adminTools = <_Tool>[
+  _Tool(
+    icon: Icons.summarize_outlined,
+    label: 'Giving Reports',
+    path: '/admin/giving-reports',
+  ),
+  _Tool(
+    icon: Icons.dashboard_customize_outlined,
+    label: 'Ministry Platform',
+    path: '/admin/ministry-platform',
+  ),
   _Tool(
     icon: Icons.volunteer_activism_outlined,
     label: 'Ministry Partnerships',
@@ -739,13 +767,13 @@ class _ToolGrid extends StatelessWidget {
           SizedBox(
             width: wide
                 ? (MediaQuery.sizeOf(context).width -
-                        AppSpacing.xl * 2 -
-                        AppSpacing.sm * 2) /
-                    3
+                          AppSpacing.xl * 2 -
+                          AppSpacing.sm * 2) /
+                      3
                 : (MediaQuery.sizeOf(context).width -
-                        AppSpacing.md * 2 -
-                        AppSpacing.sm * 2) /
-                    3,
+                          AppSpacing.md * 2 -
+                          AppSpacing.sm * 2) /
+                      3,
             child: Material(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),

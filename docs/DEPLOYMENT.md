@@ -96,6 +96,12 @@ STORAGE_ADAPTER=local
 UPLOAD_DIR=/var/lib/mygrowth/uploads
 FILE_MAX_BYTES=52428800
 
+# Monnify giving and subscription payments
+MONNIFY_API_KEY=<monnify-api-key>
+MONNIFY_SECRET_KEY=<monnify-secret-key>
+MONNIFY_CONTRACT_CODE=<monnify-contract-code>
+MONNIFY_BASE_URL=https://api.monnify.com
+
 LOG_LEVEL=info
 ```
 

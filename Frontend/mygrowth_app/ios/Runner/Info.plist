@@ -30,6 +30,10 @@
 	<string>Take a profile photo for your MyGrowth account.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a profile photo for your MyGrowth account.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

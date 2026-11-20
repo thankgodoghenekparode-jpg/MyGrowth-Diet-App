@@ -235,6 +235,37 @@ Reflections are private and are never exposed to administrators.
 | POST | `/partnerships` | Member | Create or update pledge. Body: `amount`, `frequency` (`WEEKLY`/`MONTHLY`/`YEARLY`), optional `note`. Currency is NGN. This records a pledge and does not charge the member. |
 | PATCH | `/partnerships/mine` | Member | Pause, resume (`ACTIVE`) or end pledge. Body: `status`. |
 
+## Ministry platform modules
+
+Giving checkout uses Monnify. The public category endpoint and checkout webhook
+do not require a session; a valid member token is optional on checkout so a
+member's payment is linked to their account. Giving history and partnership
+pledges require authentication.
+
+| Method | Path | Auth | Notes |
+| --- | --- | --- | --- |
+| GET | `/giving/categories` | Public | Active giving categories. |
+| POST | `/giving/initialize` | Optional | Body: `categoryId`, `amount`, and guest donor details when signed out. Returns Monnify checkout URL and reference. |
+| POST | `/giving/verify/:reference` | Public | Server verifies transaction with Monnify; returns paid status and receipt number. |
+| POST | `/giving/webhook` | Monnify signature | Verifies webhook signature and transaction with Monnify. |
+| GET | `/giving/history` | Member | Own transactions. |
+| GET | `/giving/receipt/:id` | Member | Own paid transaction details. |
+| GET/POST/PATCH | `/giving/partner` | Member | Read, create, or update a recurring partnership pledge. |
+| GET | `/events` | Approved member | Upcoming published programmes. |
+| GET | `/events/past` | Approved member | Completed programmes; elapsed published events are moved to completed on read. |
+| GET | `/events/:id` | Approved member | Published programme detail. |
+| POST/DELETE | `/events/:id/register` | Approved member | Register or unregister for a programme. |
+| GET | `/live-services/current` | Public | Current broadcast and next scheduled service. |
+| POST | `/live-services/prayer-requests` | Public | Submit a prayer request. |
+| GET | `/admin/giving/transactions` | Admin | Paginated transactions plus paid total summary. |
+| GET | `/admin/giving/reports?period=DAILY&date=YYYY-MM-DD` | Admin | Paid totals and category breakdown for `DAILY`, `WEEKLY`, or `MONTHLY` in Africa/Lagos. |
+| GET/PATCH | `/admin/giving/categories` and `/admin/giving/categories/:id` | Admin | List categories and update category name, description, order, type, or active state. |
+| GET | `/admin/giving/partners` | Admin | Paginated giving partners. |
+| GET/POST/PATCH | `/admin/events` | Admin | List, create, and update programmes. |
+| GET | `/admin/events/:id/registrations` | Admin | Paginated attendee list. |
+| GET/POST/PATCH | `/admin/live-services` | Admin | List, schedule, start, and end broadcasts. |
+| GET/PATCH | `/admin/prayer-requests` | Admin | List requests and mark them read. |
+
 ## Prayer partners
 
 | Method | Path | Auth | Notes |

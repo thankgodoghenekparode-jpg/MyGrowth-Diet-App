@@ -32,6 +32,9 @@ import adminRoutes from './modules/admin/index.js';
 import cronRoutes, { healthHandler } from './modules/cron/cron.routes.js';
 import { partnershipsRouter } from './modules/partnerships/partnerships.routes.js';
 import subscriptionRoutes from './modules/subscription/subscription.routes.js';
+import givingRoutes from './modules/giving/giving.routes.js';
+import eventsRoutes from './modules/events/events.routes.js';
+import liveServicesRoutes from './modules/liveServices/liveServices.routes.js';
 
 export function createApp() {
   const app = express();
@@ -145,6 +148,11 @@ export function createApp() {
   // Individual subscription routes authenticate themselves; the webhook is
   // public by design and validates Monnify's signature itself.
   app.use('/api/v1/subscription', subscriptionRoutes);
+  // Ministry platform modules. Giving owns its public categories/webhook and
+  // authenticates member routes internally; event routes require members.
+  app.use('/api/v1/giving', givingRoutes);
+  app.use('/api/v1/events', eventsRoutes);
+  app.use('/api/v1/live-services', liveServicesRoutes);
 
   // Authenticated member context
   app.use('/api/v1/me', requireAuth, meProfileRoutes, meActivityRoutes, meGoalRoutes, meDashboardRoutes, reportsRoutes, reflectionsRoutes, notificationsRoutes, aiAssistantRoutes);

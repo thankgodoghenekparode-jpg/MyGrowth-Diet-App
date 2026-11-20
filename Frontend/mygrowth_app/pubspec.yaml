@@ -55,6 +55,11 @@ dependencies:
   # programme's EPUB 3 books.
   archive: ^3.6.1
   xml: ^6.6.1
+  just_audio_background: ^0.0.1-beta.17
+  audio_service: ^0.18.19
+  youtube_player_flutter: 10.0.2
+  printing: 5.14.3
+  pdf: 3.12.0
 
 dev_dependencies:
   flutter_test:

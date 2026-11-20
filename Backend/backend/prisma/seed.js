@@ -341,6 +341,24 @@ async function seedProgramme() {
 }
 
 async function seedDefinitions() {
+  const givingCategories = [
+    ['General Offering', 'GENERAL_OFFERING'],
+    ['Tithe', 'TITHE'],
+    ['Ministry Partnership', 'MINISTRY_PARTNERSHIP'],
+    ['Special Seed', 'SPECIAL_SEED'],
+    ['Ministry Projects', 'MINISTRY_PROJECT'],
+    ['Thanksgiving Offering', 'THANKSGIVING'],
+    ['Other Donations', 'OTHER'],
+  ];
+  for (const [index, [name, type]] of givingCategories.entries()) {
+    await prisma.givingCategory.upsert({
+      where: { name },
+      create: { name, type, sortOrder: index, isActive: true },
+      update: { type, sortOrder: index, isActive: true },
+    });
+  }
+  log(`${givingCategories.length} giving categories upserted`);
+
   for (const c of ACTIVITY_CATEGORIES) {
     await prisma.activityCategoryDef.upsert({
       where: { key: c.key },

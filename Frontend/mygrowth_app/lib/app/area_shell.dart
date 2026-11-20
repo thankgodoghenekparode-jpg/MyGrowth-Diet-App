@@ -11,6 +11,7 @@ import '../core/widgets/app_badge.dart';
 import '../core/widgets/brand_logo.dart';
 import '../core/widgets/app_back_button.dart';
 import '../core/widgets/app_wallpaper.dart';
+import '../core/widgets/music_mini_player.dart';
 
 /// Destinations available in the member bottom navigation (compact devices).
 const memberBottomDestinations = [
@@ -173,6 +174,7 @@ class AreaShell extends ConsumerWidget {
               children: [
                 if (offlineMode) const _OfflineAccessBanner(),
                 Expanded(child: content),
+                const MusicMiniPlayer(),
               ],
             ),
             floatingActionButton: floatingActionButton,
@@ -199,6 +201,7 @@ class AreaShell extends ConsumerWidget {
                   ),
                   if (offlineMode) const _OfflineAccessBanner(),
                   Expanded(child: content),
+                  const MusicMiniPlayer(),
                 ],
               ),
             ),

@@ -49,6 +49,8 @@ import '../features/daily_diet/book_reader_screen.dart';
 import '../features/materials/material_detail_screen.dart';
 import '../features/materials/materials_screen.dart';
 import '../features/more/member_home_screen.dart';
+import '../features/music/music_library_screen.dart';
+import '../features/more/ministry_programmes_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/notifications/reminders_screen.dart';
 import '../features/shape_space/shape_space_screen.dart';
@@ -56,7 +58,10 @@ import '../features/assistant/ai_assistant_screen.dart';
 import '../features/prayer_partners/prayer_partners_screen.dart';
 import '../features/prayer_partners/prayer_room_screen.dart';
 import '../features/partnerships/ministry_partnership_screen.dart';
+import '../features/partnerships/giving_screen.dart';
 import '../features/admin/admin_ministry_partnerships_screen.dart';
+import '../features/admin/admin_ministry_platform_screen.dart';
+import '../features/admin/admin_giving_reports_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/subscription/subscription_screen.dart';
 import '../features/programme/bible_reading_screen.dart';
@@ -117,7 +122,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       final user = auth.user;
       if (!auth.isAuthenticated && user == null) {
-        return onAuthPage ? null : '/login';
+        return (onAuthPage || path == '/giving') ? null : '/login';
       }
       if (user == null) return null;
 
@@ -277,6 +282,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/music',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: MusicLibraryScreen())),
+      ),
+      GoRoute(
         path: '/reading/book',
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, state) => _fade(
@@ -345,16 +356,45 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/giving',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) => _fade(const MaterialPage(child: GivingScreen())),
+      ),
+      GoRoute(
         path: '/partnership',
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: MinistryPartnershipScreen())),
       ),
       GoRoute(
+        path: '/upcoming',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: MinistryProgrammesScreen())),
+      ),
+      GoRoute(
+        path: '/live',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: LiveServiceScreen())),
+      ),
+      GoRoute(
         path: '/admin/ministry-partnerships',
         parentNavigatorKey: rootNavigatorKey,
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: AdminMinistryPartnershipsScreen())),
+      ),
+      GoRoute(
+        path: '/admin/ministry-platform',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: AdminMinistryPlatformScreen())),
+      ),
+      GoRoute(
+        path: '/admin/giving-reports',
+        parentNavigatorKey: rootNavigatorKey,
+        pageBuilder: (_, _) =>
+            _fade(const MaterialPage(child: AdminGivingReportsScreen())),
       ),
       GoRoute(
         path: '/prayer',
