@@ -145,7 +145,7 @@ class _MinistryProgrammesScreenState
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       leading: const AppBackButton(),
-      title: Text(_past ? 'Past Programmes' : 'Upcoming Programmes'),
+      title: Text(_past ? 'Past Programmes' : 'Upcoming Event'),
       actions: [
         TextButton(
           onPressed: () => setState(() {
@@ -173,7 +173,7 @@ class _MinistryProgrammesScreenState
             child: Text(
               _past
                   ? 'No past programmes yet.'
-                  : 'No upcoming programmes have been published yet.',
+                  : 'No upcoming events have been published yet.',
             ),
           );
         }

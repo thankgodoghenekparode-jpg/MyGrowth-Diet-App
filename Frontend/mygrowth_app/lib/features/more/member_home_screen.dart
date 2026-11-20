@@ -148,10 +148,10 @@ class MemberHomeScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _HomeActionCard(
-                    icon: Icons.menu_book_rounded,
-                    title: 'Bible Reading',
-                    subtitle: "Read and reflect on God's Word",
-                    onTap: () => context.go('/bible'),
+                    icon: Icons.credit_card_rounded,
+                    title: 'Subscription',
+                    subtitle: 'View your plan and access',
+                    onTap: () => context.go('/subscription'),
                   ),
                   const SizedBox(height: 8),
                   _HomeActionCard(
@@ -163,7 +163,7 @@ class MemberHomeScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   _HomeActionCard(
                     icon: Icons.event_available_rounded,
-                    title: 'Upcoming Programmes',
+                    title: 'Upcoming Event',
                     subtitle: 'See what is happening at the ministry',
                     onTap: () => context.go('/upcoming'),
                   ),

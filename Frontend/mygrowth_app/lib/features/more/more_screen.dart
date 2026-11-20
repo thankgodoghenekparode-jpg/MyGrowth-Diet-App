@@ -404,7 +404,7 @@ const _memberTools = <_Tool>[
   ),
   _Tool(
     icon: Icons.event_available_outlined,
-    label: 'Upcoming Programmes',
+    label: 'Upcoming Event',
     path: '/upcoming',
   ),
   _Tool(icon: Icons.live_tv_outlined, label: 'Live Service', path: '/live'),
