@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,18 +105,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path == '/forgot-password' ||
           path.startsWith('/reset-password');
 
-      // Session still restoring on cold start.
+      // A cached user is already signed in while the network revalidates the
+      // session. Only a cold start with no cached identity waits on `/`.
       if (auth.status == AuthStatus.initial ||
-          auth.status == AuthStatus.loading) {
+          (auth.status == AuthStatus.loading && auth.user == null)) {
         if (onAuthPage) return null;
         return path == '/' ? null : '/';
       }
 
-      if (!auth.isAuthenticated) {
+      final user = auth.user;
+      if (!auth.isAuthenticated && user == null) {
         return onAuthPage ? null : '/login';
       }
-
-      final user = auth.user;
       if (user == null) return null;
 
       if (onAuthPage || path == '/') {
@@ -142,9 +140,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         pageBuilder: (_, _) => _fade(
           const MaterialPage(
-            child: Scaffold(
-              body: SizedBox.expand(),
-            ),
+            child: Scaffold(body: Center(child: CircularProgressIndicator())),
           ),
         ),
       ),
@@ -835,13 +831,13 @@ class _AdminPage extends StatelessWidget {
 String _memberShellTitle(int index, String location) {
   if (location == '/plan') return 'Diet Plan';
   return switch (index) {
-  0 => 'Home',
-  1 => "Today's Diet",
-  2 => 'Bible',
-  3 => 'AI Assistance',
-  4 => 'Profile',
-  _ => 'Home',
-};
+    0 => 'Home',
+    1 => "Today's Diet",
+    2 => 'Bible',
+    3 => 'AI Assistance',
+    4 => 'Profile',
+    _ => 'Home',
+  };
 }
 
 String _adminShellTitle(int index) => switch (index) {

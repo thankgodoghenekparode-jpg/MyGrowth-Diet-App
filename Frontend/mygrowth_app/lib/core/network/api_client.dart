@@ -77,7 +77,8 @@ class ApiClient {
 
   static const _accessKey = 'mgdp.accessToken';
   static const _refreshKey = 'mgdp.refreshToken';
-  static const _requestTimeout = Duration(seconds: 25);
+  static const _requestTimeout = Duration(seconds: 15);
+  static const _defaultGetRetries = 1;
 
   Future<void> Function()? onSessionExpired;
   Future<void> Function(String accessToken)? onTokensUpdated;
@@ -94,21 +95,34 @@ class ApiClient {
   void close() => _client.close();
 
   Future<void> loadSession() async {
-    try {
-      _accessToken = await _secure.read(key: _accessKey);
-      _refreshToken = await _secure.read(key: _refreshKey);
-    } catch (_) {
-      final prefs = await SharedPreferences.getInstance();
-      _accessToken = prefs.getString(_accessKey);
-      _refreshToken = prefs.getString(_refreshKey);
-      if (_accessToken != null) {
-        await _secure.write(key: _accessKey, value: _accessToken);
-        await prefs.remove(_accessKey);
+    final prefs = await SharedPreferences.getInstance();
+
+    // Prefer the secure store, but never treat an unreadable or unavailable
+    // secure store as a signed-out user. On web the encrypted store can lose
+    // its key between releases, so SharedPreferences is kept as a mirror.
+    Future<String?> readToken(String key) async {
+      try {
+        return await _secure.read(key: key).timeout(const Duration(seconds: 3));
+      } catch (_) {
+        return null;
       }
-      if (_refreshToken != null) {
-        await _secure.write(key: _refreshKey, value: _refreshToken);
-        await prefs.remove(_refreshKey);
-      }
+    }
+
+    final secureAccess = await readToken(_accessKey);
+    final secureRefresh = await readToken(_refreshKey);
+    _accessToken = secureAccess ?? prefs.getString(_accessKey);
+    _refreshToken = secureRefresh ?? prefs.getString(_refreshKey);
+
+    // Heal the secure store when the mirror is the only readable copy.
+    if (secureAccess == null && _accessToken != null) {
+      try {
+        await _secure.write(key: _accessKey, value: _accessToken!);
+      } catch (_) {}
+    }
+    if (secureRefresh == null && _refreshToken != null) {
+      try {
+        await _secure.write(key: _refreshKey, value: _refreshToken!);
+      } catch (_) {}
     }
   }
 
@@ -123,13 +137,16 @@ class ApiClient {
       if (refreshToken != null) {
         await _secure.write(key: _refreshKey, value: refreshToken);
       }
-    } catch (_) {
+    } catch (_) {}
+    // Always keep a mirror: the web secure store can silently lose its
+    // encryption key, and a missing mirror used to look like a logout.
+    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_accessKey, accessToken);
       if (refreshToken != null) {
         await prefs.setString(_refreshKey, refreshToken);
       }
-    }
+    } catch (_) {}
     final cb = onTokensUpdated;
     if (cb != null) await cb(accessToken);
   }
@@ -148,8 +165,18 @@ class ApiClient {
 
   // ---------------------------------------------------------------- verbs
 
-  Future<dynamic> get(String path, {Map<String, String>? query}) =>
-      _send('GET', path, query: query);
+  Future<dynamic> get(
+    String path, {
+    Map<String, String>? query,
+    int maxRetries = _defaultGetRetries,
+    Duration? timeout,
+  }) => _send(
+    'GET',
+    path,
+    query: query,
+    maxGetRetries: maxRetries,
+    requestTimeout: timeout,
+  );
 
   Future<dynamic> post(String path, {Object? body}) =>
       _send('POST', path, body: body);
@@ -264,25 +291,27 @@ class ApiClient {
     Object? body,
     bool retried = false,
     int getRetry = 0,
+    int maxGetRetries = _defaultGetRetries,
+    Duration? requestTimeout,
   }) async {
     final stopwatch = Stopwatch()..start();
     final uri = _resolve(path, query);
     final jsonBody = body == null ? null : jsonEncode(body);
+    final timeout = requestTimeout ?? _requestTimeout;
 
     http.Response response;
     try {
       final request = http.Request(method, uri)..headers.addAll(_headers());
       if (jsonBody != null) request.body = jsonBody;
-      final streamed = await _client.send(request).timeout(_requestTimeout);
-      response = await http.Response.fromStream(streamed)
-          .timeout(_requestTimeout);
+      final streamed = await _client.send(request).timeout(timeout);
+      response = await http.Response.fromStream(streamed).timeout(timeout);
     } on TimeoutException {
       AppPerformance.log(
         'api_request',
         stopwatch.elapsed,
         detail: 'method=$method route=${_safeRoute(path)} outcome=timeout',
       );
-      if (method == 'GET' && getRetry < 2) {
+      if (method == 'GET' && getRetry < maxGetRetries) {
         await Future<void>.delayed(
           Duration(milliseconds: 300 * (1 << getRetry)),
         );
@@ -293,6 +322,8 @@ class ApiClient {
           body: body,
           retried: retried,
           getRetry: getRetry + 1,
+          maxGetRetries: maxGetRetries,
+          requestTimeout: timeout,
         );
       }
       throw ApiException(
@@ -308,7 +339,7 @@ class ApiClient {
         detail:
             'method=$method route=${_safeRoute(path)} outcome=network_error',
       );
-      if (method == 'GET' && getRetry < 2) {
+      if (method == 'GET' && getRetry < maxGetRetries) {
         await Future<void>.delayed(
           Duration(milliseconds: 300 * (1 << getRetry)),
         );
@@ -319,6 +350,8 @@ class ApiClient {
           body: body,
           retried: retried,
           getRetry: getRetry + 1,
+          maxGetRetries: maxGetRetries,
+          requestTimeout: timeout,
         );
       }
       debugPrint('Network error on $method ${uri.path}: $e');
@@ -336,11 +369,11 @@ class ApiClient {
       detail:
           'method=$method route=${_safeRoute(path)} status=${response.statusCode}',
     );
-    onConnectionRestored?.call();
+    if (response.statusCode < 400) onConnectionRestored?.call();
 
     if (method == 'GET' &&
         const {502, 503, 504}.contains(response.statusCode) &&
-        getRetry < 2) {
+        getRetry < maxGetRetries) {
       await Future<void>.delayed(Duration(milliseconds: 300 * (1 << getRetry)));
       return _send(
         method,
@@ -349,6 +382,8 @@ class ApiClient {
         body: body,
         retried: retried,
         getRetry: getRetry + 1,
+        maxGetRetries: maxGetRetries,
+        requestTimeout: timeout,
       );
     }
 
@@ -362,6 +397,8 @@ class ApiClient {
           body: body,
           retried: true,
           getRetry: getRetry,
+          maxGetRetries: maxGetRetries,
+          requestTimeout: timeout,
         );
       }
       if (refreshed == false) {

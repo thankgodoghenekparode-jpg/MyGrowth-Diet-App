@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,12 +17,17 @@ class AuthState {
     this.user,
     this.needsProfileCompletion = false,
     this.offlineMode = false,
+    this.restoring = false,
   });
 
   final AuthStatus status;
   final AppUser? user;
   final bool needsProfileCompletion;
   final bool offlineMode;
+
+  /// True while the cached session is being revalidated in the background.
+  /// Cached users can still use the app while this is happening.
+  final bool restoring;
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
   bool get isAdmin => user?.canUseAdminArea ?? false;
@@ -33,6 +39,7 @@ class AuthState {
     bool clearUser = false,
     bool? needsProfileCompletion,
     bool? offlineMode,
+    bool? restoring,
   }) {
     return AuthState(
       status: status ?? this.status,
@@ -40,20 +47,25 @@ class AuthState {
       needsProfileCompletion:
           needsProfileCompletion ?? this.needsProfileCompletion,
       offlineMode: offlineMode ?? this.offlineMode,
+      restoring: restoring ?? this.restoring,
     );
   }
 }
 
 /// Owns the session: login, registration, refresh, logout, profile updates.
 class AuthController extends Notifier<AuthState> {
+  Future<AppUser?>? _bootstrap;
+
   @override
   AuthState build() {
     final client = ref.read(apiClientProvider);
-    client.onSessionExpired = () async {
-      await signOut(clearServer: false);
-    };
+    // A failed refresh must not throw away the cached identity: keep the user
+    // signed in with offline access instead of bouncing them to /login.
+    client.onSessionExpired = _enterOfflineMode;
     client.onConnectionRestored = () {
-      if (state.offlineMode) state = state.copyWith(offlineMode: false);
+      if (!state.offlineMode || !_api.hasSession) return;
+      state = state.copyWith(offlineMode: false);
+      unawaited(bootstrapSession());
     };
     Future.microtask(bootstrapSession);
     return const AuthState();
@@ -62,7 +74,18 @@ class AuthController extends Notifier<AuthState> {
   ApiClient get _api => ref.read(apiClientProvider);
 
   /// Restores a persisted session on app start. Returns the user if valid.
-  Future<AppUser?> bootstrapSession() async {
+  ///
+  /// Calls are de-duplicated so a reconnect and the initial microtask cannot
+  /// start two competing `/me` requests.
+  Future<AppUser?> bootstrapSession() {
+    final pending = _bootstrap;
+    if (pending != null) return pending;
+    final future = _bootstrapSession();
+    _bootstrap = future;
+    return future.whenComplete(() => _bootstrap = null);
+  }
+
+  Future<AppUser?> _bootstrapSession() async {
     final stopwatch = Stopwatch()..start();
     try {
       return await _restoreSession();
@@ -72,37 +95,56 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<AppUser?> _restoreSession() async {
-    state = state.copyWith(status: AuthStatus.loading);
-    await _api.loadSession();
-    if (!_api.hasSession) {
-      state = const AuthState(status: AuthStatus.unauthenticated);
-      return null;
+    state = state.copyWith(status: AuthStatus.loading, restoring: true);
+    try {
+      await _api.loadSession();
+    } catch (_) {
+      // Token storage failures are handled by the cached-state fallback below.
     }
     final cached = await _cachedOfflineState();
-    if (cached != null) {
-      state = cached;
+    if (!_api.hasSession) {
+      if (cached != null) {
+        state = cached.copyWith(restoring: false, offlineMode: true);
+        return cached.user;
+      }
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+        restoring: false,
+      );
+      return null;
     }
+
+    // Show the cached identity immediately; revalidation runs in the
+    // background and must never be allowed to log the user out on a bad
+    // network day.
+    if (cached != null) state = cached.copyWith(restoring: true);
     try {
-      final data = await _api.get('/me') as Map<String, dynamic>;
+      final data = await _api.get(
+        '/me',
+        maxRetries: 0,
+        timeout: const Duration(seconds: 8),
+      ) as Map<String, dynamic>;
       final user = AppUser.fromJson(data);
+      final needsCompletion =
+          (data['profileCompleted'] as bool? ?? true) == false;
       state = AuthState(
         status: AuthStatus.authenticated,
         user: user,
-        needsProfileCompletion:
-            (data['profileCompleted'] as bool? ?? true) == false,
+        needsProfileCompletion: needsCompletion,
+        restoring: false,
       );
-      await _cacheUser(user, state.needsProfileCompletion);
+      await _cacheUser(user, needsCompletion);
       return user;
-    } on ApiException catch (e) {
-      if (e.isNetworkError) {
-        if (cached != null) return cached.user;
-        final fallback = await _cachedOfflineState();
-        if (fallback != null) {
-          state = fallback;
-          return fallback.user;
-        }
+    } on Object catch (_) {
+      final fallback = cached ?? await _cachedOfflineState();
+      if (fallback != null) {
+        state = fallback.copyWith(restoring: false, offlineMode: true);
+        return fallback.user;
       }
-      state = const AuthState(status: AuthStatus.unauthenticated);
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+        restoring: false,
+      );
       return null;
     }
   }
@@ -129,6 +171,24 @@ class AuthController extends Notifier<AuthState> {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Keeps a known user signed in after a failed refresh. The tokens are gone
+  /// so API calls stay offline, but the cached identity and its screens remain
+  /// available until a reconnect revalidates the session.
+  Future<void> _enterOfflineMode() async {
+    try {
+      await _api.clearSession();
+    } catch (_) {}
+    final cached = await _cachedOfflineState();
+    if (cached != null) {
+      state = cached.copyWith(restoring: false, offlineMode: true);
+      return;
+    }
+    state = const AuthState(
+      status: AuthStatus.unauthenticated,
+      restoring: false,
+    );
   }
 
   Future<void> signIn({required String email, required String password}) async {
