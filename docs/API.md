@@ -82,8 +82,10 @@ routes).
 
 | Method | Path | Auth | Notes |
 | --- | --- | --- | --- |
-| POST | `/auth/register` | Public | Create a member account. May start `PENDING` if approval is required. |
-| POST | `/auth/login` | Public | Returns `{ accessToken, user }`; sets the httpOnly refresh cookie. |
+| POST | `/auth/register` | Public | Create a member account and email a 6-digit OTP. No session is issued yet. May start `PENDING` if approval is required. |
+| POST | `/auth/verify-email-otp` | Public | Verify `{ email, code }`; on success returns tokens and starts the session. |
+| POST | `/auth/resend-email-otp` | Public | Issue a replacement OTP after the resend cooldown. |
+| POST | `/auth/login` | Public | Returns `{ accessToken, user }`; sets the httpOnly refresh cookie. Unverified accounts receive `EMAIL_NOT_VERIFIED`. |
 | POST | `/auth/refresh` | Public (cookie) | Rotates the refresh token; reuse of an old token revokes the family. |
 | POST | `/auth/logout` | Public (cookie) | Revokes the presented refresh token and clears the cookie. |
 | POST | `/auth/forgot-password` | Public | Sends a reset link (console logs it in dev). |
@@ -92,6 +94,11 @@ routes).
 | POST | `/auth/resend-verification` | Public | Re-sends the verification link. |
 | POST | `/auth/change-password` | Member | Requires the current password; revokes other sessions. Body accepts `newPassword` or the Flutter alias `password`. |
 | GET | `/auth/session` | Member | Returns the current `{ user }`. |
+
+Verification codes expire after 10 minutes by default, allow 5 attempts, and
+can be resent after 60 seconds (`EMAIL_OTP_TTL_MINUTES`,
+`EMAIL_OTP_MAX_ATTEMPTS`, `EMAIL_OTP_RESEND_SECONDS`). Codes are stored as
+HMAC hashes, never in plain text.
 
 Access tokens live 15 minutes (`JWT_ACCESS_TTL`); refresh tokens live 30 days
 (`JWT_REFRESH_TTL_DAYS`) and are stored **SHA‑256 hashed** with rotation and

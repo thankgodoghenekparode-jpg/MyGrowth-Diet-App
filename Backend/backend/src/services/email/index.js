@@ -15,6 +15,17 @@ export function verificationEmail(to, link) {
   };
 }
 
+export function verificationOtpEmail(to, code, minutes = 10) {
+  return {
+    to,
+    subject: 'Your verification code — MyGrowth Diet App',
+    text: `Welcome to MyGrowth Diet App (Healings Erhuvwuigho Azuike Ministry).\n\nYour email verification code is ${code}.\n\nIt expires in ${minutes} minutes. If you did not create this account, you can ignore this message.`,
+    html: `<p>Welcome to <strong>MyGrowth Diet App</strong> — Healings Erhuvwuigho Azuike Ministry.</p><p>Your email verification code is <strong style="font-size:22px;letter-spacing:3px">${code}</strong>.</p><p>It expires in ${minutes} minutes.</p><p>If you did not create this account, you can ignore this message.</p>`,
+    // Used only by the console adapter for local development.
+    otp: code,
+  };
+}
+
 export function passwordResetEmail(to, link) {
   return {
     to,
@@ -34,8 +45,10 @@ export function notificationEmail(to, title, body) {
 }
 
 async function sendConsole(message) {
-  // Console adapter: logs the message (including links) and never sends.
-  logger.info(`[email:console] to=${message.to} subject="${message.subject}"`);
+  // Console adapter: logs the message (including codes/links) and never sends.
+  logger.info(
+    `[email:console] to=${message.to} subject="${message.subject}"${message.otp ? ` otp=${message.otp}` : ''}`
+  );
   return { ok: true, provider: 'console' };
 }
 
@@ -117,4 +130,10 @@ export async function sendEmail(message) {
   return sendConsole(message);
 }
 
-export default { sendEmail, verificationEmail, passwordResetEmail, notificationEmail };
+export default {
+  sendEmail,
+  verificationEmail,
+  verificationOtpEmail,
+  passwordResetEmail,
+  notificationEmail,
+};

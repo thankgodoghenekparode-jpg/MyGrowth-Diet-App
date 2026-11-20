@@ -14,8 +14,10 @@ router.post('/refresh', authLimiter, h.refresh);
 router.post('/logout', h.logout);
 router.post('/forgot-password', sensitiveAuthLimiter, ...h.forgotPassword);
 router.post('/reset-password', sensitiveAuthLimiter, ...h.resetPassword);
-router.post('/verify-email', ...h.verifyEmail);
+router.post('/verify-email', sensitiveAuthLimiter, ...h.verifyEmail);
 router.post('/resend-verification', sensitiveAuthLimiter, ...h.resendVerification);
+router.post('/verify-email-otp', sensitiveAuthLimiter, ...h.verifyEmailOtp);
+router.post('/resend-email-otp', sensitiveAuthLimiter, ...h.resendEmailOtp);
 router.post(
   '/change-password',
   requireAuth,

@@ -155,6 +155,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } on ApiException catch (e) {
       if (!mounted) return;
+      if (e.code == 'EMAIL_NOT_VERIFIED') {
+        context.go('/verify-email?email=${Uri.encodeComponent(_email.text.trim())}');
+        return;
+      }
       Toast.error(context, e.fieldError ?? e.message);
     } catch (_) {
       if (!mounted) return;

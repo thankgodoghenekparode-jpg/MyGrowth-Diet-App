@@ -32,6 +32,7 @@ import '../features/admin/admin_weekly_plans_screen.dart';
 import '../features/admin/admin_shape_space_screen.dart';
 import '../features/admin/programme_edit_screen.dart';
 import '../features/announcements/announcements_screen.dart';
+import '../features/auth/email_verification_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/profile_completion_screen.dart';
@@ -103,6 +104,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path == '/login' ||
           path == '/register' ||
           path == '/forgot-password' ||
+          path == '/verify-email' ||
           path.startsWith('/reset-password');
 
       // A cached user is already signed in while the network revalidates the
@@ -152,6 +154,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         pageBuilder: (_, _) =>
             _fade(const MaterialPage(child: RegisterScreen())),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        pageBuilder: (_, state) => _fade(
+          MaterialPage(
+            child: EmailVerificationScreen(
+              email: state.uri.queryParameters['email'] ?? '',
+            ),
+          ),
+        ),
       ),
       GoRoute(
         path: '/forgot-password',

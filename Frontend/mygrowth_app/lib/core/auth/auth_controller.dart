@@ -199,13 +199,15 @@ class AuthController extends Notifier<AuthState> {
     await _applyAuthResponse(data);
   }
 
+  /// Creates the account but deliberately does not store a session. The user
+  /// must complete the emailed OTP before any app data becomes available.
   Future<void> register({
     required String name,
     required String email,
     required String password,
     String? phone,
   }) async {
-    final data = await _api.post(
+    await _api.post(
       '/auth/register',
       body: {
         'name': name,
@@ -213,8 +215,28 @@ class AuthController extends Notifier<AuthState> {
         'password': password,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
       },
+    );
+  }
+
+  /// Verifies the emailed 6-digit code and starts the authenticated session.
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String code,
+  }) async {
+    final data = await _api.post(
+      '/auth/verify-email-otp',
+      body: {'email': email, 'code': code},
     ) as Map<String, dynamic>;
     await _applyAuthResponse(data);
+  }
+
+  /// Requests a replacement code. Returns the cooldown in seconds.
+  Future<int> resendEmailOtp(String email) async {
+    final data = await _api.post(
+      '/auth/resend-email-otp',
+      body: {'email': email},
+    ) as Map<String, dynamic>;
+    return data['retryAfterSeconds'] as int? ?? 60;
   }
 
   Future<void> _applyAuthResponse(Map<String, dynamic> data) async {

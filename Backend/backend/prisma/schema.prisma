@@ -285,6 +285,10 @@ model User {
   lastLoginAt   DateTime?
   verificationTokenHash String?
   verificationTokenExpiresAt DateTime?
+  emailOtpHash String?
+  emailOtpExpiresAt DateTime?
+  emailOtpAttempts Int @default(0)
+  emailOtpSentAt DateTime?
   passwordResetTokenHash String?
   passwordResetExpiresAt DateTime?
   createdByAdminId String?  @db.Uuid

@@ -68,6 +68,10 @@ Primary threats considered:
 - **On every request**, `requireAuth` re-reads the user row from the database.
   Role or status changes therefore take effect immediately — a stale JWT cannot
   outlive a suspension.
+- **Email verification is enforced:** new members receive a 6-digit code, and
+  no access/refresh tokens are issued until it is verified. Codes expire after
+  10 minutes, allow 5 attempts, and are stored as HMAC hashes; resends are
+  cooldown-limited.
 - **Brute-force protection:** auth endpoints are rate-limited (see
   [Rate limiting](#rate-limiting)); password reset and verification requests use
   an even stricter limiter.

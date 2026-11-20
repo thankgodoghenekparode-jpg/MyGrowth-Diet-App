@@ -1,3 +1,5 @@
+import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
+
 import { z } from 'zod';
 import prisma from '../../db/index.js';
 import config from '../../config/index.js';
@@ -14,8 +16,67 @@ import {
 } from '../../lib/jwt.js';
 import { audit } from '../../lib/audit.js';
 import { getSetting } from '../../lib/settings.js';
-import { sendEmail, verificationEmail, passwordResetEmail } from '../../services/email/index.js';
+import {
+  sendEmail,
+  verificationEmail,
+  verificationOtpEmail,
+  passwordResetEmail,
+} from '../../services/email/index.js';
+import { logger } from '../../lib/logger.js';
 import { notify } from '../../services/notifications.js';
+
+/** Codes issued in tests are kept in memory so tests can complete the flow. */
+export const testEmailOtps = new Map();
+
+const OTP_TTL_MS = () => config.emailVerification.otpTtlMinutes * 60 * 1000;
+const OTP_RESEND_MS = () => config.emailVerification.resendSeconds * 1000;
+
+function generateOtp() {
+  return randomInt(0, 1_000_000).toString().padStart(6, '0');
+}
+
+function hashOtp(userId, code) {
+  return createHmac('sha256', config.jwt.accessSecret)
+    .update(`${userId}:${code}`)
+    .digest('hex');
+}
+
+function otpMatches(user, code) {
+  if (!user.emailOtpHash) return false;
+  const expected = Buffer.from(user.emailOtpHash, 'hex');
+  const actual = Buffer.from(hashOtp(user.id, code), 'hex');
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
+async function issueEmailOtp(user) {
+  const code = generateOtp();
+  const sentAt = new Date();
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailOtpHash: hashOtp(user.id, code),
+      emailOtpExpiresAt: new Date(sentAt.getTime() + OTP_TTL_MS()),
+      emailOtpAttempts: 0,
+      emailOtpSentAt: sentAt,
+    },
+  });
+  if (!config.isProd) testEmailOtps.set(user.email, code);
+  const sent = await sendEmail(
+    verificationOtpEmail(user.email, code, config.emailVerification.otpTtlMinutes)
+  );
+  if (!sent.ok) {
+    logger.warn(`[email-otp] send failed for ${user.email}: ${sent.error}`);
+  }
+  await audit({
+    actor: user,
+    action: 'email_verification_code_sent',
+    targetType: 'user',
+    targetId: user.id,
+    outcome: sent.ok ? 'SUCCESS' : 'FAILED',
+    req: null,
+  });
+  return { code, sent: sent.ok };
+}
 
 export function publicUser(user) {
   if (!user) return null;
@@ -140,7 +201,6 @@ export const register = [
 
     const approvalRequired = await getSetting('registration.approvalRequired');
     const passwordHash = await hashPassword(body.password);
-    const verificationToken = randomToken();
 
     const user = await prisma.user.create({
       data: {
@@ -153,27 +213,33 @@ export const register = [
         role: 'MEMBER', // always MEMBER — never from client input
         status: approvalRequired ? 'PENDING' : 'ACTIVE',
         adminAccess: 'NONE',
-        verificationTokenHash: sha256(verificationToken),
-        verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
-    const verifyLink = `${config.appBaseUrl}/verify-email?token=${verificationToken}`;
-    await sendEmail(verificationEmail(user.email, verifyLink));
+    const { code, sent } = await issueEmailOtp(user);
     await notify({
       userId: user.id,
       eventType: 'welcome_verification',
       eventKey: 'registration',
       title: 'Welcome',
-      body: 'Please verify your email address to secure your account.',
+      body: 'Verify your email with the code we sent to finish creating your account.',
     });
 
-    const tokens = await issueTokens(res, user, req);
+    // No session is issued until the code is verified. The dev-only code keeps
+    // the local smoke script usable with the console email adapter.
+    const devCode =
+      config.env === 'development' && config.email.provider === 'console'
+        ? { devCode: code }
+        : {};
     res.status(201).json({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: tokens.expiresIn,
       user: publicUser(user),
+      verification: {
+        required: true,
+        emailSent: sent,
+        expiresInSeconds: config.emailVerification.otpTtlMinutes * 60,
+        resendAfterSeconds: config.emailVerification.resendSeconds,
+        ...devCode,
+      },
     });
   }),
 ];
@@ -210,6 +276,14 @@ export const login = [
     if (user.status === 'SUSPENDED' || user.status === 'DEACTIVATED') {
       await audit({ actor: user, action: 'login_blocked_suspended', targetType: 'user', targetId: user.id, outcome: 'DENIED', req });
       throw errors.forbidden('This account has been suspended. Contact the ministry administrator.', 'ACCOUNT_SUSPENDED');
+    }
+
+    if (!user.emailVerifiedAt) {
+      await audit({ actor: user, action: 'login_blocked_unverified', targetType: 'user', targetId: user.id, outcome: 'DENIED', req });
+      throw errors.forbidden(
+        'Verify your email with the code we sent before signing in.',
+        'EMAIL_NOT_VERIFIED'
+      );
     }
 
     // Admin accounts have no access until the Main Admin grants it.
@@ -281,6 +355,11 @@ export const refresh = asyncHandler(async (req, res) => {
     clearCookie(res);
     throw errors.forbidden('This account has been suspended.', 'ACCOUNT_SUSPENDED');
   }
+  if (!user.emailVerifiedAt) {
+    await revokeAllRefreshTokens(user.id);
+    clearCookie(res);
+    throw errors.forbidden('Verify your email before continuing.', 'EMAIL_NOT_VERIFIED');
+  }
   if (user.role !== 'MEMBER' && user.adminAccess !== 'ACTIVE') {
     await revokeAllRefreshTokens(user.id);
     clearCookie(res);
@@ -338,7 +417,15 @@ export const verifyEmail = [
     if (!user) throw errors.badRequest('Verification link is invalid or has expired', 'INVALID_VERIFICATION_TOKEN');
     await prisma.user.update({
       where: { id: user.id },
-      data: { emailVerifiedAt: new Date(), verificationTokenHash: null, verificationTokenExpiresAt: null },
+      data: {
+        emailVerifiedAt: new Date(),
+        verificationTokenHash: null,
+        verificationTokenExpiresAt: null,
+        emailOtpHash: null,
+        emailOtpExpiresAt: null,
+        emailOtpAttempts: 0,
+        emailOtpSentAt: null,
+      },
     });
     res.json({ ok: true, user: publicUser({ ...user, emailVerifiedAt: new Date() }) });
   }),
@@ -358,6 +445,112 @@ export const resendVerification = [
       await sendEmail(verificationEmail(user.email, `${config.appBaseUrl}/verify-email?token=${token}`));
     }
     res.json({ ok: true, message: 'If that account needs verification, a new link has been issued.' });
+  }),
+];
+
+/**
+ * OTP verification. Issuing no session until this succeeds is what makes email
+ * verification mandatory rather than cosmetic.
+ */
+export const verifyEmailOtp = [
+  validate({
+    body: z.object({
+      email: emailSchema,
+      code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code'),
+    }),
+  }),
+  asyncHandler(async (req, res) => {
+    const { email, code } = req.valid.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    const invalid = () =>
+      errors.badRequest('That code is invalid or has expired.', 'INVALID_VERIFICATION_CODE');
+
+    if (!user || user.emailVerifiedAt) throw invalid();
+    if (user.emailOtpAttempts >= config.emailVerification.maxAttempts) {
+      throw errors.badRequest(
+        'Too many incorrect codes. Request a new verification code.',
+        'VERIFICATION_ATTEMPTS_EXCEEDED'
+      );
+    }
+    const expired = !user.emailOtpExpiresAt || user.emailOtpExpiresAt <= new Date();
+    if (expired || !otpMatches(user, code)) {
+      const attempts = user.emailOtpAttempts + 1;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailOtpAttempts: attempts },
+      });
+      if (attempts >= config.emailVerification.maxAttempts) {
+        throw errors.badRequest(
+          'Too many incorrect codes. Request a new verification code.',
+          'VERIFICATION_ATTEMPTS_EXCEEDED'
+        );
+      }
+      throw invalid();
+    }
+
+    const verifiedAt = new Date();
+    const verified = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerifiedAt: verifiedAt,
+        verificationTokenHash: null,
+        verificationTokenExpiresAt: null,
+        emailOtpHash: null,
+        emailOtpExpiresAt: null,
+        emailOtpAttempts: 0,
+        emailOtpSentAt: null,
+      },
+    });
+    testEmailOtps.delete(email);
+    await audit({
+      actor: verified,
+      action: 'email_verified',
+      targetType: 'user',
+      targetId: verified.id,
+      outcome: 'SUCCESS',
+      req,
+    });
+
+    const tokens = await issueTokens(res, verified, req);
+    res.json({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: tokens.expiresIn,
+      profileCompleted: Boolean(verified.profileCompletedAt),
+      user: publicUser(verified),
+    });
+  }),
+];
+
+export const resendEmailOtp = [
+  validate({ body: z.object({ email: emailSchema }) }),
+  asyncHandler(async (req, res) => {
+    const { email } = req.valid.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    const message =
+      'If that account needs verification, a new code has been issued.';
+    let retryAfterSeconds = config.emailVerification.resendSeconds;
+
+    if (user && !user.emailVerifiedAt) {
+      const elapsed = user.emailOtpSentAt
+        ? Date.now() - user.emailOtpSentAt.getTime()
+        : Number.POSITIVE_INFINITY;
+      if (elapsed < OTP_RESEND_MS()) {
+        retryAfterSeconds = Math.max(
+          1,
+          Math.ceil((OTP_RESEND_MS() - elapsed) / 1000)
+        );
+      } else {
+        const { code } = await issueEmailOtp(user);
+        const devCode =
+          config.env === 'development' && config.email.provider === 'console'
+            ? { devCode: code }
+            : {};
+        return res.json({ ok: true, message, retryAfterSeconds, ...devCode });
+      }
+    }
+
+    res.json({ ok: true, message, retryAfterSeconds });
   }),
 ];
 

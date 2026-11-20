@@ -99,6 +99,24 @@ const unwrap = (json) =>
     : json;
 const field = (json, key) => unwrap(json)?.[key];
 
+async function registerAndVerify(name, email) {
+  const registered = await call('POST', '/auth/register', {
+    body: { name, email, password },
+  });
+  const code =
+    field(field(registered.json, 'verification'), 'devCode') ??
+    field(registered.json, 'devCode');
+  if (!code) {
+    throw new Error(
+      'Local smoke tests need EMAIL_PROVIDER=console so registration exposes devCode.'
+    );
+  }
+  const verified = await call('POST', '/auth/verify-email-otp', {
+    body: { email, code },
+  });
+  return { registered, verified, token: field(verified.json, 'accessToken') };
+}
+
 async function main() {
   console.log(`\nMyGrowth e2e smoke → ${BASE}\n`);
 
@@ -112,20 +130,19 @@ async function main() {
 
   // 1. two members register (always MEMBER role)
   console.log('\n— Members register —');
-  const regA = await call('POST', '/auth/register', {
-    body: { name: 'Smoke Member A', email: emailA, password },
-  });
-  ok('member A registers', regA.status >= 200 && regA.status < 300, `status ${regA.status}`);
-  const tokenA = field(regA.json, 'accessToken');
-  ok('member A receives token', !!tokenA);
+  const memberA = await registerAndVerify('Smoke Member A', emailA);
+  ok('member A registers and verifies email',
+    memberA.registered.status >= 200 && memberA.registered.status < 300 &&
+    memberA.verified.status >= 200 && memberA.verified.status < 300,
+    `register=${memberA.registered.status} verify=${memberA.verified.status}`);
+  const tokenA = memberA.token;
+  ok('member A receives token after verification', !!tokenA);
   ok('registration never assigns admin role',
-    (field(regA.json, 'user')?.role ?? 'MEMBER') === 'MEMBER');
+    (field(memberA.registered.json, 'user')?.role ?? 'MEMBER') === 'MEMBER');
 
-  const regB = await call('POST', '/auth/register', {
-    body: { name: 'Smoke Member B', email: emailB, password },
-  });
-  const tokenB = field(regB.json, 'accessToken');
-  ok('member B registers', !!tokenB);
+  const memberB = await registerAndVerify('Smoke Member B', emailB);
+  const tokenB = memberB.token;
+  ok('member B registers and verifies email', !!tokenB);
 
   // duplicate email rejected
   const dup = await call('POST', '/auth/register', {

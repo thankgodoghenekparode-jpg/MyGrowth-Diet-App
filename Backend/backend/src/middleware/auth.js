@@ -32,6 +32,12 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
   if (user.status === 'SUSPENDED' || user.status === 'DEACTIVATED') {
     throw errors.forbidden('This account has been suspended. Contact the ministry administrator.', 'ACCOUNT_SUSPENDED');
   }
+  if (!user.emailVerifiedAt) {
+    throw errors.forbidden(
+      'Verify your email address before continuing.',
+      'EMAIL_NOT_VERIFIED'
+    );
+  }
 
   req.user = user;
   next();

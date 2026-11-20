@@ -58,6 +58,12 @@ export const config = {
     from: process.env.EMAIL_FROM || 'MyGrowth Diet App <no-reply@mygrowth.local>',
   },
 
+  emailVerification: {
+    otpTtlMinutes: int('EMAIL_OTP_TTL_MINUTES', 10),
+    maxAttempts: int('EMAIL_OTP_MAX_ATTEMPTS', 5),
+    resendSeconds: int('EMAIL_OTP_RESEND_SECONDS', 60),
+  },
+
   storage: {
     adapter: process.env.STORAGE_ADAPTER || 'local',
     uploadDir: path.resolve(rootDir, process.env.UPLOAD_DIR || './uploads'),

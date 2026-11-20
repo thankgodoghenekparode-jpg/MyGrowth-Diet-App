@@ -13,6 +13,17 @@ import {
   TEST_PASSWORD,
 } from './helpers/setup.js';
 import { setSetting, clearSettingCache } from '../src/lib/settings.js';
+import { testEmailOtps } from '../src/modules/auth/auth.handlers.js';
+
+async function verifyOtp(email) {
+  const code = testEmailOtps.get(email);
+  assert.match(code || '', /^\d{6}$/, 'expected a generated OTP for registration');
+  const res = await api()
+    .post('/api/v1/auth/verify-email-otp')
+    .send({ email, code });
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  return res;
+}
 
 before(async () => {
   await resetDb();
@@ -20,7 +31,7 @@ before(async () => {
 
 const email = 'auth.member@test.local';
 
-test('register creates an ACTIVE MEMBER and returns tokens', async () => {
+test('register requires an email OTP before issuing a session', async () => {
   const res = await api()
     .post('/api/v1/auth/register')
     .send({ firstName: 'Auth', lastName: 'Member', email, password: TEST_PASSWORD });
@@ -28,13 +39,39 @@ test('register creates an ACTIVE MEMBER and returns tokens', async () => {
   assert.equal(res.status, 201);
   assert.equal(res.body.user.role, 'MEMBER');
   assert.equal(res.body.user.status, 'ACTIVE');
-  assert.ok(res.body.accessToken);
-  assert.ok(res.body.refreshToken);
-  assert.ok(res.headers['set-cookie'].some((c) => c.startsWith('mgdp_refresh=')));
+  assert.equal(res.body.user.emailVerified, false);
+  assert.equal(res.body.accessToken, undefined);
+  assert.equal(res.body.refreshToken, undefined);
+  assert.equal(res.body.verification.required, true);
+  assert.equal(res.body.verification.emailSent, true);
+
+  const blocked = await api()
+    .post('/api/v1/auth/login')
+    .send({ email, password: TEST_PASSWORD });
+  assert.equal(blocked.status, 403);
+  assert.equal(blocked.body.error.code, 'EMAIL_NOT_VERIFIED');
+
+  const code = testEmailOtps.get(email);
+  const wrongCode = code === '111111' ? '222222' : '111111';
+  const wrong = await api()
+    .post('/api/v1/auth/verify-email-otp')
+    .send({ email, code: wrongCode });
+  assert.equal(wrong.status, 400);
+  assert.equal(wrong.body.error.code, 'INVALID_VERIFICATION_CODE');
+
+  const verified = await verifyOtp(email);
+  assert.ok(verified.body.accessToken);
+  assert.ok(verified.body.refreshToken);
+  assert.ok(verified.headers['set-cookie'].some((c) => c.startsWith('mgdp_refresh=')));
+  assert.equal(verified.body.user.emailVerified, true);
+
+  const { res: signedIn } = await login(email);
+  assert.equal(signedIn.status, 200);
 
   const dbUser = await prisma.user.findUnique({ where: { email } });
   assert.equal(dbUser.role, 'MEMBER');
   assert.ok(dbUser.passwordHash.startsWith('$2'));
+  assert.ok(dbUser.emailVerifiedAt);
 });
 
 test('register ignores/rejects a client-supplied privileged role and audits it', async () => {
@@ -70,6 +107,55 @@ test('register rejects duplicate emails and invalid payloads', async () => {
     .send({ firstName: '', lastName: 'X', email: 'not-an-email', password: 'short' });
   assert.equal(bad.status, 400);
   assert.equal(bad.body.error.code, 'VALIDATION_ERROR');
+});
+
+test('resend issues a fresh OTP that completes registration', async () => {
+  const otpEmail = 'otp.resend@test.local';
+  const registered = await api()
+    .post('/api/v1/auth/register')
+    .send({ name: 'Resend Member', email: otpEmail, password: TEST_PASSWORD });
+  assert.equal(registered.status, 201);
+
+  // Simulate the resend cooldown elapsing.
+  await prisma.user.update({
+    where: { email: otpEmail },
+    data: { emailOtpSentAt: new Date(Date.now() - 120_000) },
+  });
+  const resent = await api()
+    .post('/api/v1/auth/resend-email-otp')
+    .send({ email: otpEmail });
+  assert.equal(resent.status, 200);
+  assert.equal(resent.body.ok, true);
+
+  const verified = await verifyOtp(otpEmail);
+  assert.ok(verified.body.accessToken);
+});
+
+test('too many wrong OTP attempts require a new code', async () => {
+  const otpEmail = 'otp.attempts@test.local';
+  const registered = await api()
+    .post('/api/v1/auth/register')
+    .send({ name: 'Attempt Member', email: otpEmail, password: TEST_PASSWORD });
+  assert.equal(registered.status, 201);
+
+  const code = testEmailOtps.get(otpEmail);
+  const wrongCode = code === '111111' ? '222222' : '111111';
+  for (let i = 0; i < 5; i++) {
+    const wrong = await api()
+      .post('/api/v1/auth/verify-email-otp')
+      .send({ email: otpEmail, code: wrongCode });
+    assert.equal(wrong.status, 400);
+    assert.equal(
+      wrong.body.error.code,
+      i === 4 ? 'VERIFICATION_ATTEMPTS_EXCEEDED' : 'INVALID_VERIFICATION_CODE'
+    );
+  }
+
+  const blocked = await api()
+    .post('/api/v1/auth/verify-email-otp')
+    .send({ email: otpEmail, code });
+  assert.equal(blocked.status, 400);
+  assert.equal(blocked.body.error.code, 'VERIFICATION_ATTEMPTS_EXCEEDED');
 });
 
 test('login issues an access token and refresh cookie', async () => {
@@ -189,6 +275,7 @@ test('registration approval setting gates member content', async () => {
       });
     assert.equal(res.status, 201);
     assert.equal(res.body.user.status, 'PENDING');
+    await verifyOtp('waiting@test.local');
 
     // A pending member may sign in but cannot reach programme content.
     const { accessToken } = await login('waiting@test.local', 'StrongPass1!');

@@ -57,8 +57,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return;
       TextInput.finishAutofillContext(shouldSave: true);
       Toast.success(
-          context, 'Account created. Welcome to MyGrowth Diet App!');
-      context.go('/setup-profile');
+          context, 'Account created. Check your email for a 6-digit code.');
+      context.go('/verify-email?email=${Uri.encodeComponent(_email.text.trim())}');
     } on ApiException catch (e) {
       if (!mounted) return;
       Toast.error(context, e.fieldError ?? e.message);
@@ -93,8 +93,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Registration creates a member account. Administrative access '
-              'is granted separately by the ministry.',
+              'Registration creates a member account. We’ll email you a '
+              '6-digit code to verify your address before you enter the app. '
+              'Administrative access is granted separately by the ministry.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.md),
