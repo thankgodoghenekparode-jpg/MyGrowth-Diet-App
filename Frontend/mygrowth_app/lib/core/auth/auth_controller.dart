@@ -59,9 +59,10 @@ class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
     final client = ref.read(apiClientProvider);
-    // A failed refresh must not throw away the cached identity: keep the user
-    // signed in with offline access instead of bouncing them to /login.
-    client.onSessionExpired = _enterOfflineMode;
+    // A rejected refresh token is an expired session, not an offline session.
+    // Keeping the cached identity in that state leaves the user on protected
+    // content routes with no token, so every content request fails.
+    client.onSessionExpired = _expireSession;
     client.onConnectionRestored = () {
       if (!state.offlineMode || !_api.hasSession) return;
       state = state.copyWith(offlineMode: false);
@@ -103,10 +104,10 @@ class AuthController extends Notifier<AuthState> {
     }
     final cached = await _cachedOfflineState();
     if (!_api.hasSession) {
-      if (cached != null) {
-        state = cached.copyWith(restoring: false, offlineMode: true);
-        return cached.user;
-      }
+      // A cached profile without a token cannot load protected programme
+      // content. Keeping it authenticated here creates a permanent broken
+      // offline session, so require the user to sign in again.
+      if (cached != null) await _clearCachedUser();
       state = const AuthState(
         status: AuthStatus.unauthenticated,
         restoring: false,
@@ -135,6 +136,27 @@ class AuthController extends Notifier<AuthState> {
       );
       await _cacheUser(user, needsCompletion);
       return user;
+    } on ApiException catch (error) {
+      // The offline fallback is only useful for temporary connectivity/server
+      // failures. A 401/403 means the cached session cannot access the API.
+      if (error.isUnauthorized || error.isForbidden) {
+        await _clearCachedUser();
+        state = const AuthState(
+          status: AuthStatus.unauthenticated,
+          restoring: false,
+        );
+        return null;
+      }
+      final fallback = cached ?? await _cachedOfflineState();
+      if (fallback != null) {
+        state = fallback.copyWith(restoring: false, offlineMode: true);
+        return fallback.user;
+      }
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+        restoring: false,
+      );
+      return null;
     } on Object catch (_) {
       final fallback = cached ?? await _cachedOfflineState();
       if (fallback != null) {
@@ -173,22 +195,24 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  /// Keeps a known user signed in after a failed refresh. The tokens are gone
-  /// so API calls stay offline, but the cached identity and its screens remain
-  /// available until a reconnect revalidates the session.
-  Future<void> _enterOfflineMode() async {
+  /// Removes a cached identity after the backend rejects its refresh token.
+  Future<void> _expireSession() async {
     try {
       await _api.clearSession();
     } catch (_) {}
-    final cached = await _cachedOfflineState();
-    if (cached != null) {
-      state = cached.copyWith(restoring: false, offlineMode: true);
-      return;
-    }
+    await _clearCachedUser();
     state = const AuthState(
       status: AuthStatus.unauthenticated,
       restoring: false,
     );
+  }
+
+  Future<void> _clearCachedUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('mgdp.cachedUser');
+      await prefs.remove('mgdp.cachedProfileCompletion');
+    } catch (_) {}
   }
 
   Future<void> signIn({required String email, required String password}) async {
