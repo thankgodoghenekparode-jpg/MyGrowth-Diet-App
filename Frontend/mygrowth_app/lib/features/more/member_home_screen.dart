@@ -155,24 +155,24 @@ class MemberHomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   _HomeActionCard(
+                    icon: Icons.live_tv_rounded,
+                    title: 'Live service',
+                    subtitle: 'Watch services and send a prayer request',
+                    onTap: () => context.go('/live'),
+                  ),
+                  const SizedBox(height: 8),
+                  _HomeActionCard(
                     icon: Icons.volunteer_activism_rounded,
-                    title: 'Giving & Partnership',
+                    title: 'Partnership',
                     subtitle: 'Support the ministry and become a partner',
                     onTap: () => context.go('/giving'),
                   ),
                   const SizedBox(height: 8),
                   _HomeActionCard(
                     icon: Icons.event_available_rounded,
-                    title: 'Upcoming Event',
+                    title: 'upcoming Event',
                     subtitle: 'See what is happening at the ministry',
                     onTap: () => context.go('/upcoming'),
-                  ),
-                  const SizedBox(height: 8),
-                  _HomeActionCard(
-                    icon: Icons.live_tv_rounded,
-                    title: 'Live Service',
-                    subtitle: 'Watch services and send a prayer request',
-                    onTap: () => context.go('/live'),
                   ),
                   const SizedBox(height: 8),
                   _HomeActionCard(
