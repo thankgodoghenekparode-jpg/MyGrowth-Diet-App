@@ -140,7 +140,7 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Grow, learn, and become.',
+                      'LEARN, GROW, BECOME',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.inkSecondary,
                           ),
