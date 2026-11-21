@@ -181,7 +181,7 @@ class _HomeBrandLockup extends StatelessWidget {
                 children: [
                   Positioned(
                     left: 0,
-                    top: 0,
+                    top: 3,
                     width: 280,
                     height: 68,
                     child: Image.asset(
