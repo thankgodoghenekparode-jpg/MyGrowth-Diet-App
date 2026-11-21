@@ -169,7 +169,8 @@ class _HomeBrandLockup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'MyGrowth Diet. LEARN, GROW, BECOME',
+      label:
+          'MyGrowth Diet. LEARN, GROW, BECOME. Your personal journey of faith and growth.',
       child: Row(
         children: [
           SizedBox(
@@ -195,17 +196,34 @@ class _HomeBrandLockup extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Expanded(
-            child: Text(
-              'LEARN, GROW,\nBECOME',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontFamily: 'PlayfairDisplay',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                height: 1.08,
-                letterSpacing: .15,
-                color: AppColors.brandText,
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'LEARN, GROW,\nBECOME',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontFamily: 'PlayfairDisplay',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    height: 1.08,
+                    letterSpacing: .15,
+                    color: AppColors.brandText,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Your personal journey of faith and growth',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontFamily: 'PlayfairDisplay',
+                    fontSize: 7,
+                    fontStyle: FontStyle.italic,
+                    height: 1.05,
+                    color: AppColors.brandText,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
