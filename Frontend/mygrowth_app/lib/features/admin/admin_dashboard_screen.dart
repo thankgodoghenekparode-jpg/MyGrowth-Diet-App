@@ -48,6 +48,74 @@ const adminHomeSlides = <CarouselSlide>[
   ),
 ];
 
+const _adminContentActions = <({
+  String title,
+  String description,
+  String path,
+  IconData icon,
+})>[
+  (
+    title: 'Annual programmes',
+    description: 'Create and publish the yearly framework',
+    path: '/admin/programmes',
+    icon: Icons.event_note_outlined,
+  ),
+  (
+    title: 'Monthly plans',
+    description: 'Add each month’s focus and guidance',
+    path: '/admin/monthly-plans',
+    icon: Icons.calendar_month_outlined,
+  ),
+  (
+    title: 'Weekly plans',
+    description: 'Build weekly readings and activities',
+    path: '/admin/weekly-plans',
+    icon: Icons.view_week_outlined,
+  ),
+  (
+    title: 'Daily Diet',
+    description: 'Write devotionals and daily content',
+    path: '/admin/daily-diet',
+    icon: Icons.today_outlined,
+  ),
+  (
+    title: 'Materials library',
+    description: 'Upload PDFs, audio and study resources',
+    path: '/admin/materials',
+    icon: Icons.library_books_outlined,
+  ),
+  (
+    title: 'Announcements',
+    description: 'Prepare and publish member updates',
+    path: '/admin/announcements',
+    icon: Icons.campaign_outlined,
+  ),
+  (
+    title: 'Activities',
+    description: 'Manage activities and reporting options',
+    path: '/admin/activities',
+    icon: Icons.checklist_outlined,
+  ),
+  (
+    title: 'Ministry platform',
+    description: 'Manage events, live services, giving and prayer',
+    path: '/admin/ministry-platform',
+    icon: Icons.church_outlined,
+  ),
+  (
+    title: 'Shape Space Q&A',
+    description: 'Add answers and discussion prompts',
+    path: '/admin/shape-space',
+    icon: Icons.forum_outlined,
+  ),
+  (
+    title: 'Connect links',
+    description: 'Update ministry contact and social links',
+    path: '/admin/connect-links',
+    icon: Icons.link_outlined,
+  ),
+];
+
 
 /// Admin home: live metrics from `/admin/analytics/summary`, attention
 /// items, recent activity and quick actions.
@@ -205,6 +273,89 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
                   onPressed: () => context.go('/admin/access'),
                 ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // ----------------------------------------------- content studio
+          SectionHeader(
+            title: 'Manage app content',
+            subtitle: 'Create, upload and publish content members see in the app',
+            icon: Icons.dashboard_customize_outlined,
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 860
+                  ? 3
+                  : constraints.maxWidth >= 520
+                  ? 2
+                  : 1;
+              const gap = AppSpacing.sm;
+              final cardWidth =
+                  (constraints.maxWidth - gap * (columns - 1)) / columns;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final action in _adminContentActions)
+                    SizedBox(
+                      width: cardWidth,
+                      child: AppCard(
+                        onTap: () => context.go(action.path),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: AppColors.paleChampagne,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                action.icon,
+                                color: AppColors.goldText,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    action.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall,
+                                  ),
+                                  const SizedBox(height: AppSpacing.xxs),
+                                  Text(
+                                    action.description,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: AppColors.inkSecondary,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.inkMuted,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.xl),
 
