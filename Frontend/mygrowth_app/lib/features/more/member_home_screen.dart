@@ -75,12 +75,7 @@ class MemberHomeScreen extends ConsumerWidget {
                                 maxWidth: 280,
                                 maxHeight: 68,
                               ),
-                              child: Image.asset(
-                                'assets/images/mygrowth_brand_lockup.png',
-                                fit: BoxFit.contain,
-                                alignment: Alignment.center,
-                                semanticLabel: 'MyGrowth Diet logo and slogan',
-                              ),
+                              child: const _HomeBrandLockup(),
                             ),
                           ),
                         ),
@@ -163,6 +158,57 @@ class MemberHomeScreen extends ConsumerWidget {
             const SizedBox(height: 12),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HomeBrandLockup extends StatelessWidget {
+  const _HomeBrandLockup();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'MyGrowth Diet. LEARN, GROW, BECOME',
+      child: Row(
+        children: [
+          SizedBox(
+            width: 157,
+            height: 68,
+            child: ClipRect(
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    width: 280,
+                    height: 68,
+                    child: Image.asset(
+                      'assets/images/mygrowth_brand_lockup.png',
+                      fit: BoxFit.contain,
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              'LEARN, GROW,\nBECOME',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontFamily: 'PlayfairDisplay',
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                height: 1.08,
+                letterSpacing: .15,
+                color: AppColors.brandText,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
