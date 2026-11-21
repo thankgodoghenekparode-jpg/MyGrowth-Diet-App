@@ -343,12 +343,10 @@ async function seedProgramme() {
 
 async function seedDefinitions() {
   const givingCategories = [
-    ['General Offering', 'GENERAL_OFFERING'],
     ['Tithe', 'TITHE'],
     ['Ministry Partnership', 'MINISTRY_PARTNERSHIP'],
     ['Special Seed', 'SPECIAL_SEED'],
     ['Ministry Projects', 'MINISTRY_PROJECT'],
-    ['Thanksgiving Offering', 'THANKSGIVING'],
     ['Other Donations', 'OTHER'],
   ];
   for (const [index, [name, type]] of givingCategories.entries()) {
