@@ -1,42 +1,18 @@
-import 'package:mygrowth_app/core/models/activity_models.dart';
-
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/models/activity_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/app_date.dart';
 import '../progress/progress_providers.dart';
-
-const _homeScriptures = [
-  (
-    text:
-        'For I know the plans I have for you, declares the LORD, plans to '
-        'prosper you and not to harm you, plans to give you hope and a future.',
-    reference: 'Jeremiah 29:11',
-  ),
-  (text: 'The LORD is my shepherd; I shall not want.', reference: 'Psalm 23:1'),
-  (
-    text:
-        'Trust in the LORD with all thine heart; and lean not unto thine '
-        'own understanding.',
-    reference: 'Proverbs 3:5',
-  ),
-  (
-    text: 'I can do all things through Christ which strengtheneth me.',
-    reference: 'Philippians 4:13',
-  ),
-  (
-    text:
-        'Be strong and of a good courage; be not afraid, neither be thou '
-        'dismayed.',
-    reference: 'Joshua 1:9',
-  ),
-];
 
 /// Member landing page following the supplied Growth Diet home reference.
 class MemberHomeScreen extends ConsumerWidget {
@@ -392,12 +368,44 @@ class _ScriptureCarousel extends StatefulWidget {
 
 class _ScriptureCarouselState extends State<_ScriptureCarousel> {
   late Timer _timer;
+  final _random = Random();
+  List<({String text, String reference})> _scriptures = const [];
   int _index = 0;
 
   @override
   void initState() {
     super.initState();
+    unawaited(_loadScriptures());
     _timer = Timer.periodic(const Duration(seconds: 7), (_) => _showNext());
+  }
+
+  Future<void> _loadScriptures() async {
+    final data = jsonDecode(
+      await rootBundle.loadString('assets/bible/web.json'),
+    ) as Map<String, dynamic>;
+    final scriptures = <({String text, String reference})>[];
+    for (final book in data['books'] as List<dynamic>) {
+      final name = (book as Map<String, dynamic>)['name'] as String;
+      final chapters = book['chapters'] as List<dynamic>;
+      for (var chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
+        final verses = chapters[chapterIndex] as List<dynamic>;
+        for (var verseIndex = 0; verseIndex < verses.length; verseIndex++) {
+          final text = verses[verseIndex];
+          if (text is String && text.trim().isNotEmpty) {
+            scriptures.add((
+              text: text,
+              reference: '$name ${chapterIndex + 1}:${verseIndex + 1}',
+            ));
+          }
+        }
+      }
+    }
+    scriptures.shuffle(_random);
+    if (!mounted) return;
+    setState(() {
+      _scriptures = scriptures;
+      _index = 0;
+    });
   }
 
   @override
@@ -407,10 +415,17 @@ class _ScriptureCarouselState extends State<_ScriptureCarousel> {
   }
 
   void _showNext({bool previous = false}) {
+    if (_scriptures.isEmpty) return;
     setState(() {
-      _index =
-          (_index + (previous ? _homeScriptures.length - 1 : 1)) %
-          _homeScriptures.length;
+      if (previous) {
+        _index = (_index - 1 + _scriptures.length) % _scriptures.length;
+      } else {
+        _index++;
+        if (_index >= _scriptures.length) {
+          _scriptures.shuffle(_random);
+          _index = 0;
+        }
+      }
     });
     _timer.cancel();
     // Restart the automatic rotation after a manual swipe.
@@ -419,7 +434,9 @@ class _ScriptureCarouselState extends State<_ScriptureCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    final scripture = _homeScriptures[_index];
+    final scripture = _scriptures.isEmpty
+        ? (text: 'Loading scripture…', reference: '')
+        : _scriptures[_index];
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         final velocity = details.primaryVelocity ?? 0;
