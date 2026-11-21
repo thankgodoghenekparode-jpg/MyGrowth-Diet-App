@@ -345,7 +345,7 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
                               ),
                             ),
                             const SizedBox(width: AppSpacing.xs),
-                            const Icon(
+                            Icon(
                               Icons.chevron_right_rounded,
                               color: AppColors.inkMuted,
                             ),
@@ -751,3 +751,4 @@ class _AdminDashboardBodyState extends ConsumerState<_AdminDashboardBody> {
     ];
   }
 }
+
