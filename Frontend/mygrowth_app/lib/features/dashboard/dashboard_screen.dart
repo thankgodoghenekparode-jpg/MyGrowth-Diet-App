@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/content/daily_affirmations.dart';
 import '../../core/models/activity_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/utils/app_date.dart';
@@ -102,6 +103,8 @@ class DashboardScreen extends ConsumerWidget {
     final checklist = ref.watch(dailyChecklistProvider(_today()));
     final announcements = ref.watch(announcementsProvider);
     final now = appDateNow();
+    final todayISO = DateFormat('yyyy-MM-dd').format(now);
+    final dailyAffirmation = ref.watch(dailyAffirmationProvider(todayISO));
     final greeting = now.hour < 12
         ? 'Good morning'
         : now.hour < 17
@@ -112,6 +115,7 @@ class DashboardScreen extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(currentProgrammeProvider);
+        ref.invalidate(dailyAffirmationProvider(todayISO));
         ref.invalidate(dailyChecklistProvider(_today()));
         ref.invalidate(announcementsProvider);
         ref.invalidate(notificationsProvider);
@@ -221,7 +225,9 @@ class DashboardScreen extends ConsumerWidget {
                   VerseCard(
                     tone: VerseTone.gold,
                     label: 'Daily Affirmation',
-                    text: programme.dailyAffirmation ?? '',
+                    text: dailyAffirmation.asData?.value ??
+                        programme.dailyAffirmation ??
+                        '',
                     icon: Icons.wb_sunny_outlined,
                   ),
                 ],

@@ -88,6 +88,7 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/bible/web.json
+    - assets/daily_affirmations_2027.json
     - assets/devotions.json
     - assets/january_bible_study.json
     - assets/DAILY DECLARATION.docx

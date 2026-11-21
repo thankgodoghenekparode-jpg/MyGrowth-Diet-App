@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/config/app_config.dart';
+import '../../core/content/daily_affirmations.dart';
 import '../../core/models/daily_diet_models.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/provider_cache.dart';
@@ -13,6 +14,46 @@ import '../../core/network/provider_cache.dart';
 /// Tolerant map parse — the API always answers with JSON objects here.
 Map<String, dynamic> _asMap(dynamic data) =>
     data is Map<String, dynamic> ? data : const {};
+
+Future<Map<String, dynamic>> _withDailyAffirmation(
+  Map<String, dynamic> json,
+  String date,
+) async {
+  final affirmation = await dailyAffirmationForDate(date);
+  final rawSections = json['sections'];
+  if (affirmation == null || rawSections is! List) return json;
+
+  final sections = <dynamic>[];
+  for (final rawSection in rawSections) {
+    if (rawSection is! Map) {
+      sections.add(rawSection);
+      continue;
+    }
+    final section = Map<String, dynamic>.from(rawSection);
+    if (section['key'] == 'declarations') {
+      final existing = section['dayContent'] is Map
+          ? Map<String, dynamic>.from(section['dayContent'] as Map)
+          : <String, dynamic>{};
+      final details = existing['details'] is Map
+          ? Map<String, dynamic>.from(existing['details'] as Map)
+          : <String, dynamic>{};
+      details['declarations'] = [affirmation];
+      section['dayContent'] = {
+        ...existing,
+        'id': existing['id'] ?? '',
+        'sectionId': existing['sectionId'] ?? section['id'] ?? '',
+        'date': date,
+        'scope': 'DAY',
+        'title': 'Daily Affirmation',
+        'body': affirmation,
+        'details': details,
+        'status': 'PUBLISHED',
+      };
+    }
+    sections.add(section);
+  }
+  return {...json, 'sections': sections};
+}
 
 const _januaryLiteratureBooks = <Map<String, dynamic>>[
   {
@@ -179,7 +220,8 @@ final dailyDietProvider =
     final data = await client.get('/daily-diet', query: {'date': date});
     final withStudy = await _withJanuaryBibleStudy(_asMap(data), date);
     final withBooks = _withJanuaryLiterature(withStudy, date);
-    final json = _withJanuaryAudioMessages(withBooks, date);
+    final withAudio = _withJanuaryAudioMessages(withBooks, date);
+    final json = await _withDailyAffirmation(withAudio, date);
     if (cacheKey != null && json.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(cacheKey, jsonEncode(json));
@@ -194,7 +236,8 @@ final dailyDietProvider =
     if (cached is! Map<String, dynamic>) rethrow;
     final withStudy = await _withJanuaryBibleStudy(cached, date);
     final withBooks = _withJanuaryLiterature(withStudy, date);
-    final json = _withJanuaryAudioMessages(withBooks, date);
+    final withAudio = _withJanuaryAudioMessages(withBooks, date);
+    final json = await _withDailyAffirmation(withAudio, date);
     return DailyDietBundle.fromJson(json);
   }
 });

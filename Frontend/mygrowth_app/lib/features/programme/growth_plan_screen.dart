@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/content/daily_affirmations.dart';
 import '../../core/models/programme_models.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -250,6 +251,8 @@ class _ProgramReviewSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final programme = ref.watch(currentProgrammeProvider);
+    final date = DateFormat('yyyy-MM-dd').format(appDateNow());
+    final dailyAffirmation = ref.watch(dailyAffirmationProvider(date));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -286,10 +289,9 @@ class _ProgramReviewSection extends ConsumerWidget {
                         data: (value) => _showPlanContent(
                           context,
                           title: item.title,
-                          text:
-                              value?.dailyAffirmation?.trim().isNotEmpty == true
-                              ? value!.dailyAffirmation!
-                              : 'The daily affirmation has not been published yet.',
+                          text: dailyAffirmation.asData?.value ??
+                              value?.dailyAffirmation ??
+                              'The daily affirmation has not been published yet.',
                           icon: item.icon,
                         ),
                         loading: () => _showPlanContent(
@@ -361,6 +363,8 @@ class _ProgrammeOverviewCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final programme = ref.watch(currentProgrammeProvider);
+    final date = DateFormat('yyyy-MM-dd').format(appDateNow());
+    final dailyAffirmation = ref.watch(dailyAffirmationProvider(date));
     return programme.when(
       loading: () => const SkeletonBox(height: 120, radius: 14),
       error: (e, _) => ErrorState(
@@ -410,12 +414,13 @@ class _ProgrammeOverviewCard extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                       ],
-                      if (programme.dailyAffirmation != null &&
-                          programme.dailyAffirmation!.isNotEmpty)
+                      if (dailyAffirmation.asData?.value?.isNotEmpty == true ||
+                          (programme.dailyAffirmation?.isNotEmpty ?? false))
                         VerseCard(
                           tone: VerseTone.gold,
                           label: 'Daily Affirmation',
-                          text: programme.dailyAffirmation!,
+                          text: dailyAffirmation.asData?.value ??
+                              programme.dailyAffirmation!,
                           icon: Icons.wb_sunny_outlined,
                         ),
                       if ((programme.prayerFocus == null ||
