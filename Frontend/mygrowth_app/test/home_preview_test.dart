@@ -53,7 +53,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text("Today's Activities"), findsOneWidget);
     expect(find.text('Your Growth Progress'), findsOneWidget);
-    expect(find.text('Bible Reading'), findsOneWidget);
+    expect(find.text('Subscription'), findsOneWidget);
 
     final activities = tester.getTopLeft(find.text("Today's Activities"));
     expect(activities.dy, lessThan(900));

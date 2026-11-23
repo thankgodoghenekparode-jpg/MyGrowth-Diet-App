@@ -79,11 +79,12 @@ export async function createUser(options = {}) {
     adminAccess = role === 'MEMBER' ? 'NONE' : 'ACTIVE',
     timezone = 'Africa/Lagos',
     emailVerified = true,
+    hasMonthlyAccess = role === 'MEMBER',
     phone = null,
     createdByAdminId = null,
   } = options;
 
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email,
       firstName,
@@ -98,6 +99,19 @@ export async function createUser(options = {}) {
       createdByAdminId,
     },
   });
+
+  // Member content routes require an active subscription. Grant it by default
+  // so content tests exercise their actual behaviour instead of the paywall.
+  if (hasMonthlyAccess) {
+    await prisma.monthlyAccess.create({
+      data: {
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  return user;
 }
 
 /** Log in through the API; returns the token plus the refresh cookie. */

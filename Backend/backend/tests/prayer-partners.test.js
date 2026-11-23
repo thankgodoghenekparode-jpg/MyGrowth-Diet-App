@@ -15,6 +15,7 @@ let d;
 let tokenA;
 let tokenB;
 let tokenC;
+let tokenD;
 
 before(async () => {
   await resetDb();
@@ -25,6 +26,7 @@ before(async () => {
   tokenA = await tokenFor(a.email);
   tokenB = await tokenFor(b.email);
   tokenC = await tokenFor(c.email);
+  tokenD = await tokenFor(d.email);
 });
 
 async function makeAvailable(token, days) {
@@ -62,7 +64,15 @@ test('discover surfaces available members and hides exact schedules', async () =
   assert.equal(found.preferredTimeRanges, undefined);
 });
 
-test('a member with no availability cannot be requested', async () => {
+test('a member who opts out of requests cannot be requested', async () => {
+  // Members without an availability row stay open to requests by default;
+  // only an explicit unavailable/opt-out state blocks them.
+  const optedOut = await api()
+    .put('/api/v1/prayer-partners/availability')
+    .set(bearer(tokenD))
+    .send({ availability: 'UNAVAILABLE', acceptsNewRequests: false });
+  assert.equal(optedOut.status, 200);
+
   const res = await api()
     .post('/api/v1/prayer-partners/requests')
     .set(bearer(tokenA))

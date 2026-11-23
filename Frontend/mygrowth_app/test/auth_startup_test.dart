@@ -93,7 +93,7 @@ void main() {
     expect(client.meCalls, 1);
   });
 
-  test('failed refresh keeps the cached user instead of signing out', () async {
+  test('failed refresh signs out and clears the cached user', () async {
     _seedCachedUser();
     final client = _FakeApiClient();
     final container = ProviderContainer(
@@ -105,13 +105,14 @@ void main() {
     await client.onSessionExpired!.call();
 
     final state = container.read(authControllerProvider);
-    expect(state.status, AuthStatus.authenticated);
-    expect(state.user?.id, _user.id);
-    expect(state.offlineMode, isTrue);
+    expect(state.status, AuthStatus.unauthenticated);
+    expect(state.user, isNull);
+    expect(state.offlineMode, isFalse);
     expect(client.sessionCleared, isTrue);
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('mgdp.cachedUser'), isNotNull);
+    expect(prefs.getString('mgdp.cachedUser'), isNull);
+    expect(prefs.getString('mgdp.cachedProfileCompletion'), isNull);
   });
 
   test('unauthorized response does not trigger session revalidation', () async {
